@@ -19,11 +19,11 @@ import (
 	"log/syslog"
 	"os"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	logrusSyslog "github.com/sirupsen/logrus/hooks/syslog"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+
+	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 )
 
 var (
@@ -42,6 +42,7 @@ var (
 	isDiscrete       bool
 	all              bool
 	ignoreLocation   bool
+	runCfg           config.Params //runtime config
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -53,13 +54,18 @@ var rootCmd = &cobra.Command{
 	//so cli flags are evaluated
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		setupLogger()
-		validateArgs()
+		//		validateArgs()
 	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+
+	//Add subcommands
+	rootCmd.AddCommand(configureCmd)
+	rootCmd.AddCommand(executeCmd)
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -86,95 +92,85 @@ func setupLogger() {
 	}
 }
 
-func validateArgs() {
-
-	//one of these args are required
-	if all == false && serial == "" && ipList == "" {
-		log.Error("Either --all OR --serial OR --ip expected.")
-		os.Exit(1)
-	}
-
-	if all == true && serial != "" && ipList != "" {
-		log.Error("--all, --serial, --ip are mutually exclusive args.")
-		os.Exit(1)
-	}
-
-	//if --all or --ipList was passed
-	if all == true || ipList != "" {
-		return
-	}
-
-	if serial != "" && (isChassis == false && isBlade == false && isDiscrete == false) {
-		log.Error("--serial requires one of --chassis | --blade | -discrete")
-		os.Exit(1)
-	}
-
-	if isChassis == true && isBlade == true {
-		log.Error("Either --chassis or --blade may be specified.")
-		os.Exit(1)
-	}
-
-	if isChassis == true && isDiscrete == true {
-		log.Error("Either --chassis or --discrete may be specified.")
-		os.Exit(1)
-	}
-
-	if isDiscrete == true && isBlade == true {
-		log.Error("Either --discrete or --blade may be specified.")
-		os.Exit(1)
-	}
-
-	if isChassis == true {
-		assetType = "chassis"
-	} else if isBlade == true {
-		assetType = "blade"
-	} else if isDiscrete == true {
-		assetType = "discrete"
-	} else {
-		log.Error("Asset type not known, see --help.")
-		os.Exit(1)
-	}
-}
+//func validateArgs() {
+//
+//	//one of these args are required
+//	if all == false && serial == "" && ipList == "" {
+//		log.Error("Either --all OR --serial OR --ip expected.")
+//		os.Exit(1)
+//	}
+//
+//	if all == true && serial != "" && ipList != "" {
+//		log.Error("--all, --serial, --ip are mutually exclusive args.")
+//		os.Exit(1)
+//	}
+//
+//	//if --all or --ipList was passed
+//	if all == true || ipList != "" {
+//		return
+//	}
+//
+//	if serial != "" && (isChassis == false && isBlade == false && isDiscrete == false) {
+//		log.Error("--serial requires one of --chassis | --blade | -discrete")
+//		os.Exit(1)
+//	}
+//
+//	if isChassis == true && isBlade == true {
+//		log.Error("Either --chassis or --blade may be specified.")
+//		os.Exit(1)
+//	}
+//
+//	if isChassis == true && isDiscrete == true {
+//		log.Error("Either --chassis or --discrete may be specified.")
+//		os.Exit(1)
+//	}
+//
+//	if isDiscrete == true && isBlade == true {
+//		log.Error("Either --discrete or --blade may be specified.")
+//		os.Exit(1)
+//	}
+//
+//	if isChassis == true {
+//		assetType = "chassis"
+//	} else if isBlade == true {
+//		assetType = "blade"
+//	} else if isDiscrete == true {
+//		assetType = "discrete"
+//	} else {
+//		log.Error("Asset type not known, see --help.")
+//		os.Exit(1)
+//	}
+//}
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose logging")
-	rootCmd.PersistentFlags().StringVarP(&serial, "serial", "", "", "Serial(s) of the asset to setup config (separated by commas - no spaces).")
-	rootCmd.PersistentFlags().StringVarP(&ipList, "iplist", "", "", "IP Address(s) of the asset to setup config (separated by commas - no spaces).")
-	rootCmd.PersistentFlags().StringVarP(&execCommand, "command", "", "", "Command to execute on BMCs.")
-	rootCmd.PersistentFlags().BoolVarP(&isChassis, "chassis", "", false, "Use in conjuction with --serial, declare asset to be a chassis")
-	rootCmd.PersistentFlags().BoolVarP(&isBlade, "blade", "", false, "Use in conjuction with --serial, declare asset to be a blade")
-	rootCmd.PersistentFlags().BoolVarP(&isDiscrete, "discrete", "", false, "Use in conjuction with --serial, declare asset to be a discrete")
-	rootCmd.PersistentFlags().BoolVarP(&all, "all", "", false, "Runs configuration/setup on all assets")
-	rootCmd.PersistentFlags().BoolVarP(&ignoreLocation, "ignorelocation", "", false, "Ignores location")
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Configuration file for bmcbutler (default: /etc/bmcbutler/bmcbutler.yml)")
 
-	cobra.OnInitialize(initConfig)
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose logging")
+	rootCmd.Flags().StringVarP(&ipList, "iplist", "", "", "IP Address(s) of the asset to setup config (separated by commas - no spaces).")
+	rootCmd.Flags().StringVarP(&execCommand, "command", "", "", "Command to execute on BMCs.")
+	rootCmd.Flags().BoolVarP(&isChassis, "chassis", "", false, "Use in conjuction with --serial, declare asset to be a chassis")
+	rootCmd.Flags().BoolVarP(&isBlade, "blade", "", false, "Use in conjuction with --serial, declare asset to be a blade")
+	rootCmd.Flags().BoolVarP(&isDiscrete, "discrete", "", false, "Use in conjuction with --serial, declare asset to be a discrete")
+	rootCmd.Flags().BoolVarP(&all, "all", "", false, "Runs configuration/setup on all assets")
+	rootCmd.Flags().BoolVarP(&ignoreLocation, "ignorelocation", "", false, "Ignores location")
+	rootCmd.Flags().StringVarP(&cfgFile, "config", "c", "", "Configuration file for bmcbutler (default: /etc/bmcbutler/bmcbutler.yml)")
 
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
 
-		viper.SetConfigName("bmcbutler")
-		viper.AddConfigPath("/etc/bmcbutler")
-		viper.AddConfigPath(fmt.Sprintf("%s/.bmcbutler", home))
+	//config was already loaded, skip loading again.
+	if runCfg.ButlersToSpawn != 0 {
+		return
 	}
 
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("Error reading config:", viper.ConfigFileUsed())
-		fmt.Println("  ->", err)
-		os.Exit(1)
+	runCfg = config.Params{
+		Verbose:        verbose,
+		CfgFile:        cfgFile,
+		Version:        version,
+		IgnoreLocation: ignoreLocation,
 	}
+
+	runCfg.Load(cfgFile)
 
 }

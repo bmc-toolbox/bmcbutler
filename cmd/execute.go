@@ -37,10 +37,49 @@ var executeCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(executeCmd)
+
+	//load config
+	initConfig()
+
+	//execute command flags
+	executeCmd.Flags().BoolVarP(&runCfg.FilterParams.Chassis, "chassis", "", false, "Execute command on chassis asset(s).")
+	executeCmd.Flags().BoolVarP(&runCfg.FilterParams.Blade, "blade", "", false, "Executure command on blade asset(s).")
+	executeCmd.Flags().BoolVarP(&runCfg.FilterParams.Discrete, "discrete", "", false, "Execute command on discrete(s).")
+	executeCmd.Flags().BoolVarP(&runCfg.FilterParams.All, "all", "", false, "Execute on all assets.")
+	executeCmd.Flags().StringVarP(&runCfg.FilterParams.Serials, "serial", "", "", "Execute command on one or more assets listed by serial(s) - use in conjunction with (--chassis/blade/discrete).")
+	executeCmd.Flags().StringVarP(&runCfg.FilterParams.IpList, "iplist", "", "", "Execute command one or more assets listed by IP address(es) - use in conjuction with (--chassis/blade/discrete).")
+
+}
+
+func validateExecuteArgs() {
+
+	//runCfg is declared in root.go and initialized in initConfig()
+	if runCfg.FilterParams.All == true {
+		assetType = "all"
+		return
+	}
+
+	if runCfg.FilterParams.Chassis == false &&
+		runCfg.FilterParams.Blade == false &&
+		runCfg.FilterParams.Discrete == false {
+
+		log.Error("Either --all OR --chassis OR --blade OR --discrete expected.")
+
+		os.Exit(1)
+	}
+
+	if runCfg.FilterParams.Chassis == true {
+		assetType = "chassis"
+	} else if runCfg.FilterParams.Blade == true {
+		assetType = "blade"
+	} else if runCfg.FilterParams.Discrete == true {
+		assetType = "discrete"
+	}
 }
 
 func execute() {
+
+	validateConfigureArgs()
 
 	// A channel to recieve inventory assets
 	inventoryChan := make(chan []asset.Asset, 5)

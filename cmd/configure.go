@@ -42,10 +42,48 @@ var configureCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(configureCmd)
+
+	initConfig()
+
+	//configure command flags
+	configureCmd.Flags().BoolVarP(&runCfg.FilterParams.Chassis, "chassis", "", false, "Configure chassis asset(s).")
+	configureCmd.Flags().BoolVarP(&runCfg.FilterParams.Blade, "blade", "", false, "Configure blade asset(s).")
+	configureCmd.Flags().BoolVarP(&runCfg.FilterParams.Discrete, "discrete", "", false, "Configure discrete(s).")
+	configureCmd.Flags().BoolVarP(&runCfg.FilterParams.All, "all", "", false, "Configure all assets.")
+	configureCmd.Flags().StringVarP(&runCfg.FilterParams.Serials, "serial", "", "", "Configure one or more assets listed by serial(s) - use in conjunction with (--chassis/blade/discrete).")
+	configureCmd.Flags().StringVarP(&runCfg.FilterParams.IpList, "iplist", "", "", "Configure one or more assets listed by IP address(es) - use in conjuction with (--chassis/blade/discrete).")
+}
+
+func validateConfigureArgs() {
+
+	fmt.Printf("%+v", runCfg.FilterParams)
+	//runCfg is declared in root.go and initialized in initConfig()
+	if runCfg.FilterParams.All == true {
+		assetType = "all"
+		return
+	}
+
+	if runCfg.FilterParams.Chassis == false &&
+		runCfg.FilterParams.Blade == false &&
+		runCfg.FilterParams.Discrete == false {
+
+		log.Error("Either --all OR --chassis OR --blade OR --discrete expected.")
+
+		os.Exit(1)
+	}
+
+	if runCfg.FilterParams.Chassis == true {
+		assetType = "chassis"
+	} else if runCfg.FilterParams.Blade == true {
+		assetType = "blade"
+	} else if runCfg.FilterParams.Discrete == true {
+		assetType = "discrete"
+	}
 }
 
 func configure() {
+
+	validateConfigureArgs()
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -69,6 +107,7 @@ func configure() {
 		Logger:  log,
 		Channel: metricsChan,
 		SyncWG:  &configureWG,
+		Config:  &runCfg,
 	}
 
 	//metrics emitter instance, used by methods to emit metrics to the forwarder.
@@ -81,16 +120,11 @@ func configure() {
 	// A channel to recieve inventory assets
 	inventoryChan := make(chan []asset.Asset, 5)
 
-	butlersToSpawn := viper.GetInt("butlersToSpawn")
-
-	if butlersToSpawn == 0 {
-		butlersToSpawn = 5
-	}
-
-	inventorySource := viper.GetString("inventory.configure.source")
+	butlersToSpawn := runCfg.ButlersToSpawn
+	inventorySource := runCfg.InventorySource
 
 	//if --iplist was passed, set inventorySource
-	if ipList != "" {
+	if runCfg.FilterParams.IpList != "" {
 		inventorySource = "iplist"
 	}
 
