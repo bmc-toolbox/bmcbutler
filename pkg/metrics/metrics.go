@@ -21,10 +21,12 @@ import (
 
 	graphite "github.com/marpaia/graphite-golang"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
+
+	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 )
 
 type Metrics struct {
+	Config  *config.Params
 	Logger  *logrus.Logger
 	SyncWG  *sync.WaitGroup
 	Channel <-chan []MetricsMsg
@@ -48,13 +50,13 @@ func (m *Metrics) Run() {
 
 	defer m.SyncWG.Done()
 
-	metricsTarget := viper.GetString("metrics.receiver.target")
+	//figure metrics target
+	metricsTarget := m.Config.Metrics.Target
 	switch metricsTarget {
 	case "graphite":
-		server = viper.GetString("metrics.receiver.graphite.host")
-		port = viper.GetInt("metrics.receiver.graphite.port")
-		prefix := viper.GetString("metrics.receiver.graphite.prefix")
-		//FIXME: validate config parameters
+		server = m.Config.Metrics.GraphiteHost
+		port = m.Config.Metrics.GraphitePort
+		prefix := m.Config.Metrics.GraphitePrefix
 
 		gClient, err = graphite.NewGraphiteWithMetricPrefix(server, port, prefix)
 		if err != nil {
