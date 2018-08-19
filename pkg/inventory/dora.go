@@ -26,14 +26,17 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
+	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
 )
 
 type Dora struct {
-	Log            *logrus.Logger
-	BatchSize      int
-	AssetsChan     chan<- []asset.Asset
-	MetricsEmitter metrics.Emitter
+	Log             *logrus.Logger
+	BatchSize       int
+	AssetsChan      chan<- []asset.Asset
+	MetricsEmitter  metrics.Emitter
+	FilterAssetType string
+	FilterParams    *config.FilterParams
 }
 
 type DoraAssetAttributes struct {
@@ -113,17 +116,30 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) (err error) {
 	return err
 }
 
-func (d *Dora) AssetIterBySerial(serials string, assetType string) {
+//AssetRetrieve looks at d.FilterParams
+//and returns the appropriate function that will retrieve assets.
+func (d *Dora) AssetRetrieve() func() {
+
+	switch {
+	case d.FilterParams.Serials != "":
+		return d.AssetIterBySerial
+	default:
+		return d.AssetIter
+	}
+
+}
+
+func (d *Dora) AssetIterBySerial() {
 
 	var path string
 
-	//assetTypes := []string{"blade", "chassis", "discrete"}
 	component := "inventory"
 	log := d.Log
 	defer close(d.AssetsChan)
 
 	apiUrl := viper.GetString("inventory.configure.dora.apiUrl")
 
+	assetType := d.FilterAssetType
 	if assetType == "blade" {
 		path = "blades"
 	} else if assetType == "discrete" {
@@ -133,7 +149,7 @@ func (d *Dora) AssetIterBySerial(serials string, assetType string) {
 	}
 
 	queryUrl := fmt.Sprintf("%s/v1/%s?filter[serial]=", apiUrl, path)
-	queryUrl += strings.ToLower(serials)
+	queryUrl += strings.ToLower(d.FilterParams.Serials)
 
 	assets := make([]asset.Asset, 0)
 
@@ -208,14 +224,24 @@ func (d *Dora) AssetIter() {
 	component := "retrieveInventoryAssetsDora"
 
 	//setup metrics related things
-
 	metricsData := make(map[string]int)
+
+	var assetTypes []string
+	switch d.FilterAssetType {
+	case "all":
+		assetTypes = []string{"blade", "discrete", "chassis"}
+	case "blade":
+		assetTypes = []string{"blade"}
+	case "discrete":
+		assetTypes = []string{"discrete"}
+	case "chassis":
+		assetTypes = []string{"chassis"}
+	}
 
 	defer close(d.AssetsChan)
 	defer d.MetricsEmitter.MeasureRunTime(
 		time.Now().Unix(), fmt.Sprintf("assets.dora.%s", component))
 
-	assetTypes := []string{"blade", "chassis", "discrete"}
 	log := d.Log
 	apiUrl := viper.GetString("inventory.configure.dora.apiUrl")
 
@@ -325,8 +351,6 @@ func (d *Dora) AssetIter() {
 			// next url to query
 			queryUrl = fmt.Sprintf("%s%s", apiUrl, doraAssets.Links.Next)
 		}
-
 		d.MetricsEmitter.EmitMetricMap(metricsData)
 	}
-
 }

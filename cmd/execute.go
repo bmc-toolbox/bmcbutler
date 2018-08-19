@@ -27,7 +27,7 @@ import (
 	"github.com/bmc-toolbox/bmcbutler/pkg/inventory"
 )
 
-// configureCmd represents the configure command
+// executeCmd represents the execute command
 var executeCmd = &cobra.Command{
 	Use:   "execute",
 	Short: "Execute actions on bmcs.",
@@ -106,14 +106,21 @@ func execute() {
 			go inventoryInstance.AssetIterBySerial(serial)
 		}
 	case "dora":
-		inventoryInstance := inventory.Dora{Log: log, BatchSize: 10, AssetsChan: inventoryChan}
-		// Spawn a goroutine that returns a slice of assets over inventoryChan
-		// the number of assets in the slice is determined by the batch size.
-		if all {
-			go inventoryInstance.AssetIter()
-		} else {
-			go inventoryInstance.AssetIterBySerial(serial, assetType)
+		inventoryInstance := inventory.Dora{
+			Log:             log,
+			BatchSize:       10,
+			AssetsChan:      inventoryChan,
+			FilterAssetType: assetType,
+			FilterParams:    runCfg.FilterParams,
 		}
+
+		//assetRetriever is a function that retrieves assets
+		var assetRetriever func()
+
+		//based on FilterParams get a asset retriever
+		assetRetriever = inventoryInstance.AssetRetrieve()
+		go assetRetriever()
+
 	case "iplist":
 		inventoryInstance := inventory.IpList{Log: log, BatchSize: 1, Channel: inventoryChan}
 

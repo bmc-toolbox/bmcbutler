@@ -137,26 +137,31 @@ func configure() {
 			go inventoryInstance.AssetIterBySerial(serial)
 		}
 	case "dora":
-		inventoryInstance := inventory.Dora{
-			Log:            log,
-			BatchSize:      10,
-			AssetsChan:     inventoryChan,
-			MetricsEmitter: metricsEmitter,
-		}
-
 		// Spawn a goroutine that returns a slice of assets over inventoryChan
 		// the number of assets in the slice is determined by the batch size.
-		if all {
-			go inventoryInstance.AssetIter()
-		} else {
-			go inventoryInstance.AssetIterBySerial(serial, assetType)
+
+		inventoryInstance := inventory.Dora{
+			Log:             log,
+			BatchSize:       10,
+			AssetsChan:      inventoryChan,
+			MetricsEmitter:  metricsEmitter,
+			FilterAssetType: assetType,
+			FilterParams:    runCfg.FilterParams,
 		}
+
+		//assetRetriever is a function that retrieves assets
+		var assetRetriever func()
+
+		//based on FilterParams get a asset retriever
+		assetRetriever = inventoryInstance.AssetRetrieve()
+		go assetRetriever()
+
 	case "iplist":
 		inventoryInstance := inventory.IpList{Log: log, BatchSize: 1, Channel: inventoryChan}
 
 		// invoke goroutine that passes assets by IP to spawned butlers,
 		// here we declare setup = false since this is a configure action.
-		go inventoryInstance.AssetIter(ipList)
+		go inventoryInstance.AssetIter(runCfg.FilterParams.IpList)
 
 	default:
 		fmt.Println("Unknown/no inventory source declared in cfg: ", inventorySource)
