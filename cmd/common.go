@@ -10,6 +10,7 @@ import (
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	"github.com/bmc-toolbox/bmcbutler/pkg/butler"
+	"github.com/bmc-toolbox/bmcbutler/pkg/tui"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/inventory"
 	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
@@ -159,6 +160,20 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 			return
 		}
 	}()
+
+	if runtui {
+		ui, err := tui.NewUserInterface(stopChan, &commandWG, log)
+		if err != nil {
+			fmt.Printf("tui setup error: %s", err)
+			os.Exit(1)
+		}
+
+		err = ui.Run()
+		if err != nil {
+			fmt.Printf("tui run error: %s", err)
+			os.Exit(1)
+		}
+	}
 
 	return inventoryChan, butlerChan, stopChan
 }

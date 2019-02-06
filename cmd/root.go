@@ -34,6 +34,7 @@ var (
 	locations      string
 	resources      string
 	runConfig      *config.Params
+	runtui         bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -88,6 +89,7 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.Debug, "debug", "d", false, "debug logging")
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.Trace, "trace", "t", false, "trace logging")
+	rootCmd.PersistentFlags().BoolVarP(&runtui, "tui", "", false, "run tui")
 
 	//Asset filter params.
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.All, "all", "", false, "Action all assets")
