@@ -15,9 +15,8 @@
 package cmd
 
 import (
+	"github.com/bmc-toolbox/bmcbutler/pkg/app"
 	"github.com/spf13/cobra"
-
-	"github.com/bmc-toolbox/bmcbutler/pkg/butler"
 )
 
 // configureCmd represents the configure command
@@ -36,18 +35,32 @@ func init() {
 func execute() {
 
 	runConfig.Execute = true
-	inventoryChan, butlerChan, _ := pre()
 
-	//iterate over the inventory channel for assets,
-	//create a butler message for each asset along with the configuration,
-	//at this point templated values in the config are not yet rendered.
-	for assetList := range inventoryChan {
-		for _, asset := range assetList {
-			asset.Execute = true
-			butlerMsg := butler.Msg{Asset: asset, AssetExecute: execCommand}
-			butlerChan <- butlerMsg
-		}
+	options := app.Options{
+		Execute:        true,
+		ButlersToSpawn: butlersToSpawn,
+		Locations:      locations,
+		Resources:      resources,
+		Tui:            runtui,
 	}
 
-	post(butlerChan)
+	app := app.New(options, runConfig)
+
+	app.Run()
+
+	//	runConfig.Execute = true
+	//	inventoryChan, butlerChan, _ := pre()
+	//
+	//	//iterate over the inventory channel for assets,
+	//	//create a butler message for each asset along with the configuration,
+	//	//at this point templated values in the config are not yet rendered.
+	//	for assetList := range inventoryChan {
+	//		for _, asset := range assetList {
+	//			asset.Execute = true
+	//			butlerMsg := butler.Msg{Asset: asset, AssetExecute: execCommand}
+	//			butlerChan <- butlerMsg
+	//		}
+	//	}
+	//
+	//	post(butlerChan)
 }

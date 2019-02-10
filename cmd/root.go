@@ -16,18 +16,14 @@ package cmd
 
 import (
 	"fmt"
-	"log/syslog"
 	"os"
 
-	"github.com/sirupsen/logrus"
-	logrusSyslog "github.com/sirupsen/logrus/hooks/syslog"
 	"github.com/spf13/cobra"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 )
 
 var (
-	log            *logrus.Logger
 	butlersToSpawn int
 	cfgFile        string
 	execCommand    string
@@ -42,11 +38,6 @@ var rootCmd = &cobra.Command{
 	Use:              "bmcbutler",
 	Short:            "A bmc config manager",
 	TraverseChildren: true,
-	//setup logger before we run our code, but after init()
-	//so cli flags are evaluated
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		setupLogger()
-	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -55,29 +46,6 @@ func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
-	}
-}
-
-func setupLogger() {
-
-	//setup logging
-	log = logrus.New()
-	log.Out = os.Stdout
-
-	hook, err := logrusSyslog.NewSyslogHook("", "", syslog.LOG_INFO, "BMCbutler")
-	if err != nil {
-		log.Error("Unable to connect to local syslog daemon.")
-	} else {
-		log.AddHook(hook)
-	}
-
-	switch {
-	case runConfig.Debug == true:
-		log.SetLevel(logrus.DebugLevel)
-	case runConfig.Trace == true:
-		log.SetLevel(logrus.TraceLevel)
-	default:
-		log.SetLevel(logrus.InfoLevel)
 	}
 }
 

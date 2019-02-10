@@ -15,14 +15,10 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
+	"log"
 
+	"github.com/bmc-toolbox/bmcbutler/pkg/app"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
-	"github.com/bmc-toolbox/bmcbutler/pkg/butler"
-	"github.com/bmc-toolbox/bmcbutler/pkg/resource"
 )
 
 // configureCmd represents the configure command
@@ -47,13 +43,11 @@ func validateConfigureArgs() {
 		runConfig.FilterParams.Serials == "" &&
 		runConfig.FilterParams.Ips == "" {
 
-		log.Error("Expected flag missing --all/--chassis/--servers/--serials/--ips (try --help)")
-		os.Exit(1)
+		log.Fatal("Expected flag missing --all/--chassis/--servers/--serials/--ips (try --help)")
 	}
 
 	if runConfig.FilterParams.All && (runConfig.FilterParams.Serials != "" || runConfig.FilterParams.Ips != "") {
-		log.Error("--all --serial --ip are mutually exclusive args.")
-		os.Exit(1)
+		log.Fatal("--all --serial --ip are mutually exclusive args.")
 	}
 
 }
@@ -63,43 +57,16 @@ func configure() {
 	runConfig.Configure = true
 	validateConfigureArgs()
 
-	inventoryChan, butlerChan, stopChan := pre()
-
-	//Read in BMC configuration data
-	assetConfigDir := viper.GetString("bmcCfgDir")
-	assetConfigFile := fmt.Sprintf("%s/%s", assetConfigDir, "configuration.yml")
-
-	//returns the file read as a slice of bytes
-	//config may contain templated values.
-	assetConfig, err := resource.ReadYamlTemplate(assetConfigFile)
-	if err != nil {
-		log.Fatal("Unable to read BMC configuration: ", assetConfigFile, " Error: ", err)
-		os.Exit(1)
+	options := app.Options{
+		Configure:      true,
+		ButlersToSpawn: butlersToSpawn,
+		Locations:      locations,
+		Resources:      resources,
+		Tui:            runtui,
 	}
 
-	//iterate over the inventory channel for assets,
-	//create a butler message for each asset along with the configuration,
-	//at this point templated values in the config are not yet rendered.
-loop:
-	for {
-		select {
-		case assetList, ok := <-inventoryChan:
-			if !ok {
-				break loop
-			}
-			for _, asset := range assetList {
-				asset.Configure = true
-				butlerMsg := butler.Msg{Asset: asset, AssetConfig: assetConfig}
-				if interrupt {
-					break loop
-				}
+	app := app.New(options, runConfig)
 
-				butlerChan <- butlerMsg
-			}
-		case <-stopChan:
-			interrupt = true
-		}
-	}
+	app.Run()
 
-	post(butlerChan)
 }
