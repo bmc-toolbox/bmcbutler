@@ -219,7 +219,7 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 
 		// missing Serials are Serials we looked up using the enc and got no data for.
 		for idx, s := range missingSerials {
-			if s == serial {
+			if strings.ToLower(s) == serial {
 				// if its in the list, purge it.
 				missingSerials = append(missingSerials[:idx], missingSerials[idx+1:]...)
 			}
