@@ -2,12 +2,16 @@
 
 [![Status](https://api.travis-ci.org/bmc-toolbox/bmcbutler.svg?branch=master)](https://travis-ci.org/bmc-toolbox/bmcbutler)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bmc-toolbox/bmcbutler)](https://goreportcard.com/report/github.com/bmc-toolbox/bmcbutler)
+[![Development/Support](https://img.shields.io/badge/chat-on%20freenode-brightgreen.svg)](https://kiwiirc.com/client/irc.freenode.net/##bmc-toolbox)
 
 ##### About
 
 Bmcbutler is a BMC (Baseboard Management Controller) configuration management tool that uses [bmclib](https://github.com/bmc-toolbox/bmclib).
 
 For list of supported BMCs and configuration options supported, see [supported hardware](https://github.com/bmc-toolbox/bmclib/blob/master/README.md)
+
+Need help? See kiwiirc link above/find us on the freenode IRC channel `##bmc-toolbox`.
+
 
 ##### Build
 `go get github.com/bmc-toolbox/bmcbutler`
