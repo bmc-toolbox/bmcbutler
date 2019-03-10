@@ -65,6 +65,9 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		asset.Model = bmc.BmcType()
 		asset.Vendor = bmc.Vendor()
 
+		// Required for TLS cert CN
+		asset.Serial, _ = bmc.Serial()
+
 		//Setup a resource instance
 		//Get any templated values in the asset config rendered
 		resourceInstance := resource.Resource{Log: log, Asset: asset}
@@ -75,7 +78,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		}
 
 		// Apply configuration
-		c := configure.NewBmcConfigurator(bmc, asset, b.Config.Resources, renderedConfig, b.StopChan, log)
+		c := configure.NewBmcConfigurator(bmc, asset, b.Config.Resources, renderedConfig, b.Config, b.StopChan, log)
 		c.Apply()
 
 		bmc.Close()
@@ -85,6 +88,9 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		asset.Type = "chassis"
 		asset.Model = chassis.BmcType()
 		asset.Vendor = chassis.Vendor()
+
+		// Required for TLS cert CN
+		asset.Serial, _ = chassis.Serial()
 
 		//Setup a resource instance
 		//Get any templated values in the asset config rendered

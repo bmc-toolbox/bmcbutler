@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
+	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/sirupsen/logrus"
@@ -11,17 +12,18 @@ import (
 
 // Bmc struct declares attributes required to apply configuration.
 type Bmc struct {
-	bmc       devices.Bmc
-	asset     *asset.Asset
-	resources []string
-	configure devices.Configure
-	config    *cfgresources.ResourcesConfig
-	logger    *logrus.Logger
-	ip        string
-	serial    string
-	vendor    string
-	model     string
-	stopChan  <-chan struct{}
+	bmc          devices.Bmc
+	asset        *asset.Asset
+	resources    []string
+	configure    devices.Configure
+	config       *cfgresources.ResourcesConfig
+	butlerConfig *config.Params
+	logger       *logrus.Logger
+	ip           string
+	serial       string
+	vendor       string
+	model        string
+	stopChan     <-chan struct{}
 }
 
 // NewBmcConfigurator returns a new configure struct to apply configuration.
@@ -29,6 +31,7 @@ func NewBmcConfigurator(bmc devices.Bmc,
 	asset *asset.Asset,
 	resources []string,
 	config *cfgresources.ResourcesConfig,
+	butlerConfig *config.Params,
 	stopChan <-chan struct{},
 	logger *logrus.Logger) *Bmc {
 
@@ -41,10 +44,11 @@ func NewBmcConfigurator(bmc devices.Bmc,
 		// this is possible since devices.Bmc embeds the Configure interface.
 		configure: bmc.(devices.Configure),
 		// if --resources was passed, only these resources will be applied
-		resources: resources,
-		config:    config,
-		logger:    logger,
-		stopChan:  stopChan,
+		resources:    resources,
+		config:       config,
+		butlerConfig: butlerConfig,
+		logger:       logger,
+		stopChan:     stopChan,
 	}
 }
 
@@ -128,6 +132,10 @@ func (b *Bmc) Apply() {
 			if b.config.Bios != nil {
 				err = b.configure.Bios(b.config.Bios)
 			}
+		case "https_cert":
+			if b.config.HTTPSCert != nil {
+				err = b.certificateSetup()
+			}
 		default:
 			b.logger.WithFields(logrus.Fields{
 				"resource": resource,
@@ -157,7 +165,6 @@ func (b *Bmc) Apply() {
 		}).Trace("Resource configuration applied.")
 
 	}
-
 	b.logger.WithFields(logrus.Fields{
 		"Vendor":       b.vendor,
 		"Model":        b.model,

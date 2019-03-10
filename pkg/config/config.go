@@ -33,6 +33,7 @@ type Params struct {
 	Setup           bool //indicates setup was invoked
 	Execute         bool //indicates execute was invoked
 	FilterParams    *FilterParams
+	SignerParams    *SignerParams
 	InventoryParams *InventoryParams
 	IgnoreLocation  bool
 	Locations       []string
@@ -61,6 +62,14 @@ type MetricsParams struct {
 	FlushInterval time.Duration
 }
 
+// SignerParams struct holds SSL/TLS cert signing attributes.
+type SignerParams struct {
+	Client     string
+	Passphrase string
+	Bin        string
+	Args       []string
+}
+
 // FilterParams struct holds various asset filter arguments that may be passed via cli args.
 type FilterParams struct {
 	Chassis bool
@@ -78,6 +87,7 @@ func (p *Params) Load(cfgFile string) {
 	p.FilterParams = &FilterParams{}
 	p.MetricsParams = &MetricsParams{}
 	p.InventoryParams = &InventoryParams{}
+	p.SignerParams = &SignerParams{}
 
 	//read in config file with viper
 	if cfgFile != "" {
@@ -114,6 +124,16 @@ func (p *Params) Load(cfgFile string) {
 		p.MetricsParams.Port = viper.GetInt("metrics.clients.graphite.port")
 		p.MetricsParams.Prefix = viper.GetString("metrics.clients.graphite.prefix")
 		p.MetricsParams.FlushInterval = viper.GetDuration("metrics.clients.graphite.flushinterval")
+	}
+
+	//Read in signer config
+	p.SignerParams.Client = viper.GetString("cert.signer.client")
+	switch p.SignerParams.Client {
+	case "fake":
+		p.SignerParams.Passphrase = viper.GetString("cert.signer.fake.passphrase")
+		p.SignerParams.Args = viper.GetStringSlice("cert.signer.fake.args")
+		p.SignerParams.Bin = viper.GetString("cert.signer.fake.bin")
+
 	}
 
 	//Inventory to read assets from
