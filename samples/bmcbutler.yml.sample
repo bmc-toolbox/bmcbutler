@@ -17,6 +17,16 @@ metrics:
       port: 3002
       prefix: "foo.bar.bmc.butler"
       flushInterval: 5m
+# The signer is an executable that is passed CSRs via STDIN
+# and expected to return signed certs on STDOUT
+# In this case a signer (github.com/square/certstrap) was patched for the job.
+cert:
+   signer:
+     client: fake
+     fake:
+        passphrase: secret
+        bin: /usr/bin/certstrap
+        args: ["--depot-path", "/root/ssl/out/", "sign", "--CA", "CertAuth"]
 inventory:
   configure:
     source: csv

@@ -40,7 +40,21 @@ ldapGroup:
   - role: user
     group: RemoveGroup
     enable: false
-
+# Declares configuration for HTTPS certs
+# If any of the params below differ in the current cert,
+# a CSR is generated on the BMC and passed to the signer (see bmcbutler.yml)
+# the signed cert is then uploaded to the BMC.
+httpsCert:
+   generateCSR: true
+   attributes:
+     commonName: <%= serial %>.bmc.example.com #serial as part of CN
+     organizationName: example.com
+     organizationUnit: Foo
+     locality: FooBar
+     stateName: La La
+     countryCode: NZ
+     email: admin@example.com
+     subjectAltName: <%= ipaddress %> # IPAddress as SAN.
 ntp:
    enable: true
    server1: ntp0.example.com

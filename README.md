@@ -8,10 +8,20 @@
 
 Bmcbutler is a BMC (Baseboard Management Controller) configuration management tool that uses [bmclib](https://github.com/bmc-toolbox/bmclib).
 
-For list of supported BMCs and configuration options supported, see [supported hardware](https://github.com/bmc-toolbox/bmclib/blob/master/README.md)
+## Configuration support
+
+Hardware      | User accounts | Syslog  |  NTP  | Ldap  | Ldap groups  | BIOS  | HTTPS Cert  |
+:-----------  | :-----------: | :-----: | :---: | :---: | :----------: | :--: | :---: |
+Dell M1000e   | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | - | |
+Dell iDRAC8   | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | | :heavy_check_mark: |
+Dell iDRAC9   | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | |
+HP c7000      | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | - | |
+HP iLO4       | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | | :heavy_check_mark: |
+HP iLO5       | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | | :heavy_check_mark: |
+Supermicro X10 | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | | |
+
 
 Need help? See kiwiirc link above/find us on the freenode IRC channel `##bmc-toolbox`.
-
 
 ##### Build
 `go get github.com/bmc-toolbox/bmcbutler`
@@ -66,6 +76,22 @@ a csv inventory example is provided to play with.
 
 The 'inventory' parameter points Bmcbutler to the inventory source.
 
+###### BMC HTTPS cert signing
+Bmcbutler can manage certs for BMCs, 
+It compares the current HTTPS cert Subject attributes of a BMC with the ones declared in its configuration,
+if the attributes don't match, it proceeds to,
+
+1. Generate a CSR on the BMC using the Subject attributes declared in its configuration.
+2. Pass the CSR to the signer executable, read the signed cert.
+3. Upload the signed cert to the BMC.
+4. Reset the BMC if required.
+
+To have this setup,
+
+1. Declare a `https_cert` configuration section in the BMC config template, see [configuration.yml sample](../master/samples/cfg/configuration.yml)
+2. Declare a signer executable in the bmcbutler config, see [bmcbutler.yml sample](../master/samples/bmcbutler.yml.sample) 
+
+The signer executable is required to accept a CSR through STDIN and spit out the signed cert through STDOUT.
 
 ##### Run
 
