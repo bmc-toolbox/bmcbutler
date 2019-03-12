@@ -76,6 +76,9 @@ func (b *Bmc) Apply() {
 
 	var failed, success []string
 
+	// reset causes are appended here
+	var resetCause []string
+
 	b.logger.WithFields(logrus.Fields{
 		"Vendor":    b.vendor,
 		"Model":     b.model,
@@ -87,6 +90,7 @@ func (b *Bmc) Apply() {
 	for _, resource := range resources {
 
 		var err error
+		var reset bool
 
 		// check if an interrupt was received.
 		if interrupt == true {
@@ -134,7 +138,7 @@ func (b *Bmc) Apply() {
 			}
 		case "https_cert":
 			if b.config.HTTPSCert != nil {
-				err = b.certificateSetup()
+				reset, err = b.certificateSetup()
 			}
 		default:
 			b.logger.WithFields(logrus.Fields{
@@ -156,6 +160,10 @@ func (b *Bmc) Apply() {
 			success = append(success, resource)
 		}
 
+		if reset {
+			resetCause = append(resetCause, resource)
+		}
+
 		b.logger.WithFields(logrus.Fields{
 			"resource":  resource,
 			"Vendor":    b.vendor,
@@ -165,6 +173,35 @@ func (b *Bmc) Apply() {
 		}).Trace("Resource configuration applied.")
 
 	}
+
+	//// Reset BMC if needed.
+	if len(resetCause) > 0 {
+
+		b.logger.WithFields(logrus.Fields{
+			"Vendor":    b.vendor,
+			"Model":     b.model,
+			"Serial":    b.serial,
+			"IPAddress": b.ip,
+			"cause":     strings.Join(resetCause, ", "),
+		}).Info("BMC to be reset.")
+
+		// Close the current connection - so we don't leave connections hanging.
+		b.bmc.Close()
+
+		//// reset BMC using SSH.
+		_, err := b.bmc.PowerCycleBmc()
+		if err != nil {
+			b.logger.WithFields(logrus.Fields{
+				"Vendor":    b.vendor,
+				"Model":     b.model,
+				"Serial":    b.serial,
+				"IPAddress": b.ip,
+				"Error":     err,
+			}).Warn("BMC reset failed.")
+
+		}
+	}
+
 	b.logger.WithFields(logrus.Fields{
 		"Vendor":       b.vendor,
 		"Model":        b.model,
@@ -173,4 +210,5 @@ func (b *Bmc) Apply() {
 		"applied":      strings.Join(success, ", "),
 		"unsuccessful": strings.Join(failed, ", "),
 	}).Debug("Server BMC configuration actions done.")
+
 }
