@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
+	"github.com/sirupsen/logrus"
 )
 
 // 1. Get current certificate info
@@ -19,23 +20,38 @@ import (
 // 5. Upload signed certificate on the BMC.
 // iDrac needs a reset
 // POST https://10.193.251.25/data?set=iDracReset:1
-func (b *Bmc) certificateSetup() error {
+func (b *Bmc) certificateSetup() (bool, error) {
 
 	// Retrieve current cert(s)
 	certs, err := b.bmc.CurrentHTTPSCert()
 	if err != nil {
-		return fmt.Errorf("Error retreiving current cert: %s", err)
+		return false, fmt.Errorf("Error retreiving current cert: %s", err)
 	}
 
 	// Compare if the current cert matches declared config.
 	if b.certMatchConfig(certs, b.config.HTTPSCert.Attributes) {
-		return nil
+
+		b.logger.WithFields(logrus.Fields{
+			"Vendor":    b.vendor,
+			"Model":     b.model,
+			"Serial":    b.serial,
+			"IPAddress": b.ip,
+		}).Trace("Current certificate matches configuration.")
+
+		return false, nil
 	}
+
+	b.logger.WithFields(logrus.Fields{
+		"Vendor":    b.vendor,
+		"Model":     b.model,
+		"Serial":    b.serial,
+		"IPAddress": b.ip,
+	}).Trace("Current certificate to be updated.")
 
 	// Generate a CSR
 	csr, err := b.configure.GenerateCSR(b.config.HTTPSCert.Attributes)
 	if err != nil {
-		return fmt.Errorf("CSR not generated: %s", err)
+		return false, fmt.Errorf("CSR not generated: %s", err)
 	}
 
 	// sign the CSR with the configured signer.
@@ -45,7 +61,7 @@ func (b *Bmc) certificateSetup() error {
 
 	stdOut, stdErr, exitCode := execCmd(cmd, env, args, csr)
 	if exitCode != 0 {
-		return fmt.Errorf("Error signing CSR: %s", stdErr)
+		return false, fmt.Errorf("Error signing CSR: %s", stdErr)
 	}
 
 	// upload signed cert
@@ -56,22 +72,10 @@ func (b *Bmc) certificateSetup() error {
 	//// TODO:validate stdOut is a PEM block.
 	resetBMC, err := b.configure.UploadHTTPSCert([]byte(stdOut), formFileName)
 	if err != nil {
-		return fmt.Errorf("Error uploading signed cert: %s", err)
+		return false, fmt.Errorf("Error uploading signed cert: %s", err)
 	}
 
-	//// Reset BMC if needed.
-	if resetBMC {
-		// Close the current connection - so we don't leave connections hanging.
-		b.bmc.Close()
-
-		//// reset BMC using SSH.
-		_, err := b.bmc.PowerCycleBmc()
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return resetBMC, nil
 }
 
 // TODO
@@ -84,8 +88,6 @@ func (b *Bmc) certMatchConfig(certs []*x509.Certificate, config *cfgresources.HT
 	}
 
 	cert := certs[0]
-
-	//spew.Dump(cert)
 
 	pkix := cert.Subject
 
