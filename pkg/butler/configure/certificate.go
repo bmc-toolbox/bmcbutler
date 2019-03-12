@@ -105,8 +105,12 @@ func (b *Bmc) certMatchConfig(certs []*x509.Certificate, config *cfgresources.HT
 		return false
 	} else if !match(pkix.Province, config.StateName) {
 		return false
-	} else if !match([]string{cert.IPAddresses[0].String()}, b.ip) {
+	} else if len(cert.IPAddresses) < 1 {
 		return false
+	} else if len(cert.IPAddresses) > 0 {
+		if !match([]string{cert.IPAddresses[0].String()}, b.ip) {
+			return false
+		}
 	}
 
 	return true
