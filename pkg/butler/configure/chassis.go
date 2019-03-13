@@ -121,7 +121,7 @@ func (b *BmcChassis) Apply() { //nolint: gocyclo
 			}
 		case "network":
 			if b.config.Network != nil {
-				err = b.configure.Network(b.config.Network)
+				_, err = b.configure.Network(b.config.Network)
 			}
 		default:
 			b.logger.WithFields(logrus.Fields{

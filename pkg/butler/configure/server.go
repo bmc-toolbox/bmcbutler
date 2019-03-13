@@ -130,7 +130,7 @@ func (b *Bmc) Apply() {
 			}
 		case "network":
 			if b.config.Network != nil {
-				err = b.configure.Network(b.config.Network)
+				reset, err = b.configure.Network(b.config.Network)
 			}
 		case "bios":
 			if b.config.Bios != nil {
