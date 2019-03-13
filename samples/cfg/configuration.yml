@@ -63,13 +63,17 @@ ntp:
    timezone: CET
 
 network:
-  sshEnable: true
   dnsFromDhcp: true  #bmc to get its DNS address from dhcp
-  ipmiEnable: true
-  dhcpEnable: true
-  solEnable: true #serial over lan
+  sshEnable: true
   sshPort: 22
+  solEnable: true    #serial over lan
+  ipmiEnable: true
   ipmiPort: 623
+  dhcpEnable: true
+  kvmMediaPort: 17988   # KVM Virtual Media Port
+  kvmConsolePort: 17990 # KVM console port
+  DDNSEnable: false     # dynamic dns
+
 
 #an example of setting the license key based on vendor.
 <%= if ( vendor == "hp" ) { %>
