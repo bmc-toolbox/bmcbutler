@@ -78,8 +78,7 @@ func (b *Bmc) certificateSetup() (bool, error) {
 	return resetBMC, nil
 }
 
-// TODO
-// Write this method which will compare attributes.
+// nolint: gocyclo
 func (b *Bmc) certMatchConfig(certs []*x509.Certificate, config *cfgresources.HTTPSCertAttributes) bool {
 
 	// If there are no certs
@@ -93,21 +92,37 @@ func (b *Bmc) certMatchConfig(certs []*x509.Certificate, config *cfgresources.HT
 
 	if !match(pkix.Country, config.CountryCode) {
 		return false
-	} else if !match(pkix.Country, config.CountryCode) {
+	}
+
+	if !match(pkix.Country, config.CountryCode) {
 		return false
-	} else if !match([]string{pkix.CommonName}, config.CommonName) {
+	}
+
+	if !match([]string{pkix.CommonName}, config.CommonName) {
 		return false
-	} else if !match(pkix.Organization, config.OrganizationName) {
+	}
+
+	if !match(pkix.Organization, config.OrganizationName) {
 		return false
-	} else if !match(pkix.OrganizationalUnit, config.OrganizationUnit) {
+	}
+
+	if !match(pkix.OrganizationalUnit, config.OrganizationUnit) {
 		return false
-	} else if !match(pkix.Locality, config.Locality) {
+	}
+
+	if !match(pkix.Locality, config.Locality) {
 		return false
-	} else if !match(pkix.Province, config.StateName) {
+	}
+
+	if !match(pkix.Province, config.StateName) {
 		return false
-	} else if len(cert.IPAddresses) < 1 {
+	}
+
+	if len(cert.IPAddresses) < 1 {
 		return false
-	} else if len(cert.IPAddresses) > 0 {
+	}
+
+	if len(cert.IPAddresses) > 0 {
 		if !match([]string{cert.IPAddresses[0].String()}, b.ip) {
 			return false
 		}
