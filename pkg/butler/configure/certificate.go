@@ -3,8 +3,14 @@ package configure
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/asn1"
+	"encoding/pem"
 	"fmt"
+	"net"
 	"os/exec"
 	"syscall"
 	"time"
@@ -23,7 +29,7 @@ import (
 func (b *Bmc) certificateSetup() (bool, error) {
 
 	// Retrieve current cert(s)
-	certs, err := b.bmc.CurrentHTTPSCert()
+	certs, csrCapability, err := b.bmc.CurrentHTTPSCert()
 	if err != nil {
 		return false, fmt.Errorf("Error retreiving current cert: %s", err)
 	}
@@ -48,8 +54,19 @@ func (b *Bmc) certificateSetup() (bool, error) {
 		"IPAddress": b.ip,
 	}).Trace("Current certificate to be updated.")
 
-	// Generate a CSR
-	csr, err := b.configure.GenerateCSR(b.config.HTTPSCert.Attributes)
+	var csr []byte
+	var privateKey []byte
+	var privateKeyFileName string
+
+	// BMC doesn't support generating a CSR
+	if !csrCapability {
+		// Generate a CSR locally
+		csr, privateKey, err = generateCsr(b.config.HTTPSCert.Attributes)
+	} else {
+		// Generate a CSR on the BMC
+		csr, err = b.configure.GenerateCSR(b.config.HTTPSCert.Attributes)
+	}
+
 	if err != nil {
 		return false, fmt.Errorf("CSR not generated: %s", err)
 	}
@@ -65,12 +82,12 @@ func (b *Bmc) certificateSetup() (bool, error) {
 	}
 
 	// upload signed cert
-	formFileName := fmt.Sprintf("%s.%s", b.config.HTTPSCert.Attributes.CommonName, "crt")
+	certFileName := fmt.Sprintf("%s.%s", b.config.HTTPSCert.Attributes.CommonName, "crt")
 
 	time.Sleep(time.Second * 1)
 
 	//// TODO:validate stdOut is a PEM block.
-	resetBMC, err := b.configure.UploadHTTPSCert([]byte(stdOut), formFileName)
+	resetBMC, err := b.configure.UploadHTTPSCert([]byte(stdOut), certFileName, privateKey, privateKeyFileName)
 	if err != nil {
 		return false, fmt.Errorf("Error uploading signed cert: %s", err)
 	}
@@ -78,7 +95,8 @@ func (b *Bmc) certificateSetup() (bool, error) {
 	return resetBMC, nil
 }
 
-// nolint: gocyclo
+// TODO
+// Write this method which will compare attributes.
 func (b *Bmc) certMatchConfig(certs []*x509.Certificate, config *cfgresources.HTTPSCertAttributes) bool {
 
 	// If there are no certs
@@ -92,37 +110,21 @@ func (b *Bmc) certMatchConfig(certs []*x509.Certificate, config *cfgresources.HT
 
 	if !match(pkix.Country, config.CountryCode) {
 		return false
-	}
-
-	if !match(pkix.Country, config.CountryCode) {
+	} else if !match(pkix.Country, config.CountryCode) {
 		return false
-	}
-
-	if !match([]string{pkix.CommonName}, config.CommonName) {
+	} else if !match([]string{pkix.CommonName}, config.CommonName) {
 		return false
-	}
-
-	if !match(pkix.Organization, config.OrganizationName) {
+	} else if !match(pkix.Organization, config.OrganizationName) {
 		return false
-	}
-
-	if !match(pkix.OrganizationalUnit, config.OrganizationUnit) {
+	} else if !match(pkix.OrganizationalUnit, config.OrganizationUnit) {
 		return false
-	}
-
-	if !match(pkix.Locality, config.Locality) {
+	} else if !match(pkix.Locality, config.Locality) {
 		return false
-	}
-
-	if !match(pkix.Province, config.StateName) {
+	} else if !match(pkix.Province, config.StateName) {
 		return false
-	}
-
-	if len(cert.IPAddresses) < 1 {
+	} else if len(cert.IPAddresses) < 1 {
 		return false
-	}
-
-	if len(cert.IPAddresses) > 0 {
+	} else if len(cert.IPAddresses) > 0 {
 		if !match([]string{cert.IPAddresses[0].String()}, b.ip) {
 			return false
 		}
@@ -204,4 +206,63 @@ func execCmd(c string, env map[string]string, args []string, stdIn []byte) (stdO
 	}
 
 	return stdOut, stdErr, exitCode
+}
+
+func generateCsr(c *cfgresources.HTTPSCertAttributes) (csr, privateKey []byte, err error) {
+
+	// https://oidref.com/1.2.840.113549.1.9.1
+	var oidEmailAddress = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}
+
+	// Generate private key
+	keyBytes, err := rsa.GenerateKey(rand.Reader, 1024)
+	if err != nil {
+		return csr, privateKey, err
+	}
+
+	// fill in the Subject values
+	subject := pkix.Name{
+		CommonName:         c.CommonName,
+		Country:            []string{c.CountryCode},
+		Province:           []string{c.StateName},
+		Locality:           []string{c.Locality},
+		Organization:       []string{c.OrganizationName},
+		OrganizationalUnit: []string{c.OrganizationUnit},
+	}
+
+	// Append Email address
+	rawSubject := subject.ToRDNSequence()
+	rawSubject = append(rawSubject, []pkix.AttributeTypeAndValue{
+		{Type: oidEmailAddress, Value: c.Email},
+	})
+
+	asn1Subj, _ := asn1.Marshal(rawSubject)
+	if err != nil {
+		return csr, privateKey, err
+	}
+
+	// Build the CSR template
+	template := x509.CertificateRequest{
+		RawSubject:         asn1Subj,
+		EmailAddresses:     []string{c.Email},
+		SignatureAlgorithm: x509.SHA256WithRSA,
+	}
+
+	// Add IPaddress
+	// TODO: identify if its an IP or a A record
+	template.IPAddresses = []net.IP{net.ParseIP(c.SubjectAltName)}
+
+	// Generate csr
+	csrBytes, err := x509.CreateCertificateRequest(rand.Reader, &template, keyBytes)
+	if err != nil {
+		return csr, privateKey, err
+	}
+
+	// PEM encode private key block
+	privateKey = pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(keyBytes)})
+
+	// PEM encode CSR block
+	csr = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
+
+	return csr, privateKey, err
+
 }
