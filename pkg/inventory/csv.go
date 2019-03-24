@@ -36,7 +36,7 @@ func (c *Csv) readCsv() []*CsvAsset {
 	log := c.Log
 
 	var csvAssets []*CsvAsset
-	csvFile, err := os.Open(c.Config.InventoryParams.File)
+	csvFile, err := os.Open(c.Config.Inventory.Csv.File)
 	if err != nil {
 		log.Error("Error: ", err)
 		os.Exit(1)

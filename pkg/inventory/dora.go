@@ -72,7 +72,7 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) (err error) {
 	component := "inventory"
 	log := d.Log
 
-	apiURL := d.Config.InventoryParams.APIURL
+	apiURL := d.Config.Inventory.Dora.URL
 	queryURL := fmt.Sprintf("%s/v1/scanned_ports?filter[port]=22&filter[ip]=", apiURL)
 
 	//collect IPAddresses used to look up the location
@@ -151,7 +151,7 @@ func (d *Dora) AssetRetrieve() func() {
 func (d *Dora) AssetIterBySerial() {
 
 	serials := d.Config.FilterParams.Serials
-	apiURL := d.Config.InventoryParams.APIURL
+	apiURL := d.Config.Inventory.Dora.URL
 
 	component := "inventory"
 
@@ -255,7 +255,7 @@ func (d *Dora) AssetIter() {
 	//Iter stuffs assets into an array of Assets
 	//Iter writes the assets array to the channel
 
-	apiURL := d.Config.InventoryParams.APIURL
+	apiURL := d.Config.Inventory.Dora.URL
 	component := "retrieveInventoryAssetsDora"
 
 	metric := d.MetricsEmitter

@@ -73,7 +73,7 @@ func (e *Enc) SetBMCInterfaces(attributes Attributes) Attributes {
 		return attributes
 	}
 
-	bmcNicPrefixes := e.Config.InventoryParams.BMCNicPrefix
+	bmcNicPrefixes := e.Config.Inventory.Enc.BMCNicPrefix
 	for _, nic := range *attributes.NetworkInterfaces {
 		if stringHasPrefix(nic.Name, bmcNicPrefixes) && nic.IPAddress != "" {
 			attributes.BMCIPAddress = append(attributes.BMCIPAddress, nic.IPAddress)
@@ -155,7 +155,7 @@ func (e *Enc) SetChassisInstalled(serials string) {
 	//assetlookup inventory --set-chassis-installed FOO123,BAR123
 	cmdArgs := []string{"inventory", "--set-chassis-installed", serials}
 
-	encBin := e.Config.InventoryParams.EncExecutable
+	encBin := e.Config.Inventory.Enc.Bin
 	out, err := ExecCmd(encBin, cmdArgs)
 	if err != nil {
 		log.WithFields(logrus.Fields{
@@ -177,7 +177,7 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 	//assetlookup enc --serials FOO123,BAR123
 	cmdArgs := []string{"enc", "--serials", serials}
 
-	encBin := e.Config.InventoryParams.EncExecutable
+	encBin := e.Config.Inventory.Enc.Bin
 	out, err := ExecCmd(encBin, cmdArgs)
 	if err != nil {
 		log.WithFields(logrus.Fields{
@@ -267,7 +267,7 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 	//assetlookup enc --serials 192.168.1.1,192.168.1.2
 	cmdArgs := []string{"enc", "--ips", ips}
 
-	encBin := e.Config.InventoryParams.EncExecutable
+	encBin := e.Config.Inventory.Enc.Bin
 	out, err := ExecCmd(encBin, cmdArgs)
 	if err != nil {
 		log.WithFields(logrus.Fields{
@@ -375,7 +375,7 @@ func (e *Enc) encQueryByOffset(assetType string, offset int, limit int, location
 		cmdArgs = append(cmdArgs, location)
 	}
 
-	encBin := e.Config.InventoryParams.EncExecutable
+	encBin := e.Config.Inventory.Enc.Bin
 	out, err := ExecCmd(encBin, cmdArgs)
 	if err != nil {
 		log.WithFields(logrus.Fields{

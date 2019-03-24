@@ -79,7 +79,7 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 	inventoryChan = make(chan []asset.Asset, 5)
 
 	//determine inventory to fetch asset data.
-	inventorySource := runConfig.InventoryParams.Source
+	inventorySource := runConfig.Inventory.Source
 
 	//based on inventory source, invoke assetRetriever
 	var assetRetriever func()

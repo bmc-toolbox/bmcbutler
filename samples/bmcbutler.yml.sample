@@ -2,7 +2,6 @@ locations: ['fra4', 'ams4']
 butlersToSpawn: 1
 bmcCfgDir: /etc/bmcbutler/cfg
 credentials:
-  accounts:
   - Administrator: "foobar1"
   - Administrator: "hunter2"
   - user1: "barbar"
@@ -10,32 +9,31 @@ credentials:
   - root: "calvin"
   - ADMIN: "ADMIN"
 metrics:
-  clients:
-    client: graphite
-    graphite:
-      host: graphite.example.foo
-      port: 3002
-      prefix: "foo.bar.bmc.butler"
-      flushInterval: 5m
+  graphite:
+    host: graphite.example.foo
+    port: 3002
+    prefix: "foo.bar.bmc.butler"
+    flushInterval: 5m
 # The signer is an executable that is passed CSRs via STDIN
 # and expected to return signed certs on STDOUT
-# In this case a signer (github.com/square/certstrap) was patched for the job.
-cert:
-   signer:
-     client: fake
-     fake:
-        passphrase: secret
-        bin: /usr/bin/certstrap
-        args: ["--depot-path", "/root/ssl/out/", "sign", "--CA", "CertAuth"]
+# The currently supported signer (look under helpers), uses https://github.com/Netflix/lemur
+cert_signer:
+  lemur:
+     authority: Test3
+     validity_years: 1
+     owner_email: example@foobar.co
+     auth_token: adszdsarfqwerqwerasdfdfrtqwtrretg.asdfwerfsdf123rtg
+     endpoint: https://lemur/api/1/certificates
+     bin: /usr/bin/lemur_csr_signer
+  # fake:
+  #  passphrase: secret
+  #  bin: /usr/bin/certstrap
+  #  args: ["--depot-path", "/root/ssl/out/", "sign", "--CA", "CertAuth"]
 inventory:
-  configure:
-    source: csv
-    enc:
-      bin: /usr/bin/assetlookup
-      bmcNicPrefix: ["oa", "ilo"]
-    dora:
-      apiURL: http://dora.example.com/api
-    csv:
-      file: /etc/bmcbutler/inventory.csv
-  setup:
-    source: needSetup
+  enc:
+    bin: /usr/bin/assetlookup
+    bmcNicPrefix: ["oa", "ilo"]
+  #dora:
+  #  apiURL: http://dora.example.com/api
+  #csv:
+  #  file: /etc/bmcbutler/inventory.csv

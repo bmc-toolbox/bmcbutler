@@ -69,13 +69,13 @@ func (m *Emitter) Init() {
 	go m.store()
 
 	//setup metrics client based on config
-	client := m.Config.MetricsParams.Client
+	client := m.Config.Metrics.Client
 	switch client {
 	case "graphite":
-		host = m.Config.MetricsParams.Host
-		port = m.Config.MetricsParams.Port
-		prefix = m.Config.MetricsParams.Prefix
-		flushInterval = m.Config.MetricsParams.FlushInterval
+		host = m.Config.Metrics.Graphite.Host
+		port = m.Config.Metrics.Graphite.Port
+		prefix = m.Config.Metrics.Graphite.Prefix
+		flushInterval = m.Config.Metrics.Graphite.FlushInterval
 
 		addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("%s:%d", host, port))
 		if err != nil {

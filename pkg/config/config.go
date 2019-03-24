@@ -16,6 +16,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -25,49 +26,86 @@ import (
 
 // Params struct holds all bmcbutler configuration parameters
 type Params struct {
-	ButlersToSpawn  int
-	Credentials     []map[string]string
-	CfgFile         string
-	Configure       bool //indicates configure was invoked
-	DryRun          bool //when set, don't carry out any actions, just log.
-	Setup           bool //indicates setup was invoked
-	Execute         bool //indicates execute was invoked
-	FilterParams    *FilterParams
-	SignerParams    *SignerParams
-	InventoryParams *InventoryParams
-	IgnoreLocation  bool
-	Locations       []string
-	Resources       []string
-	MetricsParams   *MetricsParams
-	Version         string
-	Debug           bool
-	Trace           bool
+	ButlersToSpawn int                 `mapstructure:"butlersToSpawn"`
+	Credentials    []map[string]string `mapstructure:"credentials"`
+	CertSigner     *CertSigner         `mapstructure:"cert_signer"`
+	Inventory      *Inventory          `mapstructure:"inventory"`
+	Locations      []string            `mapstructure:"locations"`
+	Metrics        *Metrics            `mapstructure:"metrics"`
+	FilterParams   *FilterParams
+	CfgFile        string
+	Configure      bool //indicates configure was invoked
+	DryRun         bool //when set, don't carry out any actions, just log.
+	Execute        bool //indicates execute was invoked
+	IgnoreLocation bool
+	Resources      []string
+	Version        string
+	Debug          bool
+	Trace          bool
 }
 
-// InventoryParams struct holds inventory configuration parameters.
-type InventoryParams struct {
-	Source        string //dora, csv, enc
-	EncExecutable string
-	BMCNicPrefix  []string
-	APIURL        string
-	File          string
+// Inventory struct holds inventory configuration parameters.
+type Inventory struct {
+	Source string //dora, csv, enc
+	Enc    *Enc   `mapstructure:"enc"`
+	Dora   *Dora  `mapstructure:"dora"`
+	Csv    *Csv   `mapstrucure:"csv"`
 }
 
-// MetricsParams struct holds metrics emitter configuration parameters.
-type MetricsParams struct {
-	Client        string //The metrics client.
-	Host          string
-	Port          int
-	Prefix        string
-	FlushInterval time.Duration
+// Enc declares config for a ENC as an inventory source
+type Enc struct {
+	Bin          string   `mapstructure:"bin"`
+	BMCNicPrefix []string `mapstructure:"bmcNicPrefix"`
 }
 
-// SignerParams struct holds SSL/TLS cert signing attributes.
-type SignerParams struct {
-	Client     string
-	Passphrase string
-	Bin        string
-	Args       []string
+// Csv declares config for a CSV file as an inventory source
+type Csv struct {
+	File string `mapstructure:"file"`
+}
+
+// Dora declares config for Dora as a inventory source.
+type Dora struct {
+	URL string `mapstructure:"url"`
+}
+
+// Metrics struct holds metrics emitter configuration parameters.
+type Metrics struct {
+	Client   string    //The metrics client.
+	Graphite *Graphite `mapstructure:"graphite"`
+}
+
+// Graphite struct holds attributes for the Graphite metrics emitter
+type Graphite struct {
+	Host          string        `mapstructure:"host"`
+	Port          int           `mapstructure:"port"`
+	Prefix        string        `mapstructure:"prefix"`
+	FlushInterval time.Duration `mapstructure:"flushInterval"`
+}
+
+// CertSigner struct
+type CertSigner struct {
+	Client      string
+	FakeSigner  *FakeSigner  `mapstructure:"fake"`
+	LemurSigner *LemurSigner `mapstructure:"lemur"`
+}
+
+// FakeSigner struct holds SSL/TLS cert signing attributes.
+type FakeSigner struct {
+	Client     string   `mapstructure:"client"`
+	Passphrase string   `mapstructure:"passphrase"`
+	Bin        string   `mapstructure:"bin"`
+	Args       []string `mapstructure:"args"`
+}
+
+// LemurSigner struct holds SSL/TLS cert signing attributes.
+type LemurSigner struct {
+	Client        string `mapstructure:"client"`
+	Authority     string `mapstructure:"authority"`
+	ValidityYears string `mapstructure:"validity_years"`
+	Owner         string `mapstructure:"owner_email"`
+	Key           string `mapstructure:"auth_token"`
+	Bin           string `mapstructure:"bin"`
+	Endpoint      string `mapstructure:"endpoint"`
 }
 
 // FilterParams struct holds various asset filter arguments that may be passed via cli args.
@@ -85,9 +123,6 @@ func (p *Params) Load(cfgFile string) {
 
 	//FilterParams holds the configure/setup/execute related host filter cli args.
 	p.FilterParams = &FilterParams{}
-	p.MetricsParams = &MetricsParams{}
-	p.InventoryParams = &InventoryParams{}
-	p.SignerParams = &SignerParams{}
 
 	//read in config file with viper
 	if cfgFile != "" {
@@ -106,72 +141,62 @@ func (p *Params) Load(cfgFile string) {
 		viper.AddConfigPath(fmt.Sprintf("%s/.bmcbutler", home))
 	}
 
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("Error reading config:", viper.ConfigFileUsed())
-		fmt.Println("  ->", err)
-		os.Exit(1)
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	//The config file viper is using.
-	p.CfgFile = viper.ConfigFileUsed()
-
-	//Read in metrics config
-	p.MetricsParams.Client = viper.GetString("metrics.clients.client")
-	switch p.MetricsParams.Client {
-	case "graphite":
-		p.MetricsParams.Host = viper.GetString("metrics.clients.graphite.host")
-		p.MetricsParams.Port = viper.GetInt("metrics.clients.graphite.port")
-		p.MetricsParams.Prefix = viper.GetString("metrics.clients.graphite.prefix")
-		p.MetricsParams.FlushInterval = viper.GetDuration("metrics.clients.graphite.flushinterval")
+	err = viper.Unmarshal(&p)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	//Read in signer config
-	p.SignerParams.Client = viper.GetString("cert.signer.client")
-	switch p.SignerParams.Client {
-	case "fake":
-		p.SignerParams.Passphrase = viper.GetString("cert.signer.fake.passphrase")
-		p.SignerParams.Args = viper.GetStringSlice("cert.signer.fake.args")
-		p.SignerParams.Bin = viper.GetString("cert.signer.fake.bin")
-
+	// metrics config
+	if p.Metrics != nil {
+		if p.Metrics.Graphite != nil {
+			p.Metrics.Client = "graphite"
+		} else {
+			log.Println("[WARN] Invalid metrics client declared in config.")
+		}
 	}
 
-	//Inventory to read assets from
-	p.InventoryParams.Source = viper.GetString("inventory.configure.source")
-	switch p.InventoryParams.Source {
-	case "dora":
-		p.InventoryParams.APIURL = viper.GetString("inventory.configure.dora.apiURL")
-	case "csv":
-		p.InventoryParams.File = viper.GetString("inventory.configure.csv.file")
-	case "enc":
-		p.InventoryParams.EncExecutable = viper.GetString("inventory.configure.enc.bin")
-		p.InventoryParams.BMCNicPrefix = viper.GetStringSlice("inventory.configure.enc.bmcNicPrefix")
+	//signer config
+	if p.CertSigner != nil {
+		if p.CertSigner.FakeSigner != nil {
+			p.CertSigner.Client = "fakeSigner"
+
+		} else if p.CertSigner.LemurSigner != nil {
+			p.CertSigner.Client = "lemurSigner"
+
+		} else {
+			log.Println("[WARN] Invalid cert_signer declared in config.")
+		}
+	}
+
+	//inventory config
+	if p.Inventory != nil {
+
+		if p.Inventory.Enc != nil {
+			p.Inventory.Source = "enc"
+
+		} else if p.Inventory.Dora != nil {
+			p.Inventory.Source = "dora"
+
+		} else if p.Inventory.Csv != nil {
+			p.Inventory.Source = "csv"
+
+		} else {
+			log.Println("[WARN] Invalid inventory source declared in configuration.")
+		}
 	}
 
 	//Butlers to spawn
-	p.ButlersToSpawn = viper.GetInt("butlersToSpawn")
 	if p.ButlersToSpawn == 0 {
 		p.ButlersToSpawn = 5
 	}
 
-	//Locations this bmcbutler will action assets for,
-	//assets in locations not in this slice are ignored.
-	p.Locations = viper.GetStringSlice("locations")
-
-	//store credentials, the way bmclogin expects them.
-	credentials := viper.GetStringMap("credentials")
-
-	_, keyExists := credentials["accounts"]
-	if !keyExists {
-		fmt.Println("Error: expected credentials -> accounts config not declared.")
+	if p.Credentials == nil {
+		log.Println("[Error] No credentials declared in configuration.")
 		os.Exit(1)
 	}
-
-	for _, m := range credentials["accounts"].([]interface{}) {
-		for k, v := range m.(map[interface{}]interface{}) {
-			p.Credentials = append(p.Credentials, map[string]string{k.(string): v.(string)})
-		}
-
-	}
-
 }
