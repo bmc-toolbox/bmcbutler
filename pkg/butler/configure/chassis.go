@@ -64,9 +64,6 @@ func (b *BmcChassis) Apply() { //nolint: gocyclo
 		resources = b.configure.Resources()
 	}
 
-	b.vendor = b.bmc.Vendor()
-	b.model, _ = b.bmc.Model()
-	b.serial, _ = b.bmc.Serial()
 	b.ip = b.asset.IPAddress
 
 	var failed, success []string

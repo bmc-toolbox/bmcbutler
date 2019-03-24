@@ -64,7 +64,6 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		asset.Type = "server"
 		asset.Model = bmc.BmcType()
 		asset.Vendor = bmc.Vendor()
-
 		// Required for TLS cert CN
 		asset.Serial, _ = bmc.Serial()
 
