@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"net"
 	"os/exec"
+	"strings"
 	"syscall"
 	"time"
 
@@ -28,14 +29,27 @@ import (
 // POST https://10.193.251.25/data?set=iDracReset:1
 func (b *Bmc) certificateSetup() (bool, error) {
 
+	var commonName string
+	if b.config.HTTPSCert.Attributes.CommonName == "" {
+		return false, fmt.Errorf("Declared certificate configuration requires a commonName")
+	}
+
+	commonName = b.config.HTTPSCert.Attributes.CommonName
+
+	if b.butlerConfig.CertSigner == nil {
+		return false, fmt.Errorf("No cert signer declared in butler configuration")
+	}
+
 	// Retrieve current cert(s)
 	certs, csrCapability, err := b.bmc.CurrentHTTPSCert()
 	if err != nil {
 		return false, fmt.Errorf("Error retreiving current cert: %s", err)
 	}
 
+	invalidReason, valid := b.validateCert(certs, b.config.HTTPSCert.Attributes)
+
 	// Compare if the current cert matches declared config.
-	if b.certMatchConfig(certs, b.config.HTTPSCert.Attributes) {
+	if valid {
 
 		b.logger.WithFields(logrus.Fields{
 			"Vendor":    b.vendor,
@@ -52,7 +66,8 @@ func (b *Bmc) certificateSetup() (bool, error) {
 		"Model":     b.model,
 		"Serial":    b.serial,
 		"IPAddress": b.ip,
-	}).Trace("Current certificate to be updated.")
+		"Cause":     invalidReason,
+	}).Trace("Current certificate does not match configuration.")
 
 	var csr []byte
 	var privateKey []byte
@@ -71,23 +86,20 @@ func (b *Bmc) certificateSetup() (bool, error) {
 		return false, fmt.Errorf("CSR not generated: %s", err)
 	}
 
-	// sign the CSR with the configured signer.
-	cmd := b.butlerConfig.SignerParams.Bin
-	args := b.butlerConfig.SignerParams.Args
-	env := map[string]string{"PASSPHRASE": b.butlerConfig.SignerParams.Passphrase}
-
-	stdOut, stdErr, exitCode := execCmd(cmd, env, args, csr)
-	if exitCode != 0 {
-		return false, fmt.Errorf("Error signing CSR: %s", stdErr)
+	// sign CSR
+	crt, err := b.signCSR(csr, commonName)
+	if err != nil {
+		return false, err
 	}
 
 	// upload signed cert
-	certFileName := fmt.Sprintf("%s.%s", b.config.HTTPSCert.Attributes.CommonName, "crt")
+	// TODO: This cert format is required only for the Idracs, move into bmclib
+	certFileName := fmt.Sprintf("%s.%s", commonName, "crt")
 
 	time.Sleep(time.Second * 1)
 
 	//// TODO:validate stdOut is a PEM block.
-	resetBMC, err := b.configure.UploadHTTPSCert([]byte(stdOut), certFileName, privateKey, privateKeyFileName)
+	resetBMC, err := b.configure.UploadHTTPSCert(crt, certFileName, privateKey, privateKeyFileName)
 	if err != nil {
 		return false, fmt.Errorf("Error uploading signed cert: %s", err)
 	}
@@ -95,58 +107,129 @@ func (b *Bmc) certificateSetup() (bool, error) {
 	return resetBMC, nil
 }
 
-// TODO
-// Write this method which will compare attributes.
-func (b *Bmc) certMatchConfig(certs []*x509.Certificate, config *cfgresources.HTTPSCertAttributes) bool {
+// signCSR signs the given csr with the configured signer
+func (b *Bmc) signCSR(csr []byte, commonName string) ([]byte, error) {
+
+	config := b.butlerConfig.CertSigner
+
+	var cmd string
+	var args []string
+	var env = make(map[string]string)
+
+	// if we're in trace logging, pass the debugging env var to the signer.
+	if b.butlerConfig.Trace {
+		env["DEBUG_SIGNER"] = "1"
+	}
+
+	// based on configuration, setup cmd, args, env vars
+	switch config.Client {
+	case "fakeSigner":
+		cmd = config.FakeSigner.Bin
+		args = config.FakeSigner.Args
+		env["PASSPHRASE"] = config.FakeSigner.Passphrase
+
+	case "lemurSigner":
+		cmd = config.LemurSigner.Bin
+		env["KEY"] = config.LemurSigner.Key
+		env["ENDPOINT"] = config.LemurSigner.Endpoint
+		a := []string{
+			"--valid-years", config.LemurSigner.ValidityYears,
+			"--authority", config.LemurSigner.Authority,
+			"--owner", config.LemurSigner.Owner,
+			"--common-name", commonName,
+		}
+
+		args = append(args, a...)
+	default:
+		return []byte{}, fmt.Errorf("Unknown cert signer declared in butler config")
+	}
+
+	if cmd == "" {
+		return []byte{}, fmt.Errorf("No signer binary declared in butler config")
+	}
+
+	b.logger.WithFields(logrus.Fields{
+		"component": "signCSR",
+		"signer":    config.Client,
+		"cmd":       cmd,
+		//"env":       env,
+		"args": strings.Join(args, " "),
+	}).Trace("Invoked cert signer.")
+
+	// sign the CSR with the configured signer.
+	stdOut, stdErr, exitCode := execCmd(cmd, env, args, csr)
+	if exitCode != 0 {
+		return []byte{}, fmt.Errorf("Error signing CSR: %s", stdErr)
+	}
+
+	return []byte(stdOut), nil
+}
+
+// Validate a x509 cert attributes with declared configuration
+// return a string, bool - based on if the cert attributes aren't valid or is/will expired.
+// nolint: gocyclo
+func (b *Bmc) validateCert(certs []*x509.Certificate, config *cfgresources.HTTPSCertAttributes) (string, bool) {
 
 	// If there are no certs
 	if len(certs) == 0 {
-		return false
+		return "No certs present.", false
 	}
 
 	cert := certs[0]
 
+	expires := cert.NotAfter
+	if config.RenewBeforeExpiry == 0 {
+		config.RenewBeforeExpiry, _ = time.ParseDuration("720h")
+	}
+
+	if expires.Sub(time.Now()) < config.RenewBeforeExpiry {
+		return fmt.Sprintf("Cert expires in %s", time.Until(expires).String()), false
+	}
+
+	// The email address field isn't validated, since HP ILOs don't seem to support it.
 	pkix := cert.Subject
 
 	if !match(pkix.Country, config.CountryCode) {
-		return false
-	} else if !match(pkix.Country, config.CountryCode) {
-		return false
+		return fmt.Sprintf("Country Code mismatch, has %s want %s", pkix.Country, config.CountryCode), false
+
 	} else if !match([]string{pkix.CommonName}, config.CommonName) {
-		return false
+		return fmt.Sprintf("CN mismatch, has %s want %s", pkix.CommonName, config.CommonName), false
+
 	} else if !match(pkix.Organization, config.OrganizationName) {
-		return false
+		return fmt.Sprintf("Organization mismatch, has %s want %s", pkix.Organization, config.OrganizationName), false
+
 	} else if !match(pkix.OrganizationalUnit, config.OrganizationUnit) {
-		return false
+		return fmt.Sprintf("OU mismatch, has %s want %s", pkix.OrganizationalUnit, config.OrganizationUnit), false
+
 	} else if !match(pkix.Locality, config.Locality) {
-		return false
+		return fmt.Sprintf("Locality mismatch, has %s want %s", pkix.Locality, config.Locality), false
+
 	} else if !match(pkix.Province, config.StateName) {
-		return false
+		return fmt.Sprintf("Province mismatch, has %s want %s", pkix.Province, config.StateName), false
+
 	} else if len(cert.IPAddresses) < 1 {
-		return false
+		return fmt.Sprintf("Subject Alt Name has no IPAddresses, want %s", b.ip), false
+
 	} else if len(cert.IPAddresses) > 0 {
 		if !match([]string{cert.IPAddresses[0].String()}, b.ip) {
-			return false
+			return fmt.Sprintf("Subject Alt Name IPAddress mismatch, has %s want %s", cert.IPAddresses[0].String(), b.ip), false
 		}
 	}
 
-	return true
+	return "", true
 }
 
 func match(field []string, config string) bool {
 
 	// As of now we don't support > 1 element in the slice
 	if len(field) != 1 {
-		//fmt.Printf(">> %+v\n", field)
 		return false
 	}
 
 	if field[0] == config {
-		//fmt.Printf(">>>%s == %s<<\n", field[0], config)
 		return true
 	}
 
-	//fmt.Printf(">>>%s != %s<<\n", field[0], config)
 	return false
 }
 
