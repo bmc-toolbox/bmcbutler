@@ -247,6 +247,20 @@ func (b *BmcChassisSetup) addBladeBmcAdmins() (err error) {
 	component := "addBladeBmcAdmins"
 	cfg := b.config.AddBladeBmcAdmins
 
+	//retrieve list of blades in chassis
+	blades, err := b.chassis.Blades()
+	if len(blades) < 1 || err != nil {
+		b.log.WithFields(logrus.Fields{
+			"component": component,
+			"Vendor":    b.vendor,
+			"Model":     b.model,
+			"Serial":    b.serial,
+			"IPAddress": b.ip,
+			"Error":     err,
+		}).Debug("Chassis has no blades/Unable to retrieve list of blades.")
+		return nil
+	}
+
 	for _, user := range cfg {
 		if user.Name == "" {
 			return fmt.Errorf("AddbladeBmcAdmins resource expects parameter: Name")
@@ -283,6 +297,20 @@ func (b *BmcChassisSetup) addBladeBmcAdmins() (err error) {
 func (b *BmcChassisSetup) removeBladeBmcUsers() (err error) {
 
 	component := "removeBladeBmcUsers"
+
+	//retrieve list of blades in chassis
+	blades, err := b.chassis.Blades()
+	if len(blades) < 1 || err != nil {
+		b.log.WithFields(logrus.Fields{
+			"component": component,
+			"Vendor":    b.vendor,
+			"Model":     b.model,
+			"Serial":    b.serial,
+			"IPAddress": b.ip,
+			"Error":     err,
+		}).Debug("Chassis has no blades/Unable to list blades in chassis.")
+		return nil
+	}
 
 	cfg := b.config.RemoveBladeBmcUsers
 	for _, user := range cfg {
