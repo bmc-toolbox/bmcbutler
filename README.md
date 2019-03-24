@@ -92,6 +92,7 @@ To have this setup,
 2. Declare a signer executable in the bmcbutler config, see [bmcbutler.yml sample](../master/samples/bmcbutler.yml.sample) 
 
 The signer executable is required to accept a CSR through STDIN and spit out the signed cert through STDOUT.
+An example signer that uses [lemur](https://github.com/Netflix/lemur) can be found under [helpers](../master/helpers)
 
 ##### Run
 
