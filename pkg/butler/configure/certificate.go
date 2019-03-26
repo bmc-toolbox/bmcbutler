@@ -29,12 +29,13 @@ import (
 // POST https://10.193.251.25/data?set=iDracReset:1
 func (b *Bmc) certificateSetup() (bool, error) {
 
-	var commonName string
 	if b.config.HTTPSCert.Attributes.CommonName == "" {
 		return false, fmt.Errorf("Declared certificate configuration requires a commonName")
 	}
 
-	commonName = b.config.HTTPSCert.Attributes.CommonName
+	// replace any underscores with hypens
+	b.config.HTTPSCert.Attributes.CommonName = strings.Replace(b.config.HTTPSCert.Attributes.CommonName, "_", "-", -1)
+	commonName := b.config.HTTPSCert.Attributes.CommonName
 
 	if b.butlerConfig.CertSigner == nil {
 		return false, fmt.Errorf("No cert signer declared in butler configuration")
@@ -46,7 +47,7 @@ func (b *Bmc) certificateSetup() (bool, error) {
 		return false, fmt.Errorf("Error retreiving current cert: %s", err)
 	}
 
-	invalidReason, valid := b.validateCert(certs, b.config.HTTPSCert.Attributes)
+	invalidReason, valid := b.validateCert(certs, b.config.HTTPSCert)
 
 	// Compare if the current cert matches declared config.
 	if valid {
@@ -92,13 +93,18 @@ func (b *Bmc) certificateSetup() (bool, error) {
 		return false, err
 	}
 
+	// validate PEM data.
+	block, _ := pem.Decode(crt)
+	if block == nil {
+		return false, fmt.Errorf("CSR signer returned an invalid PEM block")
+	}
+
 	// upload signed cert
 	// TODO: This cert format is required only for the Idracs, move into bmclib
 	certFileName := fmt.Sprintf("%s.%s", commonName, "crt")
 
-	time.Sleep(time.Second * 1)
+	time.Sleep(time.Second * 2)
 
-	//// TODO:validate stdOut is a PEM block.
 	resetBMC, err := b.configure.UploadHTTPSCert(crt, certFileName, privateKey, privateKeyFileName)
 	if err != nil {
 		return false, fmt.Errorf("Error uploading signed cert: %s", err)
@@ -168,7 +174,7 @@ func (b *Bmc) signCSR(csr []byte, commonName string) ([]byte, error) {
 // Validate a x509 cert attributes with declared configuration
 // return a string, bool - based on if the cert attributes aren't valid or is/will expired.
 // nolint: gocyclo
-func (b *Bmc) validateCert(certs []*x509.Certificate, config *cfgresources.HTTPSCertAttributes) (string, bool) {
+func (b *Bmc) validateCert(certs []*x509.Certificate, config *cfgresources.HTTPSCert) (string, bool) {
 
 	// If there are no certs
 	if len(certs) == 0 {
@@ -186,40 +192,73 @@ func (b *Bmc) validateCert(certs []*x509.Certificate, config *cfgresources.HTTPS
 		return fmt.Sprintf("Cert expires in %s", time.Until(expires).String()), false
 	}
 
-	// The email address field isn't validated, since HP ILOs don't seem to support it.
 	pkix := cert.Subject
 
-	if !match(pkix.Country, config.CountryCode) {
-		return fmt.Sprintf("Country Code mismatch, has %s want %s", pkix.Country, config.CountryCode), false
+	// The attributes declared in configuration.yml
+	attributes := config.Attributes
 
-	} else if !match([]string{pkix.CommonName}, config.CommonName) {
-		return fmt.Sprintf("CN mismatch, has %s want %s", pkix.CommonName, config.CommonName), false
+	// For every attribute declared to be validated,
+	// validate the attribute in the x509 cert matches the one in our configuration.
+	// The email address field isn't validated, since HP ILOs don't seem to include it as part of the CSR.
+	for _, attribute := range config.ValidateAttributes {
 
-	} else if !match(pkix.Organization, config.OrganizationName) {
-		return fmt.Sprintf("Organization mismatch, has %s want %s", pkix.Organization, config.OrganizationName), false
+		b.logger.WithFields(logrus.Fields{
+			"component": "validateCert",
+			"attribute": attribute,
+		}).Trace("Comparing attribute.")
 
-	} else if !match(pkix.OrganizationalUnit, config.OrganizationUnit) {
-		return fmt.Sprintf("OU mismatch, has %s want %s", pkix.OrganizationalUnit, config.OrganizationUnit), false
+		switch attribute {
+		case "commonName":
+			if !match([]string{pkix.CommonName}, attributes.CommonName) {
+				return fmt.Sprintf("CN mismatch, has %s want %s", pkix.CommonName, attributes.CommonName), false
+			}
+		case "organizationName":
+			if !match(pkix.Organization, attributes.OrganizationName) {
+				return fmt.Sprintf("Organization mismatch, has %s want %s", pkix.Organization, attributes.OrganizationName), false
+			}
+		case "organizationUnit":
+			if !match(pkix.OrganizationalUnit, attributes.OrganizationUnit) {
+				return fmt.Sprintf("OU mismatch, has %s want %s", pkix.OrganizationalUnit, attributes.OrganizationUnit), false
+			}
+		case "locality":
+			if !match(pkix.Locality, attributes.Locality) {
+				return fmt.Sprintf("Locality mismatch, has %s want %s", pkix.Locality, attributes.Locality), false
+			}
+		case "stateName":
+			if !match(pkix.Province, attributes.StateName) {
+				return fmt.Sprintf("Province mismatch, has %s want %s", pkix.Province, attributes.StateName), false
+			}
+		case "countryCode":
+			if !match(pkix.Country, attributes.CountryCode) {
+				return fmt.Sprintf("Country Code mismatch, has %s want %s", pkix.Country, attributes.CountryCode), false
+			}
+		case "subjectAltName":
+			// if the config declares a subject Alt name - for now we expect it to be an IPAddress
+			if attributes.SubjectAltName != "" {
+				// x509 cert has IPAddress listed
+				if len(cert.IPAddresses) > 0 {
+					if !match([]string{cert.IPAddresses[0].String()}, b.ip) {
+						return fmt.Sprintf("Subject Alt Name IPAddress mismatch, has %s want %s", cert.IPAddresses[0].String(), b.ip), false
+					}
+					continue
+				}
 
-	} else if !match(pkix.Locality, config.Locality) {
-		return fmt.Sprintf("Locality mismatch, has %s want %s", pkix.Locality, config.Locality), false
-
-	} else if !match(pkix.Province, config.StateName) {
-		return fmt.Sprintf("Province mismatch, has %s want %s", pkix.Province, config.StateName), false
-
-	} else if len(cert.IPAddresses) < 1 {
-		return fmt.Sprintf("Subject Alt Name has no IPAddresses, want %s", b.ip), false
-
-	} else if len(cert.IPAddresses) > 0 {
-		if !match([]string{cert.IPAddresses[0].String()}, b.ip) {
-			return fmt.Sprintf("Subject Alt Name IPAddress mismatch, has %s want %s", cert.IPAddresses[0].String(), b.ip), false
+				return fmt.Sprintf("Subject Alt Name has no IPAddresses, want %s", b.ip), false
+			}
 		}
+
 	}
 
 	return "", true
 }
 
+// match compares the subject fields in the certificate vs the declared configuration.
 func match(field []string, config string) bool {
+
+	// !!!!! if a configuration field is empty, this method assumes the user has not declared this attribute !!!!!
+	if config == "" {
+		return true
+	}
 
 	// As of now we don't support > 1 element in the slice
 	if len(field) != 1 {
@@ -297,7 +336,7 @@ func generateCsr(c *cfgresources.HTTPSCertAttributes) (csr, privateKey []byte, e
 	var oidEmailAddress = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}
 
 	// Generate private key
-	keyBytes, err := rsa.GenerateKey(rand.Reader, 1024)
+	keyBytes, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return csr, privateKey, err
 	}
@@ -326,7 +365,6 @@ func generateCsr(c *cfgresources.HTTPSCertAttributes) (csr, privateKey []byte, e
 	// Build the CSR template
 	template := x509.CertificateRequest{
 		RawSubject:         asn1Subj,
-		EmailAddresses:     []string{c.Email},
 		SignatureAlgorithm: x509.SHA256WithRSA,
 	}
 
