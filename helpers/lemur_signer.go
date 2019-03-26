@@ -25,6 +25,23 @@ type Request struct {
 	Debug         bool   `json:"-"`
 	CSR           string `json:"csr"`
 	Authority     `json:"authority"`
+	Extensions    `json:"extensions"`
+}
+
+// Extensions is part of the Request payload
+type Extensions struct {
+	SubjectAltNames `json:"subAltNames"`
+}
+
+// SubjectAltNames is part of the Request payload
+type SubjectAltNames struct {
+	Names []Names `json:"names"`
+}
+
+// Names is part of the Request payload
+type Names struct {
+	NameType string `json:"nameType"`
+	Value    string `json:"value"`
 }
 
 // Response struct is the response payload.
@@ -81,6 +98,8 @@ func main() {
 		csr = append(csr, []byte(fmt.Sprintln(scanner.Text()))...)
 	}
 
+	extensions := Extensions{SubjectAltNames: SubjectAltNames{Names: []Names{Names{NameType: "DNSName", Value: *commonName}}}}
+
 	a := Authority{Name: *authority}
 	r := Request{
 		Owner:         *owner,
@@ -90,6 +109,7 @@ func main() {
 		Key:           key,
 		Endpoint:      endpoint,
 		CSR:           string(csr),
+		Extensions:    extensions,
 	}
 
 	if debug == "1" {
@@ -142,11 +162,16 @@ func sign(request Request) (string, error) {
 		return "", err
 	}
 
+	defer resp.Body.Close()
+
 	buf, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
-	resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("Lemur API returned non 200 response: %d, response body: %s", resp.StatusCode, string(buf))
+	}
 
 	if request.Debug {
 		dump, err := httputil.DumpResponse(resp, true)
