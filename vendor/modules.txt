@@ -1,4 +1,4 @@
-# github.com/bmc-toolbox/bmclib v0.2.4-0.20190318124048-7730ff8545fd
+# github.com/bmc-toolbox/bmclib v0.2.4-0.20190326163319-cf88bc8134f4
 github.com/bmc-toolbox/bmclib/devices
 github.com/bmc-toolbox/bmclib/logging
 github.com/bmc-toolbox/bmclib/cfgresources
