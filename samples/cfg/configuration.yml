@@ -45,14 +45,19 @@ ldapGroup:
 # a CSR is generated on the BMC and passed to the signer (see bmcbutler.yml)
 # the signed cert is then uploaded to the BMC.
 httpsCert:
-   generateCSR: true
+   renewBeforeExpiry: 720h # accepts a time.Duration string
+   # by default only the cert expiry period is checked, to check other attributes list them here.
+   validateAttributes: 
+     - commonName
+     - organizationName
+     - subjectAltName 
    attributes:
      commonName: <%= serial %>.bmc.example.com #serial as part of CN
-     organizationName: example.com
-     organizationUnit: Foo
-     locality: FooBar
-     stateName: La La
-     countryCode: NZ
+     organizationName: Acme B.V.
+     organizationUnit: foo
+     locality: Amsterdam
+     stateName: Noord-Holland
+     countryCode: NL
      email: admin@example.com
      subjectAltName: <%= ipaddress %> # IPAddress as SAN.
 ntp:
