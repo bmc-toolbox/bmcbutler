@@ -1,7 +1,7 @@
 module github.com/bmc-toolbox/bmcbutler
 
 require (
-	github.com/bmc-toolbox/bmclib v0.2.4-0.20190327090822-8a9036b3f214
+	github.com/bmc-toolbox/bmclib v0.2.4-0.20190327090610-548aa1b6aee8
 	github.com/bmc-toolbox/bmclogin v0.0.2
 	github.com/cyberdelia/go-metrics-graphite v0.0.0-20161219230853-39f87cc3b432
 	github.com/fatih/structs v1.1.0 // indirect
