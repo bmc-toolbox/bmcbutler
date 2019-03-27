@@ -33,6 +33,8 @@ github.com/bmc-toolbox/bmclib v0.2.4-0.20190324214341-3c984c866a1a h1:fZ+kDPtZ6w
 github.com/bmc-toolbox/bmclib v0.2.4-0.20190324214341-3c984c866a1a/go.mod h1:z0DjdwjcklfuNQPChtprwJblNR3XJriU0fffx1aDSIs=
 github.com/bmc-toolbox/bmclib v0.2.4-0.20190326163319-cf88bc8134f4 h1:HmAizXrHBCMh5L1xolRW6kI9B4P0YWyBo0oCjbgsRx4=
 github.com/bmc-toolbox/bmclib v0.2.4-0.20190326163319-cf88bc8134f4/go.mod h1:z0DjdwjcklfuNQPChtprwJblNR3XJriU0fffx1aDSIs=
+github.com/bmc-toolbox/bmclib v0.2.4-0.20190327090822-8a9036b3f214 h1:iayTtx9Jybpeoovy0co6EqhDb+8/6Iw55A9nQ0c7wlY=
+github.com/bmc-toolbox/bmclib v0.2.4-0.20190327090822-8a9036b3f214/go.mod h1:z0DjdwjcklfuNQPChtprwJblNR3XJriU0fffx1aDSIs=
 github.com/bmc-toolbox/bmclogin v0.0.1 h1:xPZMATBB2XHkCo4i1hQkDodeKdioYN7GSf5D05yUQ7c=
 github.com/bmc-toolbox/bmclogin v0.0.1/go.mod h1:jtifl2zfoGTDZNE9WhUeKgXPiurdaB33HjkHXz6gMAE=
 github.com/bmc-toolbox/bmclogin v0.0.2-0.20190106211646-d5c2f26514e9 h1:OXHi7NDPtMbtFW7RbyoCYedNKHK7Nwf6NynH1Cm1Yu0=

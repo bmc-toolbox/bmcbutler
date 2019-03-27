@@ -1,7 +1,5 @@
 package cfgresources
 
-import "time"
-
 // SetupChassis struct holds attributes for one time chassis setup.
 type SetupChassis struct {
 	FlexAddress         *flexAddress       `yaml:"flexAddress"`
@@ -106,11 +104,11 @@ type LdapGroup struct {
 
 // HTTPSCert struct holds BMC HTTPs cert configuration.
 type HTTPSCert struct {
-	// Renew cert if it will expire in this time period.
-	RenewBeforeExpiry time.Duration `yaml:"renewBeforeExpiry"`
-	// Validate these attributes when renewing certs
-	ValidateAttributes []string             `yaml:"validateAttributes"`
-	Attributes         *HTTPSCertAttributes `yaml:"attributes"`
+	GenerateCSR bool                 `yaml:"generateCSR"`
+	Attributes  *HTTPSCertAttributes `yaml:"attributes"`
+	// If GenerateCSR is false a CertFile and KeyFile is looked up
+	CertFile string `yaml:"certfile"`
+	KeyFile  string `yaml:"keyfile"`
 }
 
 // HTTPSCertAttributes declares attributes that are part of a cert.
