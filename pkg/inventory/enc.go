@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/sirupsen/logrus"
 
@@ -127,8 +128,9 @@ func (e *Enc) AssetRetrieve() func() {
 }
 
 // ExecCmd executes the executable with the given args and returns
+// if retry is declared, the command is retried for the given number with an interval of 10 seconds,
 // the response as a slice of bytes, and the error if any.
-func ExecCmd(exe string, args []string) (out []byte, err error) {
+func ExecCmd(exe string, args []string, retry int) (out []byte, err error) {
 
 	cmd := exec.Command(exe, args...)
 
@@ -139,8 +141,14 @@ func ExecCmd(exe string, args []string) (out []byte, err error) {
 	}
 
 	out, err = cmd.Output()
-	if err != nil {
+	if err != nil && retry == 0 {
 		return out, err
+	}
+
+	if err != nil && retry > 1 {
+		retry--
+		time.Sleep(time.Second * 10)
+		return ExecCmd(exe, args, retry)
 	}
 
 	return out, err
@@ -156,7 +164,7 @@ func (e *Enc) SetChassisInstalled(serials string) {
 	cmdArgs := []string{"inventory", "--set-chassis-installed", serials}
 
 	encBin := e.Config.Inventory.Enc.Bin
-	out, err := ExecCmd(encBin, cmdArgs)
+	out, err := ExecCmd(encBin, cmdArgs, 0)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
@@ -178,7 +186,7 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 	cmdArgs := []string{"enc", "--serials", serials}
 
 	encBin := e.Config.Inventory.Enc.Bin
-	out, err := ExecCmd(encBin, cmdArgs)
+	out, err := ExecCmd(encBin, cmdArgs, 0)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
@@ -268,7 +276,7 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 	cmdArgs := []string{"enc", "--ips", ips}
 
 	encBin := e.Config.Inventory.Enc.Bin
-	out, err := ExecCmd(encBin, cmdArgs)
+	out, err := ExecCmd(encBin, cmdArgs, 0)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
@@ -376,7 +384,7 @@ func (e *Enc) encQueryByOffset(assetType string, offset int, limit int, location
 	}
 
 	encBin := e.Config.Inventory.Enc.Bin
-	out, err := ExecCmd(encBin, cmdArgs)
+	out, err := ExecCmd(encBin, cmdArgs, 3)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
