@@ -357,7 +357,7 @@ func generateCsr(c *cfgresources.HTTPSCertAttributes) (csr, privateKey []byte, e
 		{Type: oidEmailAddress, Value: c.Email},
 	})
 
-	asn1Subj, _ := asn1.Marshal(rawSubject)
+	asn1Subj, err := asn1.Marshal(rawSubject)
 	if err != nil {
 		return csr, privateKey, err
 	}

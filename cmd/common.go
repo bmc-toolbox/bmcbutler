@@ -19,7 +19,6 @@ var (
 	butlers        *butler.Butler
 	commandWG      sync.WaitGroup
 	metricsEmitter *metrics.Emitter
-	stopChan       chan struct{}
 	interrupt      bool
 )
 

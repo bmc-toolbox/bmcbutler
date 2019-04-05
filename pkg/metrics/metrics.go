@@ -27,10 +27,6 @@ import (
 	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 )
 
-var (
-	metricsChan chan Metric
-)
-
 //TODO:
 // Implement a counter increment method that accepts string, float32 value
 // increment method sends the metric down the channel

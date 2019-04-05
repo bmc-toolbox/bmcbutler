@@ -533,7 +533,7 @@ func (b *BmcChassisSetup) setFlexAddressState() (err error) { // nolint: gocyclo
 			//give it a few seconds to change the flex state
 			time.Sleep(10 * time.Second)
 
-			chassis.PowerOnBlade(blade.BladePosition)
+			_, err := chassis.PowerOnBlade(blade.BladePosition)
 			if err != nil {
 				msg := "Unable to disable FlexAddress - blade power on failed."
 				log.WithFields(logrus.Fields{

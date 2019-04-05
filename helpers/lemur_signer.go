@@ -98,7 +98,7 @@ func main() {
 		csr = append(csr, []byte(fmt.Sprintln(scanner.Text()))...)
 	}
 
-	extensions := Extensions{SubjectAltNames: SubjectAltNames{Names: []Names{Names{NameType: "DNSName", Value: *commonName}}}}
+	extensions := Extensions{SubjectAltNames: SubjectAltNames{Names: []Names{{NameType: "DNSName", Value: *commonName}}}}
 
 	a := Authority{Name: *authority}
 	r := Request{
