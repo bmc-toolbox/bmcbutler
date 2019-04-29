@@ -12,7 +12,6 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
-	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/internal/sshclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
 
@@ -27,8 +26,9 @@ const (
 )
 
 var (
-	macFinder = regexp.MustCompile("([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})")
-	findBmcIP = regexp.MustCompile("bladeIpAddress\">((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3})")
+	macFinder          = regexp.MustCompile("([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})")
+	findBmcIP          = regexp.MustCompile("bladeIpAddress\">((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3})")
+	findRedundancyMode = regexp.MustCompile("selected=\"selected\">(.+)</option>")
 )
 
 // M1000e holds the status and properties of a connection to a CMC device
@@ -145,7 +145,6 @@ func (m *M1000e) TempC() (temp int, err error) {
 	dellCMCTemp := &dell.CMCTemp{}
 	err = json.Unmarshal(payload, dellCMCTemp)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, m.ip, payload)
 		return temp, err
 	}
 
@@ -154,6 +153,42 @@ func (m *M1000e) TempC() (temp int, err error) {
 	}
 
 	return temp, err
+}
+
+// Fans returns all found fans in the device
+func (m *M1000e) Fans() (fans []*devices.Fan, err error) {
+	serial, err := m.Serial()
+	if err != nil {
+		return fans, err
+	}
+
+	for pos, fan := range m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.Fans {
+		if fans == nil {
+			fans = make([]*devices.Fan, 0)
+		}
+
+		if fan.Presence == 1 {
+			status := "OK"
+			if fan.ActiveError != "No Errors" {
+				status = fan.ActiveError
+			}
+
+			p, err := strconv.Atoi(pos)
+			if err != nil && pos != "ECM" {
+				return fans, fmt.Errorf("unable to read: %s", pos)
+			}
+
+			f := &devices.Fan{
+				Serial:     fmt.Sprintf("%d_%s", p, serial),
+				Position:   p,
+				Status:     status,
+				CurrentRPM: fan.FanRPM,
+			}
+			fans = append(fans, f)
+		}
+	}
+
+	return fans, err
 }
 
 // Status returns health string status from the bmc
@@ -260,11 +295,18 @@ func (m *M1000e) Psus() (psus []*devices.Psu, err error) {
 			status = psu.PsuActiveError
 		}
 
+		psuPosition, err := strconv.Atoi(strings.Split(psu.PsuPosition, "_")[1])
+		if err != nil {
+			return psus, err
+		}
+
 		p := &devices.Psu{
 			Serial:     fmt.Sprintf("%s_%s", serial, psu.PsuPosition),
 			CapacityKw: float64(psu.PsuCapacity) / 1000.00,
 			PowerKw:    (i * e) / 1000.00,
 			Status:     status,
+			PartNumber: psu.PsuPartNum,
+			Position:   psuPosition,
 		}
 
 		psus = append(psus, p)
@@ -448,6 +490,18 @@ func (m *M1000e) ChassisSnapshot() (chassis *devices.Chassis, err error) {
 	if err != nil {
 		return nil, err
 	}
+	chassis.Fans, err = m.Fans()
+	if err != nil {
+		return nil, err
+	}
+	chassis.PsuRedundancyMode, err = m.PsuRedundancyMode()
+	if err != nil {
+		return nil, err
+	}
+	chassis.IsPsuRedundant, err = m.IsPsuRedundant()
+	if err != nil {
+		return nil, err
+	}
 
 	return chassis, err
 }
@@ -456,4 +510,46 @@ func (m *M1000e) ChassisSnapshot() (chassis *devices.Chassis, err error) {
 func (m *M1000e) UpdateCredentials(username string, password string) {
 	m.username = username
 	m.password = password
+}
+
+// IsPsuRedundant informs whether or not the power is currently redundant
+func (m *M1000e) IsPsuRedundant() (status bool, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return status, err
+	}
+
+	if m.cmcJSON.Chassis.ChassisGroupMemberHealthBlob.PsuStatus.PsuRedundancy == 1 {
+		return true, err
+	}
+	return false, err
+}
+
+// PsuRedundancyMode returns the current redundancy mode is configured for the chassis
+func (m *M1000e) PsuRedundancyMode() (mode string, err error) {
+	err = m.httpLogin()
+	if err != nil {
+		return mode, err
+	}
+
+	payload, err := m.get("pwr_redundancy?cat=C00&tab=T03&id=P10")
+	if err != nil {
+		return mode, err
+	}
+
+	fnd := findRedundancyMode.FindStringSubmatch(string(payload))
+	var rm string
+	if len(fnd) > 0 {
+		rm = fnd[1]
+	}
+	switch rm {
+	case "Grid Redundancy":
+		return devices.Grid, err
+	case "Power Supply Redundancy":
+		return devices.PowerSupply, err
+	case "No Redundancy":
+		return devices.NoRedundancy, err
+	default:
+		return devices.Unknown, err
+	}
 }

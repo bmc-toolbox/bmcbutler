@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
@@ -73,7 +73,7 @@ func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (payload 
 		}
 	}
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] %s/%s", bmcURL, endpoint))
@@ -89,7 +89,7 @@ func (i *IDrac9) get(endpoint string, extraHeaders *map[string]string) (payload 
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")
@@ -122,7 +122,7 @@ func (i *IDrac9) put(endpoint string, payload []byte) (statusCode int, response 
 
 	req.Header.Add("XSRF-TOKEN", i.xsrfToken)
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] %s/%s", bmcURL, endpoint))
@@ -138,7 +138,7 @@ func (i *IDrac9) put(endpoint string, payload []byte) (statusCode int, response 
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")
@@ -172,7 +172,7 @@ func (i *IDrac9) delete(endpoint string) (statusCode int, payload []byte, err er
 
 	req.Header.Add("XSRF-TOKEN", i.xsrfToken)
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] %s", fmt.Sprintf("%s/%s", bmcURL, endpoint)))
@@ -188,7 +188,7 @@ func (i *IDrac9) delete(endpoint string) (statusCode int, payload []byte, err er
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")
@@ -231,7 +231,7 @@ func (i *IDrac9) post(endpoint string, data []byte, formDataContentType string) 
 		req.Header.Set("Content-Type", formDataContentType)
 	}
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] https://%s/%s", i.ip, endpoint))
@@ -246,7 +246,7 @@ func (i *IDrac9) post(endpoint string, data []byte, formDataContentType string) 
 		return 0, []byte{}, err
 	}
 	defer resp.Body.Close()
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			log.Println("[Response]")
@@ -356,7 +356,6 @@ func (i *IDrac9) Status() (status string, err error) {
 	iDracHealthStatus := &dell.IDracHealthStatus{}
 	err = json.Unmarshal(payload, iDracHealthStatus)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return status, err
 	}
 
@@ -385,7 +384,6 @@ func (i *IDrac9) PowerKw() (power float64, err error) {
 	iDracPowerData := &dell.IDracPowerData{}
 	err = json.Unmarshal(payload, iDracPowerData)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return power, err
 	}
 
@@ -514,7 +512,6 @@ func (i *IDrac9) License() (name string, licType string, err error) {
 	iDracLicense := &dell.IDracLicense{}
 	err = json.Unmarshal(payload, iDracLicense)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return name, licType, err
 	}
 
@@ -567,7 +564,6 @@ func (i *IDrac9) TempC() (temp int, err error) {
 	iDracTemp := &dell.IDracTemp{}
 	err = json.Unmarshal(payload, iDracTemp)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return temp, err
 	}
 
@@ -641,7 +637,6 @@ func (i *IDrac9) Psus() (psus []*devices.Psu, err error) {
 	iDracRoot := &dell.IDracRoot{}
 	err = xml.Unmarshal(payload, iDracRoot)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return psus, err
 	}
 
@@ -676,7 +671,7 @@ func (i *IDrac9) Vendor() (vendor string) {
 }
 
 // ServerSnapshot do best effort to populate the server data and returns a blade or discrete
-func (i *IDrac9) ServerSnapshot() (server interface{}, err error) {
+func (i *IDrac9) ServerSnapshot() (server interface{}, err error) { // nolint: gocyclo
 	err = i.httpLogin()
 	if err != nil {
 		return server, err
@@ -688,7 +683,7 @@ func (i *IDrac9) ServerSnapshot() (server interface{}, err error) {
 		blade.BmcAddress = i.ip
 		blade.BmcType = i.BmcType()
 
-		blade.Serial, _ = i.Serial()
+		blade.Serial, err = i.Serial()
 		if err != nil {
 			return nil, err
 		}

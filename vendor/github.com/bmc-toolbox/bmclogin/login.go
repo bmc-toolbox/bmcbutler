@@ -169,8 +169,8 @@ func (p *Params) attemptLogin(ip string, user string, pass string) (connection i
 
 		//successful login.
 		return connection, ipInactive, nil
-	case devices.BmcChassis:
-		chassis := connection.(devices.BmcChassis)
+	case devices.Cmc:
+		chassis := connection.(devices.Cmc)
 		err := chassis.CheckCredentials()
 		if err != nil {
 			return connection, ipInactive, errors.New(
@@ -190,6 +190,6 @@ func (p *Params) attemptLogin(ip string, user string, pass string) (connection i
 	}
 
 	//we won't ever end up here
-	return connection, ipInactive, errors.New(
-		fmt.Sprintf("Unable to login"))
+	//return connection, ipInactive, errors.New(
+	//	fmt.Sprintf("Unable to login"))
 }

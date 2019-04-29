@@ -39,7 +39,7 @@ func (i *IDrac9) httpLogin() (err error) {
 	req.Header.Add("user", fmt.Sprintf("\"%s\"", i.username))
 	req.Header.Add("password", fmt.Sprintf("\"%s\"", i.password))
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpRequestOut(req, true)
 		if err == nil {
 			log.Println(fmt.Sprintf("[Request] %s", url))
@@ -69,7 +69,7 @@ func (i *IDrac9) httpLogin() (err error) {
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.DebugLevel {
+	if log.GetLevel() == log.TraceLevel {
 		dump, err := httputil.DumpResponse(resp, false)
 		if err == nil {
 			log.Println("[Response]")
@@ -82,7 +82,6 @@ func (i *IDrac9) httpLogin() (err error) {
 	iDracAuth := &dell.IDracAuth{}
 	err = json.Unmarshal(payload, iDracAuth)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return err
 	}
 
@@ -113,11 +112,10 @@ func (i *IDrac9) loadHwData() (err error) {
 	iDracInventory := &dell.IDracInventory{}
 	err = xml.Unmarshal(payload, iDracInventory)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, i.ip, payload)
 		return err
 	}
 
-	if iDracInventory == nil || iDracInventory.Component == nil {
+	if iDracInventory.Component == nil {
 		return errors.ErrUnableToReadData
 	}
 
