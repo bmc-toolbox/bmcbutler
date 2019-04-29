@@ -18,14 +18,14 @@ import (
 func TestExecCmd(t *testing.T) {
 
 	badCMD := "/usr/bin/echofoobar"
-	_, err := ExecCmd(badCMD, []string{})
+	_, err := ExecCmd(badCMD, []string{}, 0)
 	if err == nil {
 		t.Fatalf("Expected error on bad command, but returned error was nil")
 	}
 
 	cmd := "/usr/bin/echo"
 	args := []string{"ARG1", "ARG2", "ARG3"}
-	out, err := ExecCmd(cmd, args)
+	out, err := ExecCmd(cmd, args, 0)
 	if err != nil {
 		t.Fatalf("Expected successful command execution, got error: %s", err)
 	}
@@ -76,7 +76,7 @@ func TestEncQueryBySerial(t *testing.T) {
 
 	//build asset lookup bin
 	args := []string{"build", "-o", assetLookup, "../../samples/assetlookup.go"}
-	_, err := ExecCmd(cmd, args)
+	_, err := ExecCmd(cmd, args, 0)
 	if err != nil {
 		t.Fatalf("Expected to build assetlookup for test, but failed with error : %s", err)
 	}
@@ -84,7 +84,7 @@ func TestEncQueryBySerial(t *testing.T) {
 
 	enc := Enc{
 		Log:    logrus.New(),
-		Config: &config.Params{InventoryParams: &config.InventoryParams{EncExecutable: assetLookup}},
+		Config: &config.Params{Inventory: &config.Inventory{Source: assetLookup}},
 	}
 
 	assets := enc.encQueryBySerial(strings.Join(serials, ","))

@@ -98,8 +98,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&runConfig.FilterParams.Ips, "ips", "", "", "IP Address(s) of the asset to setup config (separated by commas - no spaces).")
 
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.IgnoreLocation, "ignorelocation", "", false, "Action assets in all locations (ignore locations directive in config)")
-	rootCmd.PersistentFlags().IntVarP(&butlersToSpawn, "butlers", "b", 0, "Number of butlers to spawn (overide butlersToSpawn directive in config)")
-	rootCmd.PersistentFlags().StringVarP(&locations, "locations", "l", "", "Action assets by given location(s). (overide locations directive in config)")
+	rootCmd.PersistentFlags().IntVarP(&butlersToSpawn, "butlers", "b", 0, "Number of butlers to spawn (override butlersToSpawn directive in config)")
+	rootCmd.PersistentFlags().StringVarP(&locations, "locations", "l", "", "Action assets by given location(s). (override locations directive in config)")
 	rootCmd.PersistentFlags().StringVarP(&resources, "resources", "r", "", "Apply one or more resources instead of the whole config (e.g -r syslog,ntp).")
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Configuration file for bmcbutler (default: /etc/bmcbutler/bmcbutler.yml)")
 

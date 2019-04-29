@@ -81,8 +81,8 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		c.Apply()
 
 		bmc.Close()
-	case devices.BmcChassis:
-		chassis := client.(devices.BmcChassis)
+	case devices.Cmc:
+		chassis := client.(devices.Cmc)
 
 		asset.Type = "chassis"
 		asset.Model = chassis.BmcType()
@@ -101,7 +101,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		}
 
 		if renderedConfig.SetupChassis != nil {
-			s := configure.NewBmcChassisSetup(
+			s := configure.NewCmcSetup(
 				chassis,
 				asset,
 				b.Config.Resources,
@@ -115,7 +115,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		}
 
 		// Apply configuration
-		c := configure.NewBmcChassisConfigurator(chassis, asset, b.Config.Resources, renderedConfig, b.StopChan, log)
+		c := configure.NewCmcConfigurator(chassis, asset, b.Config.Resources, renderedConfig, b.StopChan, log)
 		c.Apply()
 
 		chassis.Close()

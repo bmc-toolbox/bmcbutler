@@ -31,5 +31,4 @@ type Asset struct {
 	Configure bool              //If setup is set, butlers will configure the asset.
 	Execute   bool              //If execute is set, butlers will execute given command(s) on the asset.
 	Extra     map[string]string //any extra params needed to be set in a asset.
-
 }

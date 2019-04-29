@@ -1,7 +1,7 @@
 #This config is YAML based and supports plush templating,
 # https://github.com/gobuffalo/plush
 #
-# For support configuration resources, see, 
+# For support configuration resources, see,
 # https://github.com/bmc-toolbox/bmclib/blob/master/cfgresources/
 #
 syslog:
@@ -45,27 +45,27 @@ ldapGroup:
 # a CSR is generated on the BMC and passed to the signer (see bmcbutler.yml)
 # the signed cert is then uploaded to the BMC.
 httpsCert:
-   renewBeforeExpiry: 720h # accepts a time.Duration string
-   # by default only the cert expiry period is checked, to check other attributes list them here.
-   validateAttributes: 
-     - commonName
-     - organizationName
-     - subjectAltName 
-   attributes:
-     commonName: <%= serial %>.bmc.example.com #serial as part of CN
-     organizationName: Acme B.V.
-     organizationUnit: foo
-     locality: Amsterdam
-     stateName: Noord-Holland
-     countryCode: NL
-     email: admin@example.com
-     subjectAltName: <%= ipaddress %> # IPAddress as SAN.
+  renewBeforeExpiry: 720h # accepts a time.Duration string
+  # by default only the cert expiry period is checked, to check other attributes list them here.
+  validateAttributes:
+    - commonName
+    - organizationName
+    - subjectAltName
+  attributes:
+    commonName: <%= serial %>.bmc.example.com #serial as part of CN
+    organizationName: Acme B.V.
+    organizationUnit: foo
+    locality: Amsterdam
+    stateName: Noord-Holland
+    countryCode: NL
+    email: admin@example.com
+    subjectAltName: <%= ipaddress %> # IPAddress as SAN.
 ntp:
-   enable: true
-   server1: ntp0.example.com
-   server2: ntp1.example.com
-   server3: ntp3.example.com
-   timezone: CET
+  enable: true
+  server1: ntp0.example.com
+  server2: ntp1.example.com
+  server3: ntp3.example.com
+  timezone: CET
 
 network:
   dnsFromDhcp: true  #bmc to get its DNS address from dhcp
@@ -80,11 +80,11 @@ network:
   DDNSEnable: false     # dynamic dns
 
 
-#an example of setting the license key based on vendor.
-<%= if ( vendor == "hp" ) { %>
+  #an example of setting the license key based on vendor.
+  <%= if ( vendor == "hp" ) { %>
 license:
   key: ASDFKLAMDNARALKNBA123
-<% } %>
+  <% } %>
 
 #Bios configuration, declared per vendor, model.
 bios:
@@ -95,24 +95,24 @@ bios:
       PxeDev3EnDis: Disabled
       PxeDev4EnDis: Disabled
 
-#Chassis setup configuration to be declared only if various asset attributes match.
-<%= if ( assetType == "chassis" &&
-	 extra["company"] == "skynet" &&
-         extra["state"] == "needs-setup" &&
-         extra["liveAssets"] == "" ) { %>
+  #Chassis setup configuration to be declared only if various asset attributes match.
+  <%= if ( assetType == "chassis" &&
+  extra["company"] == "skynet" &&
+  extra["state"] == "needs-setup" &&
+  extra["liveAssets"] == "" ) { %>
 setupChassis:
-  ipmiOverLan: 
+  ipmiOverLan:
     enable: true     #applies to all blades in a chassis
-  flexAddress: 
+  flexAddress:
     enable: false    #applies to all blades in a chassis
-  dynamicPower: 
+  dynamicPower:
     enable: false    #DPSE on M1000e, Dynamic power for the c7000.
-   addBladeBmcAdmins: #Add/Mod admin accounts to all blades in the chassis.
-    - name: Administrator
-      password: foobar123
-    - name: barbar
-      password: barbar
+    addBladeBmcAdmins: #Add/Mod admin accounts to all blades in the chassis.
+      - name: Administrator
+        password: foobar123
+      - name: barbar
+        password: barbar
   removeBladeBmcUsers: #Remove admin accounts from all blades in the chassis.
     - name: olduser
     - name: foo
-<% } %>
+  <% } %>

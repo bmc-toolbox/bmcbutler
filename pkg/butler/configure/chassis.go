@@ -9,10 +9,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// BmcChassis struct declares attributes required to apply configuration.
-type BmcChassis struct {
+// Cmc struct declares attributes required to apply configuration.
+type Cmc struct {
 	asset     *asset.Asset
-	bmc       devices.BmcChassis
+	bmc       devices.Cmc
 	resources []string
 	configure devices.Configure
 	config    *cfgresources.ResourcesConfig
@@ -24,22 +24,22 @@ type BmcChassis struct {
 	stopChan  <-chan struct{}
 }
 
-// NewBmcChassisConfigurator returns a new configure struct to apply configuration.
-func NewBmcChassisConfigurator(bmc devices.BmcChassis,
+// NewCmcConfigurator returns a new configure struct to apply configuration.
+func NewCmcConfigurator(bmc devices.Cmc,
 	asset *asset.Asset,
 	resources []string,
 	config *cfgresources.ResourcesConfig,
 	stopChan <-chan struct{},
-	logger *logrus.Logger) *BmcChassis {
+	logger *logrus.Logger) *Cmc {
 
-	return &BmcChassis{
+	return &Cmc{
 		// asset to be setup
 		asset: asset,
 		// client is of type devices.Bmc
 		bmc: bmc,
 		// if --resources was passed, only these resources will be applied
 		resources: resources,
-		// devices.BmcChassis is type asserted to apply configuration,
+		// devices.Cmc is type asserted to apply configuration,
 		// this is possible since devices.Bmc embeds the Configure interface.
 		configure: bmc.(devices.Configure),
 		config:    config,
@@ -49,7 +49,7 @@ func NewBmcChassisConfigurator(bmc devices.BmcChassis,
 }
 
 // Apply applies configuration.
-func (b *BmcChassis) Apply() { //nolint: gocyclo
+func (b *Cmc) Apply() { //nolint: gocyclo
 
 	var interrupt bool
 	go func() { <-b.stopChan; interrupt = true }()

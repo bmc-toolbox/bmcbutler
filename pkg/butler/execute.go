@@ -71,8 +71,8 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 
 		}
 		bmc.Close()
-	case devices.BmcChassis:
-		chassis := client.(devices.BmcChassis)
+	case devices.Cmc:
+		chassis := client.(devices.Cmc)
 		//b.executeCommandChassis(chassis, command)
 		log.WithFields(logrus.Fields{
 			"component": component,
@@ -105,7 +105,7 @@ func (b *Butler) executeCommandBmc(bmc devices.Bmc, command string) (success boo
 
 }
 
-//func (b *Butler) executeCommandChassis(chassis devices.BmcChassis, command []byte) (err error) {
+//func (b *Butler) executeCommandChassis(chassis devices.Cmc, command []byte) (err error) {
 //
 //	switch string(command) {
 //	case "Chassis reset":

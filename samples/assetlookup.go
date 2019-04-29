@@ -51,7 +51,7 @@ type NetworkInterface struct {
 //	Chassis  bool     //is a chassis asset
 //	Server   bool     //is a server asset
 //	Location []string //locations to return assets for
-//	Company  []string //companys to return assets for
+//	Company  []string //companies to return assets for
 //	State    []string //filter assets by these states.
 //}
 

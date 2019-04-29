@@ -33,7 +33,7 @@ func (b *Bmc) certificateSetup() (bool, error) {
 		return false, fmt.Errorf("Declared certificate configuration requires a commonName")
 	}
 
-	// replace any underscores with hypens
+	// replace any underscores with hyphens
 	b.config.HTTPSCert.Attributes.CommonName = strings.Replace(b.config.HTTPSCert.Attributes.CommonName, "_", "-", -1)
 	commonName := b.config.HTTPSCert.Attributes.CommonName
 
@@ -289,7 +289,7 @@ func execCmd(c string, env map[string]string, args []string, stdIn []byte) (stdO
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
 	}
 
-	// setup output/input redirections
+	// setup output/input redirects
 	cmd.Stdout = &outBuf
 	cmd.Stderr = &errBuf
 

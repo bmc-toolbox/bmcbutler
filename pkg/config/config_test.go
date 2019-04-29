@@ -59,7 +59,7 @@ func TestLoad(t *testing.T) {
 	}
 
 	// validate Inventory source was read.
-	if cfg.InventoryParams.Source == "" {
+	if cfg.Inventory.Source == "" {
 		t.Fatal("Expected InventoryParams Source to have a valid attribute.")
 	}
 
