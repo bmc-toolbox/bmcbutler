@@ -9,8 +9,6 @@ import (
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 	"github.com/bmc-toolbox/bmcbutler/pkg/inventory"
-	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
-
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/sirupsen/logrus"
@@ -18,19 +16,18 @@ import (
 
 // CmcSetup struct holds various attributes for chassis setup methods.
 type CmcSetup struct {
-	asset          *asset.Asset
-	chassis        devices.Cmc
-	setup          devices.CmcSetup
-	config         *cfgresources.SetupChassis
-	resources      []string
-	butlerConfig   *config.Params
-	metricsEmitter *metrics.Emitter
-	log            *logrus.Logger
-	ip             string
-	serial         string
-	vendor         string
-	model          string
-	stopChan       <-chan struct{}
+	asset        *asset.Asset
+	chassis      devices.Cmc
+	setup        devices.CmcSetup
+	config       *cfgresources.SetupChassis
+	resources    []string
+	butlerConfig *config.Params
+	log          *logrus.Logger
+	ip           string
+	serial       string
+	vendor       string
+	model        string
+	stopChan     <-chan struct{}
 }
 
 // NewCmcSetup returns a new  struct to apply configuration.
@@ -40,7 +37,6 @@ func NewCmcSetup(
 	resources []string,
 	config *cfgresources.SetupChassis,
 	butlerConfig *config.Params,
-	metricsEmitter *metrics.Emitter,
 	stopChan <-chan struct{},
 	logger *logrus.Logger) *CmcSetup {
 
@@ -54,21 +50,20 @@ func NewCmcSetup(
 		setup:        chassis.(devices.CmcSetup),
 		butlerConfig: butlerConfig,
 		// if --resources was passed, only these resources will be applied
-		resources:      resources,
-		metricsEmitter: metricsEmitter,
-		config:         config,
-		log:            logger,
-		stopChan:       stopChan,
+		resources: resources,
+		config:    config,
+		log:       logger,
+		stopChan:  stopChan,
 	}
 }
 
 // Apply applies one time setup configuration.
 func (b *CmcSetup) Apply() { //nolint: gocyclo
 
-	defer b.metricsEmitter.MeasureRuntime(
-		[]string{"butler", "setupChassis_runtime"},
-		time.Now(),
-	)
+	//defer b.metricsEmitter.MeasureRuntime(
+	//	[]string{"butler", "setupChassis_runtime"},
+	//	time.Now(),
+	//)
 
 	var interrupt bool
 	go func() { <-b.stopChan; interrupt = true }()
@@ -215,9 +210,8 @@ func (b *CmcSetup) Apply() { //nolint: gocyclo
 func (b *CmcSetup) Post() {
 
 	enc := inventory.Enc{
-		Config:         b.butlerConfig,
-		Log:            b.log,
-		MetricsEmitter: b.metricsEmitter,
+		Config: b.butlerConfig,
+		Log:    b.log,
 	}
 
 	enc.SetChassisInstalled(b.asset.Serial)

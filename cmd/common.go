@@ -10,16 +10,14 @@ import (
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	"github.com/bmc-toolbox/bmcbutler/pkg/butler"
-
 	"github.com/bmc-toolbox/bmcbutler/pkg/inventory"
-	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
+	metrics "github.com/bmc-toolbox/gin-go-metrics"
 )
 
 var (
-	butlers        *butler.Butler
-	commandWG      sync.WaitGroup
-	metricsEmitter *metrics.Emitter
-	interrupt      bool
+	butlers   *butler.Butler
+	commandWG sync.WaitGroup
+	interrupt bool
 )
 
 // post handles clean up actions
@@ -28,7 +26,7 @@ var (
 func post(butlerChan chan butler.Msg) {
 	close(butlerChan)
 	commandWG.Wait()
-	metricsEmitter.Close(true)
+	metrics.Close(true)
 }
 
 // Any flags to override configuration goes here.
@@ -67,12 +65,17 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 	stopChan = make(chan struct{})
 
 	//Initialize metrics collection.
-	metricsEmitter = &metrics.Emitter{
-		Config: runConfig,
-		Logger: log,
+	err := metrics.Setup(
+		runConfig.Metrics.Client,
+		runConfig.Metrics.Graphite.Host,
+		runConfig.Metrics.Graphite.Port,
+		runConfig.Metrics.Graphite.Prefix,
+		runConfig.Metrics.Graphite.FlushInterval,
+	)
+	if err != nil {
+		fmt.Printf("Failed to set up monitoring: %s", err)
+		os.Exit(1)
 	}
-
-	metricsEmitter.Init()
 
 	// A channel to receive inventory assets
 	inventoryChan = make(chan []asset.Asset, 5)
@@ -86,12 +89,11 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 	switch inventorySource {
 	case "enc":
 		inventoryInstance := inventory.Enc{
-			Config:         runConfig,
-			Log:            log,
-			BatchSize:      10,
-			AssetsChan:     inventoryChan,
-			MetricsEmitter: metricsEmitter,
-			StopChan:       stopChan,
+			Config:     runConfig,
+			Log:        log,
+			BatchSize:  10,
+			AssetsChan: inventoryChan,
+			StopChan:   stopChan,
 		}
 
 		assetRetriever = inventoryInstance.AssetRetrieve()
@@ -105,11 +107,10 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 		assetRetriever = inventoryInstance.AssetRetrieve()
 	case "dora":
 		inventoryInstance := inventory.Dora{
-			Config:         runConfig,
-			Log:            log,
-			BatchSize:      10,
-			AssetsChan:     inventoryChan,
-			MetricsEmitter: metricsEmitter,
+			Config:     runConfig,
+			Log:        log,
+			BatchSize:  10,
+			AssetsChan: inventoryChan,
 		}
 
 		assetRetriever = inventoryInstance.AssetRetrieve()
@@ -134,12 +135,11 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 	// Spawn butlers to work
 	butlerChan = make(chan butler.Msg, 2)
 	butlers = &butler.Butler{
-		ButlerChan:     butlerChan,
-		StopChan:       stopChan,
-		Config:         runConfig,
-		Log:            log,
-		MetricsEmitter: metricsEmitter,
-		SyncWG:         &commandWG,
+		ButlerChan: butlerChan,
+		StopChan:   stopChan,
+		Config:     runConfig,
+		Log:        log,
+		SyncWG:     &commandWG,
 	}
 
 	go butlers.Runner()

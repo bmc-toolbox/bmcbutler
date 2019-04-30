@@ -20,6 +20,8 @@ github.com/bmc-toolbox/bmclib/internal/ipmi
 github.com/bmc-toolbox/bmclib/providers/supermicro
 # github.com/bmc-toolbox/bmclogin v0.0.3
 github.com/bmc-toolbox/bmclogin
+# github.com/bmc-toolbox/gin-go-metrics v0.0.0-20190425145145-130c9ad985ff
+github.com/bmc-toolbox/gin-go-metrics
 # github.com/cyberdelia/go-metrics-graphite v0.0.0-20161219230853-39f87cc3b432
 github.com/cyberdelia/go-metrics-graphite
 # github.com/fatih/structs v1.1.0
@@ -142,7 +144,7 @@ golang.org/x/crypto/internal/chacha20
 golang.org/x/crypto/poly1305
 golang.org/x/crypto/ed25519/internal/edwards25519
 golang.org/x/crypto/internal/subtle
-# golang.org/x/net v0.0.0-20190328230028-74de082e2cca
+# golang.org/x/net v0.0.0-20190415100556-4a65cf94b679
 golang.org/x/net/html
 golang.org/x/net/html/atom
 golang.org/x/net/publicsuffix

@@ -9,11 +9,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	"github.com/bmc-toolbox/bmcbutler/pkg/config"
-	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
+	metrics "github.com/bmc-toolbox/gin-go-metrics"
+	"github.com/sirupsen/logrus"
 )
 
 // Enc struct holds attributes required to run inventory/enc methods.
@@ -21,7 +20,6 @@ type Enc struct {
 	Log             *logrus.Logger
 	BatchSize       int
 	AssetsChan      chan<- []asset.Asset
-	MetricsEmitter  *metrics.Emitter
 	Config          *config.Params
 	FilterAssetType []string
 	StopChan        <-chan struct{}
@@ -179,7 +177,6 @@ func (e *Enc) SetChassisInstalled(serials string) {
 func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 
 	log := e.Log
-	metric := e.MetricsEmitter
 	component := "encQueryBySerial"
 
 	//assetlookup enc --serials FOO123,BAR123
@@ -221,7 +218,7 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 
 		attributes := e.SetBMCInterfaces(attributes)
 		if len(attributes.BMCIPAddress) == 0 {
-			metric.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
+			metrics.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
 			continue
 		}
 
@@ -249,9 +246,7 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 		}
 	}
 
-	if metric != nil {
-		metric.IncrCounter([]string{"inventory", "assets_fetched_enc"}, float32(len(assets)))
-	}
+	metrics.IncrCounter([]string{"inventory", "assets_fetched_enc"}, int64(len(assets)))
 
 	return assets
 }
@@ -260,7 +255,6 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 
 	log := e.Log
-	metric := e.MetricsEmitter
 	component := "encQueryByIP"
 
 	// if no attributes can be received we return assets objs
@@ -317,7 +311,7 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 		attributes := e.SetBMCInterfaces(attributes)
 		if len(attributes.BMCIPAddress) == 0 {
 			populateAssetsWithNoAttributes()
-			metric.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
+			metrics.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
 			continue
 		}
 
@@ -345,7 +339,7 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 		}
 	}
 
-	metric.IncrCounter([]string{"inventory", "assets_fetched_enc"}, float32(len(assets)))
+	metrics.IncrCounter([]string{"inventory", "assets_fetched_enc"}, int64(len(assets)))
 
 	return assets
 }
@@ -356,7 +350,6 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 func (e *Enc) encQueryByOffset(assetType string, offset int, limit int, location string) (assets []asset.Asset, endOfAssets bool) {
 
 	component := "EncQueryByOffset"
-	metric := e.MetricsEmitter
 	log := e.Log
 
 	assets = make([]asset.Asset, 0)
@@ -415,7 +408,7 @@ func (e *Enc) encQueryByOffset(assetType string, offset int, limit int, location
 
 		attributes := e.SetBMCInterfaces(attributes)
 		if len(attributes.BMCIPAddress) == 0 {
-			metric.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
+			metrics.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
 			continue
 		}
 
@@ -429,7 +422,7 @@ func (e *Enc) encQueryByOffset(assetType string, offset int, limit int, location
 			})
 	}
 
-	metric.IncrCounter([]string{"inventory", "assets_fetched_enc"}, float32(len(assets)))
+	metrics.IncrCounter([]string{"inventory", "assets_fetched_enc"}, int64(len(assets)))
 
 	return assets, endOfAssets
 }
@@ -441,8 +434,6 @@ func (e *Enc) AssetIter() {
 	//Iter stuffs assets into an array of Assets
 	//Iter writes the assets array to the channel
 	//component := "AssetIterEnc"
-
-	//metric := d.MetricsEmitter
 
 	var interrupt bool
 

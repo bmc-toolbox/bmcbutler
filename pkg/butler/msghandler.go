@@ -1,8 +1,10 @@
 package butler
 
 import (
-	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
 	"github.com/sirupsen/logrus"
+
+	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
+	metrics "github.com/bmc-toolbox/gin-go-metrics"
 )
 
 func (b *Butler) myLocation(location string) bool {
@@ -27,8 +29,7 @@ func (b *Butler) msgHandler(msg Msg) {
 	log := b.Log
 	component := "msgHandler"
 
-	metric := b.MetricsEmitter
-	metric.IncrCounter([]string{"butler", "asset_recvd"}, 1)
+	metrics.IncrCounter([]string{"butler", "asset_recvd"}, 1)
 
 	//set bmclib logger params
 	bmclibLogger.SetFormatter(&logrus.TextFormatter{})
@@ -44,7 +45,7 @@ func (b *Butler) msgHandler(msg Msg) {
 			"AssetType": msg.Asset.Type,
 		}).Debug("Asset was received by butler without any IP(s) info, skipped.")
 
-		metric.IncrCounter([]string{"butler", "asset_recvd_noip"}, 1)
+		metrics.IncrCounter([]string{"butler", "asset_recvd_noip"}, 1)
 		return
 	}
 
@@ -58,7 +59,7 @@ func (b *Butler) msgHandler(msg Msg) {
 				"AssetLocation": msg.Asset.Location,
 			}).Warn("Butler wont manage asset based on its current location.")
 
-			metric.IncrCounter([]string{"butler", "asset_recvd_location_unmanaged"}, 1)
+			metrics.IncrCounter([]string{"butler", "asset_recvd_location_unmanaged"}, 1)
 			return
 		}
 	}
@@ -75,11 +76,11 @@ func (b *Butler) msgHandler(msg Msg) {
 				"Location":  msg.Asset.Location,
 				"Error":     err,
 			}).Warn("Unable Execute command(s) on asset.")
-			metric.IncrCounter([]string{"butler", "execute_fail"}, 1)
+			metrics.IncrCounter([]string{"butler", "execute_fail"}, 1)
 			return
 		}
 
-		metric.IncrCounter([]string{"butler", "execute_success"}, 1)
+		metrics.IncrCounter([]string{"butler", "execute_success"}, 1)
 		return
 	case msg.Asset.Configure == true:
 		err := b.configureAsset(msg.AssetConfig, &msg.Asset)
@@ -93,11 +94,11 @@ func (b *Butler) msgHandler(msg Msg) {
 				"Error":     err,
 			}).Warn("Configure action returned error.")
 
-			metric.IncrCounter([]string{"butler", "configure_fail"}, 1)
+			metrics.IncrCounter([]string{"butler", "configure_fail"}, 1)
 			return
 		}
 
-		metric.IncrCounter([]string{"butler", "configure_success"}, 1)
+		metrics.IncrCounter([]string{"butler", "configure_success"}, 1)
 		return
 	default:
 		log.WithFields(logrus.Fields{
