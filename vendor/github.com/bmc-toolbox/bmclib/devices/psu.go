@@ -6,4 +6,6 @@ type Psu struct {
 	CapacityKw float64
 	PowerKw    float64
 	Status     string
+	PartNumber string
+	Position   int
 }

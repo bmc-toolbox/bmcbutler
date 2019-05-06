@@ -7,12 +7,12 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/bmc-toolbox/bmclogin"
-
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	"github.com/bmc-toolbox/bmcbutler/pkg/butler/configure"
 	"github.com/bmc-toolbox/bmcbutler/pkg/resource"
 	"github.com/bmc-toolbox/bmclib/devices"
+	"github.com/bmc-toolbox/bmclogin"
+	metrics "github.com/bmc-toolbox/gin-go-metrics"
 )
 
 // applyConfig setups up the bmc connection
@@ -22,7 +22,6 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 
 	log := b.Log
 	component := "configureAsset"
-	metric := b.MetricsEmitter
 
 	if b.Config.DryRun {
 		log.WithFields(logrus.Fields{
@@ -32,7 +31,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		return nil
 	}
 
-	defer metric.MeasureRuntime([]string{"butler", "configure_runtime"}, time.Now())
+	defer metrics.MeasureRuntime([]string{"butler", "configure_runtime"}, time.Now())
 
 	b.Log.WithFields(logrus.Fields{
 		"component": component,
@@ -81,8 +80,8 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		c.Apply()
 
 		bmc.Close()
-	case devices.BmcChassis:
-		chassis := client.(devices.BmcChassis)
+	case devices.Cmc:
+		chassis := client.(devices.Cmc)
 
 		asset.Type = "chassis"
 		asset.Model = chassis.BmcType()
@@ -101,13 +100,12 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		}
 
 		if renderedConfig.SetupChassis != nil {
-			s := configure.NewBmcChassisSetup(
+			s := configure.NewCmcSetup(
 				chassis,
 				asset,
 				b.Config.Resources,
 				renderedConfig.SetupChassis,
 				b.Config,
-				b.MetricsEmitter,
 				b.StopChan,
 				b.Log,
 			)
@@ -115,7 +113,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		}
 
 		// Apply configuration
-		c := configure.NewBmcChassisConfigurator(chassis, asset, b.Config.Resources, renderedConfig, b.StopChan, log)
+		c := configure.NewCmcConfigurator(chassis, asset, b.Config.Resources, renderedConfig, b.StopChan, log)
 		c.Apply()
 
 		chassis.Close()

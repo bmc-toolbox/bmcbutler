@@ -23,7 +23,6 @@ import (
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	"github.com/bmc-toolbox/bmcbutler/pkg/config"
-	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
 )
 
 // Msg (butler messages) are passed over the butlerChan
@@ -37,14 +36,13 @@ type Msg struct {
 
 // Butler struct holds attributes required to spawn butlers.
 type Butler struct {
-	Config         *config.Params //bmcbutler config, cli params
-	ButlerChan     <-chan Msg
-	Log            *logrus.Logger
-	StopChan       <-chan struct{}
-	MetricsEmitter *metrics.Emitter
-	SyncWG         *sync.WaitGroup
-	WorkerPool     *workerpool.WorkerPool
-	interrupt      bool
+	Config     *config.Params //bmcbutler config, cli params
+	ButlerChan <-chan Msg
+	Log        *logrus.Logger
+	StopChan   <-chan struct{}
+	SyncWG     *sync.WaitGroup
+	WorkerPool *workerpool.WorkerPool
+	interrupt  bool
 }
 
 // Runner spawns a pool of butlers, waits until they are done.

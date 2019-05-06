@@ -54,7 +54,6 @@ func New(ip string, username string, password string) (chassis *C7000, err error
 	Rimp := &hp.Rimp{}
 	err = xml.Unmarshal(payload, Rimp)
 	if err != nil {
-		httpclient.DumpInvalidPayload(url, ip, payload)
 		return chassis, err
 	}
 
@@ -116,6 +115,8 @@ func (c *C7000) Psus() (psus []*devices.Psu, err error) {
 			Status:     psu.Status,
 			PowerKw:    psu.ActualOutput / 1000.00,
 			CapacityKw: psu.Capacity / 1000.00,
+			PartNumber: psu.Pn,
+			Position:   psu.Bay.Connection,
 		}
 		psus = append(psus, p)
 	}
@@ -138,6 +139,32 @@ func (c *C7000) Nics() (nics []*devices.Nic, err error) {
 	}
 
 	return nics, err
+}
+
+// Fans returns all found fans in the device
+func (c *C7000) Fans() (fans []*devices.Fan, err error) {
+	serial, err := c.Serial()
+	if err != nil {
+		return fans, err
+	}
+
+	for _, fan := range c.Rimp.Infra2.Fans {
+		if fans == nil {
+			fans = make([]*devices.Fan, 0)
+		}
+
+		f := &devices.Fan{
+			Serial:     fmt.Sprintf("%d_%s", fan.Bay.Connection, serial),
+			Status:     fan.Status,
+			Position:   fan.Bay.Connection,
+			Model:      fan.ProducName,
+			CurrentRPM: fan.RpmCUR,
+			PowerKw:    float64(fan.PowerUsed) / 1000,
+		}
+		fans = append(fans, f)
+	}
+
+	return fans, err
 }
 
 // Status returns health string status from the bmc
@@ -286,6 +313,18 @@ func (c *C7000) ChassisSnapshot() (chassis *devices.Chassis, err error) {
 	if err != nil {
 		return nil, err
 	}
+	chassis.Fans, err = c.Fans()
+	if err != nil {
+		return nil, err
+	}
+	chassis.PsuRedundancyMode, err = c.PsuRedundancyMode()
+	if err != nil {
+		return nil, err
+	}
+	chassis.IsPsuRedundant, err = c.IsPsuRedundant()
+	if err != nil {
+		return nil, err
+	}
 
 	return chassis, err
 }
@@ -294,4 +333,26 @@ func (c *C7000) ChassisSnapshot() (chassis *devices.Chassis, err error) {
 func (c *C7000) UpdateCredentials(username string, password string) {
 	c.username = username
 	c.password = password
+}
+
+// IsPsuRedundant informs whether or not the power is currently redundant
+func (c *C7000) IsPsuRedundant() (state bool, err error) {
+	if c.Rimp.Infra2.ChassisPower.Redundancy == "REDUNDANT" {
+		return true, err
+	}
+	return false, err
+}
+
+// PsuRedundancyMode returns the current redundancy mode is configured for the chassis
+func (c *C7000) PsuRedundancyMode() (mode string, err error) {
+	switch c.Rimp.Infra2.ChassisPower.RedundancyMode {
+	case "AC_REDUNDANT":
+		return devices.Grid, err
+	case "POWER_SUPPLY_REDUNDANT":
+		return devices.PowerSupply, err
+	case "NON_REDUNDANT":
+		return devices.NoRedundancy, err
+	default:
+		return devices.Unknown, err
+	}
 }

@@ -21,11 +21,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	"github.com/bmc-toolbox/bmcbutler/pkg/config"
-	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
+	metrics "github.com/bmc-toolbox/gin-go-metrics"
+	"github.com/sirupsen/logrus"
 )
 
 // Dora struct holds attributes required to retrieve assets from Dora,
@@ -34,7 +33,6 @@ type Dora struct {
 	Log             *logrus.Logger
 	BatchSize       int
 	AssetsChan      chan<- []asset.Asset
-	MetricsEmitter  *metrics.Emitter
 	Config          *config.Params
 	FilterAssetType []string
 }
@@ -258,10 +256,8 @@ func (d *Dora) AssetIter() {
 	apiURL := d.Config.Inventory.Dora.URL
 	component := "retrieveInventoryAssetsDora"
 
-	metric := d.MetricsEmitter
-
 	defer close(d.AssetsChan)
-	//defer d.MetricsEmitter.MeasureSince(component, time.Now())
+	//defer metrics.MeasureSince(component, time.Now())
 
 	log := d.Log
 
@@ -310,9 +306,9 @@ func (d *Dora) AssetIter() {
 				}).Fatal("Error unmarshaling data returned from Dora.")
 			}
 
-			metric.IncrCounter(
+			metrics.IncrCounter(
 				[]string{"inventory", "assets_fetched_dora"},
-				float32(len(doraAssets.Data)))
+				int64(len(doraAssets.Data)))
 
 			// for each asset, get its location
 			// store in the assets slice
@@ -325,7 +321,7 @@ func (d *Dora) AssetIter() {
 						"DoraAsset": fmt.Sprintf("%+v", item),
 					}).Warn("Asset location could not be determined, since the asset has no IP.")
 
-					metric.IncrCounter([]string{"inventory", "assets_noip_dora"}, 1)
+					metrics.IncrCounter([]string{"inventory", "assets_noip_dora"}, 1)
 					continue
 				}
 
@@ -346,13 +342,13 @@ func (d *Dora) AssetIter() {
 					"Assets":    fmt.Sprintf("%+v", assets),
 				}).Warn("Asset location could not be determined, ignoring assets")
 
-				metric.IncrCounter([]string{"inventory", "assets_nolocation_dora"}, 1)
+				metrics.IncrCounter([]string{"inventory", "assets_nolocation_dora"}, 1)
 				continue
 			}
 
-			metric.IncrCounter(
+			metrics.IncrCounter(
 				[]string{"inventory", "assets_returned_dora"},
-				float32(len(assets)))
+				int64(len(assets)))
 
 			//pass the asset to the channel
 			d.AssetsChan <- assets

@@ -39,7 +39,7 @@ To add/update the vendor dir.
 `GO111MODULE=on go mod vendor`
 
 ##### Setup
-Theres two parts to setting up configuration for bmcbutler,
+There's two parts to setting up configuration for bmcbutler,
 
 * Bmcbutler configuration
 * Configuration for BMCs

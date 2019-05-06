@@ -1,4 +1,4 @@
-# github.com/bmc-toolbox/bmclib v0.2.4-0.20190327090610-548aa1b6aee8
+# github.com/bmc-toolbox/bmclib v0.2.8
 github.com/bmc-toolbox/bmclib/devices
 github.com/bmc-toolbox/bmclib/logging
 github.com/bmc-toolbox/bmclib/cfgresources
@@ -18,8 +18,10 @@ github.com/bmc-toolbox/bmclib/internal/sshclient
 github.com/bmc-toolbox/bmclib/providers/dell
 github.com/bmc-toolbox/bmclib/internal/ipmi
 github.com/bmc-toolbox/bmclib/providers/supermicro
-# github.com/bmc-toolbox/bmclogin v0.0.2
+# github.com/bmc-toolbox/bmclogin v0.0.3
 github.com/bmc-toolbox/bmclogin
+# github.com/bmc-toolbox/gin-go-metrics v0.0.0-20190425145145-130c9ad985ff
+github.com/bmc-toolbox/gin-go-metrics
 # github.com/cyberdelia/go-metrics-graphite v0.0.0-20161219230853-39f87cc3b432
 github.com/cyberdelia/go-metrics-graphite
 # github.com/fatih/structs v1.1.0
@@ -114,7 +116,7 @@ github.com/rogpeppe/go-internal/semver
 github.com/serenize/snaker
 # github.com/sergi/go-diff v1.0.0
 github.com/sergi/go-diff/diffmatchpatch
-# github.com/sirupsen/logrus v1.3.0
+# github.com/sirupsen/logrus v1.4.1
 github.com/sirupsen/logrus
 github.com/sirupsen/logrus/hooks/syslog
 # github.com/sourcegraph/annotate v0.0.0-20160123013949-f4cad6c6324d
@@ -132,10 +134,9 @@ github.com/spf13/cobra
 github.com/spf13/jwalterweatherman
 # github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
-# github.com/spf13/viper v1.3.1
+# github.com/spf13/viper v1.3.2
 github.com/spf13/viper
-# golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
-golang.org/x/crypto/ssh/terminal
+# golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c
 golang.org/x/crypto/ssh
 golang.org/x/crypto/curve25519
 golang.org/x/crypto/ed25519
@@ -143,17 +144,17 @@ golang.org/x/crypto/internal/chacha20
 golang.org/x/crypto/poly1305
 golang.org/x/crypto/ed25519/internal/edwards25519
 golang.org/x/crypto/internal/subtle
-# golang.org/x/net v0.0.0-20190110200230-915654e7eabc
+# golang.org/x/net v0.0.0-20190415100556-4a65cf94b679
 golang.org/x/net/html
 golang.org/x/net/html/atom
 golang.org/x/net/publicsuffix
-# golang.org/x/sys v0.0.0-20181206074257-70b957f3b65e
+# golang.org/x/sys v0.0.0-20190329044733-9eb1bfa1ce65
 golang.org/x/sys/unix
-golang.org/x/sys/windows
+golang.org/x/sys/cpu
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
-# gopkg.in/go-playground/validator.v9 v9.25.0
+# gopkg.in/go-playground/validator.v9 v9.28.0
 gopkg.in/go-playground/validator.v9
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2

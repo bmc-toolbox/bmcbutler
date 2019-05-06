@@ -9,66 +9,61 @@ import (
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	"github.com/bmc-toolbox/bmcbutler/pkg/config"
 	"github.com/bmc-toolbox/bmcbutler/pkg/inventory"
-	"github.com/bmc-toolbox/bmcbutler/pkg/metrics"
-
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/sirupsen/logrus"
 )
 
-// BmcChassisSetup struct holds various attributes for chassis setup methods.
-type BmcChassisSetup struct {
-	asset          *asset.Asset
-	chassis        devices.BmcChassis
-	setup          devices.BmcChassisSetup
-	config         *cfgresources.SetupChassis
-	resources      []string
-	butlerConfig   *config.Params
-	metricsEmitter *metrics.Emitter
-	log            *logrus.Logger
-	ip             string
-	serial         string
-	vendor         string
-	model          string
-	stopChan       <-chan struct{}
+// CmcSetup struct holds various attributes for chassis setup methods.
+type CmcSetup struct {
+	asset        *asset.Asset
+	chassis      devices.Cmc
+	setup        devices.CmcSetup
+	config       *cfgresources.SetupChassis
+	resources    []string
+	butlerConfig *config.Params
+	log          *logrus.Logger
+	ip           string
+	serial       string
+	vendor       string
+	model        string
+	stopChan     <-chan struct{}
 }
 
-// NewBmcChassisSetup returns a new  struct to apply configuration.
-func NewBmcChassisSetup(
-	chassis devices.BmcChassis,
+// NewCmcSetup returns a new  struct to apply configuration.
+func NewCmcSetup(
+	chassis devices.Cmc,
 	asset *asset.Asset,
 	resources []string,
 	config *cfgresources.SetupChassis,
 	butlerConfig *config.Params,
-	metricsEmitter *metrics.Emitter,
 	stopChan <-chan struct{},
-	logger *logrus.Logger) *BmcChassisSetup {
+	logger *logrus.Logger) *CmcSetup {
 
-	return &BmcChassisSetup{
+	return &CmcSetup{
 		// asset to be setup
 		asset: asset,
 		// client is of type devices.Bmc
 		chassis: chassis,
 		// devices.Bmc is type asserted to apply one time setup configuration,
-		// this is possible since devices.Bmc embeds the BmcChassisSetup interface.
-		setup:        chassis.(devices.BmcChassisSetup),
+		// this is possible since devices.Bmc embeds the CmcSetup interface.
+		setup:        chassis.(devices.CmcSetup),
 		butlerConfig: butlerConfig,
 		// if --resources was passed, only these resources will be applied
-		resources:      resources,
-		metricsEmitter: metricsEmitter,
-		config:         config,
-		log:            logger,
-		stopChan:       stopChan,
+		resources: resources,
+		config:    config,
+		log:       logger,
+		stopChan:  stopChan,
 	}
 }
 
 // Apply applies one time setup configuration.
-func (b *BmcChassisSetup) Apply() { //nolint: gocyclo
+func (b *CmcSetup) Apply() { //nolint: gocyclo
 
-	defer b.metricsEmitter.MeasureRuntime(
-		[]string{"butler", "setupChassis_runtime"},
-		time.Now(),
-	)
+	//defer b.metricsEmitter.MeasureRuntime(
+	//	[]string{"butler", "setupChassis_runtime"},
+	//	time.Now(),
+	//)
 
 	var interrupt bool
 	go func() { <-b.stopChan; interrupt = true }()
@@ -212,12 +207,11 @@ func (b *BmcChassisSetup) Apply() { //nolint: gocyclo
 }
 
 // Post method is when a chassis was setup successfully.
-func (b *BmcChassisSetup) Post() {
+func (b *CmcSetup) Post() {
 
 	enc := inventory.Enc{
-		Config:         b.butlerConfig,
-		Log:            b.log,
-		MetricsEmitter: b.metricsEmitter,
+		Config: b.butlerConfig,
+		Log:    b.log,
 	}
 
 	enc.SetChassisInstalled(b.asset.Serial)
@@ -227,7 +221,7 @@ func (b *BmcChassisSetup) Post() {
 
 // ensurePoweredUp method checks if a chassis is powered off
 // and powers it back on.
-func (b *BmcChassisSetup) ensurePoweredUp() (err error) {
+func (b *CmcSetup) ensurePoweredUp() (err error) {
 
 	status, _ := b.chassis.IsOn()
 	if status == false {
@@ -242,7 +236,7 @@ func (b *BmcChassisSetup) ensurePoweredUp() (err error) {
 	return nil
 }
 
-func (b *BmcChassisSetup) addBladeBmcAdmins() (err error) {
+func (b *CmcSetup) addBladeBmcAdmins() (err error) {
 
 	component := "addBladeBmcAdmins"
 	cfg := b.config.AddBladeBmcAdmins
@@ -294,7 +288,7 @@ func (b *BmcChassisSetup) addBladeBmcAdmins() (err error) {
 	return err
 }
 
-func (b *BmcChassisSetup) removeBladeBmcUsers() (err error) {
+func (b *CmcSetup) removeBladeBmcUsers() (err error) {
 
 	component := "removeBladeBmcUsers"
 
@@ -336,7 +330,7 @@ func (b *BmcChassisSetup) removeBladeBmcUsers() (err error) {
 	return err
 }
 
-func (b *BmcChassisSetup) setDynamicPower() (err error) {
+func (b *CmcSetup) setDynamicPower() (err error) {
 
 	log := b.log
 	component := "setDynamicPower"
@@ -366,7 +360,7 @@ func (b *BmcChassisSetup) setDynamicPower() (err error) {
 
 }
 
-func (b *BmcChassisSetup) setIpmiOverLan() (err error) {
+func (b *CmcSetup) setIpmiOverLan() (err error) {
 
 	log := b.log
 	component := "setIpmiOverLan"
@@ -375,7 +369,7 @@ func (b *BmcChassisSetup) setIpmiOverLan() (err error) {
 	chassis := b.chassis
 	setup := b.setup
 
-	//retrive list of blades in chassis
+	//retrieve list of blades in chassis
 	blades, err := chassis.Blades()
 	if err != nil {
 		msg := "Unable to list blades for chassis."
@@ -454,7 +448,7 @@ func (b *BmcChassisSetup) setIpmiOverLan() (err error) {
 
 // Enables/ Disables FlexAddress status for each blade in a chassis.
 // Each blade is powered down, flex state updated, powered up
-func (b *BmcChassisSetup) setFlexAddressState() (err error) { // nolint: gocyclo
+func (b *CmcSetup) setFlexAddressState() (err error) { // nolint: gocyclo
 
 	component := "setFlexAddressState"
 
@@ -464,7 +458,7 @@ func (b *BmcChassisSetup) setFlexAddressState() (err error) { // nolint: gocyclo
 
 	enable := b.config.FlexAddress.Enable
 
-	//retrive list of blades in chassis
+	//retrieve list of blades in chassis
 	blades, err := chassis.Blades()
 	if err != nil {
 		msg := "Unable to list blades for chassis."
@@ -645,7 +639,7 @@ func (b *BmcChassisSetup) setFlexAddressState() (err error) { // nolint: gocyclo
 }
 
 // Powers up/down blades as defined in config.
-func (b *BmcChassisSetup) setBladesPower() (err error) {
+func (b *CmcSetup) setBladesPower() (err error) {
 
 	log := b.log
 	component := "setBladesPower"
@@ -701,7 +695,7 @@ func (b *BmcChassisSetup) setBladesPower() (err error) {
 			}
 
 			if powerEnable == false {
-				chassis.PowerOffBlade(blade.BladePosition)
+				_, err = chassis.PowerOffBlade(blade.BladePosition)
 				if err != nil {
 					msg := "Unable power down blade."
 					log.WithFields(logrus.Fields{

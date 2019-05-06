@@ -28,7 +28,7 @@ All notable changes to this project goes here.
 ## [v0.0.4] - 03-09-2018
 ### Added
 - Adds --dry-run flag to just run without taking actions.
-- Adds --location, --butlers to overide config params.
+- Adds --location, --butlers to override config params.
 
 ### Changed
 - Update config handling, read in all config before run.
@@ -39,7 +39,7 @@ All notable changes to this project goes here.
  - --chassis/--blades/--discretes can be invoked to configure just those asset types.
  - --serials, --ips can be used without --chassis/--blades/--discretes args.
  - use plurals for all flags
-- Inventory is fetched by invoking inventory type -> AssetRetrieve() which returns the approprate method.
+- Inventory is fetched by invoking inventory type -> AssetRetrieve() which returns the appropriate method.
 - Merge code among cmd/(configure,setup,execute) into pre(), post() methods.
 
 ### Fixed
