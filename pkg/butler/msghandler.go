@@ -34,6 +34,10 @@ func (b *Butler) msgHandler(msg Msg) {
 	//set bmclib logger params
 	bmclibLogger.SetFormatter(&logrus.TextFormatter{})
 	if log.Level == logrus.TraceLevel {
+		bmclibLogger.SetLevel(logrus.TraceLevel)
+	}
+
+	if log.Level == logrus.DebugLevel {
 		bmclibLogger.SetLevel(logrus.DebugLevel)
 	}
 
