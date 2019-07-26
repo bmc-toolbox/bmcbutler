@@ -156,22 +156,23 @@ func (b *Cmc) Apply() { //nolint: gocyclo
 
 	if len(failed) > 0 {
 		b.logger.WithFields(logrus.Fields{
-			"Vendor":       b.vendor,
-			"Model":        b.model,
-			"Serial":       b.serial,
-			"IPAddress":    b.ip,
-			"applied":      strings.Join(success, ", "),
-			"unsuccessful": strings.Join(failed, ", "),
+			"Vendor":    b.vendor,
+			"Model":     b.model,
+			"Serial":    b.serial,
+			"IPAddress": b.ip,
+			"success":   false,
+			"applied":   strings.Join(success, ", "),
+			"failed":    strings.Join(failed, ", "),
 		}).Warn("One or more resources failed to apply.")
 		return
 	}
 
 	b.logger.WithFields(logrus.Fields{
-		"Vendor":       b.vendor,
-		"Model":        b.model,
-		"Serial":       b.serial,
-		"IPAddress":    b.ip,
-		"applied":      strings.Join(success, ", "),
-		"unsuccessful": strings.Join(failed, ", "),
-	}).Info("CMC configuration actions successful.")
+		"Vendor":    b.vendor,
+		"Model":     b.model,
+		"Serial":    b.serial,
+		"IPAddress": b.ip,
+		"success":   true,
+		"applied":   strings.Join(success, ", "),
+	}).Info("BMC configuration actions successful.")
 }

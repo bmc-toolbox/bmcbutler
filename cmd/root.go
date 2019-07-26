@@ -78,6 +78,8 @@ func setupLogger() {
 	default:
 		log.SetLevel(logrus.InfoLevel)
 	}
+
+	log.SetFormatter(&logrus.JSONFormatter{})
 }
 
 func init() {
