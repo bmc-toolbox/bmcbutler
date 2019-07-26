@@ -94,6 +94,6 @@ loop:
 	log.WithFields(logrus.Fields{
 		"component": component,
 		"Count":     b.Config.ButlersToSpawn,
-	}).Info("All butlers exited.")
+	}).Debug("All butlers exited.")
 
 }
