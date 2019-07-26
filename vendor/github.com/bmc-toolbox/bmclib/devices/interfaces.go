@@ -29,8 +29,8 @@ type Bmc interface {
 // BmcCollection represents the requirement of items to be collected a server
 type BmcCollection interface {
 	BiosVersion() (string, error)
-	BmcType() string
-	BmcVersion() (string, error)
+	HardwareType() string
+	Version() (string, error)
 	CPU() (string, int, int, int, error)
 	Disks() ([]*Disk, error)
 	IsBlade() (bool, error)
@@ -46,8 +46,10 @@ type BmcCollection interface {
 	Status() (string, error)
 	TempC() (int, error)
 	Vendor() string
+	Slot() (int, error)
 	Screenshot() ([]byte, string, error)
 	ServerSnapshot() (interface{}, error)
+	ChassisSerial() (string, error)
 }
 
 // Cmc represents all the required cmc items
@@ -81,10 +83,9 @@ type Cmc interface {
 // CmcCollection represents the requirement of items to be collected from a chassis
 type CmcCollection interface {
 	Blades() ([]*Blade, error)
-	BmcType() string
+	HardwareType() string
 	FindBladePosition(string) (int, error)
-	FwVersion() (string, error)
-	GetFirmwareVersion() (string, error)
+	Version() (string, error)
 	Fans() ([]*Fan, error)
 	IsActive() bool
 	IsOn() (bool, error)

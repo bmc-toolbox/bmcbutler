@@ -36,13 +36,13 @@ func (i *Ibmc) BiosVersion() (string, error) {
 	return "", nil
 }
 
-// BmcType implements the Bmc interface
-func (i *Ibmc) BmcType() string {
+// HardwareType implements the Bmc interface
+func (i *Ibmc) HardwareType() string {
 	return ""
 }
 
-// BmcVersion implements the Bmc interface
-func (i *Ibmc) BmcVersion() (string, error) {
+// Version implements the Bmc interface
+func (i *Ibmc) Version() (string, error) {
 	return "", nil
 }
 
@@ -136,6 +136,11 @@ func (i *Ibmc) Serial() (string, error) {
 	return "", nil
 }
 
+// ChassisSerial implements the Bmc interface
+func (i *Ibmc) ChassisSerial() (string, error) {
+	return "", nil
+}
+
 // Status implements the Bmc interface
 func (i *Ibmc) Status() (string, error) {
 	return "", nil
@@ -164,6 +169,11 @@ func (i *Ibmc) ServerSnapshot() (interface{}, error) {
 // UpdateCredentials implements the Bmc interface
 func (i *Ibmc) UpdateCredentials(string, string) {
 	return
+}
+
+// Slot implements the Bmc interface
+func (i *Ibmc) Slot() (int, error) {
+	return -1, nil
 }
 
 // UpdateFirmware implements the Bmc inteface

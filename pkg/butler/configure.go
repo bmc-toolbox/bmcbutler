@@ -61,7 +61,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		bmc := client.(devices.Bmc)
 
 		asset.Type = "server"
-		asset.Model = bmc.BmcType()
+		asset.Model = bmc.HardwareType()
 		asset.Vendor = bmc.Vendor()
 		// Required for TLS cert CN
 		asset.Serial, _ = bmc.Serial()
@@ -84,7 +84,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		chassis := client.(devices.Cmc)
 
 		asset.Type = "chassis"
-		asset.Model = chassis.BmcType()
+		asset.Model = chassis.HardwareType()
 		asset.Vendor = chassis.Vendor()
 
 		// Required for TLS cert CN

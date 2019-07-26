@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	// BmcType defines the bmc model that is supported by this package
+	// HardwareType defines the bmc model that is supported by this package
 	BmcType = "supermicrox10"
 )
 
@@ -256,21 +256,29 @@ func (s *SupermicroX10) Serial() (serial string, err error) {
 		return serial, err
 	}
 
+	if ipmi.FruInfo == nil || ipmi.FruInfo.Board == nil {
+		return serial, errors.ErrInvalidSerial
+	}
+
+	return strings.ToLower(ipmi.FruInfo.Board.SerialNum), err
+}
+
+// ChassisSerial returns the serial number of the chassis where the blade is attached
+func (s *SupermicroX10) ChassisSerial() (serial string, err error) {
+	ipmi, err := s.query("FRU_INFO.XML=(0,0)")
+	if err != nil {
+		return serial, err
+	}
+
 	if ipmi.FruInfo == nil || ipmi.FruInfo.Chassis == nil {
 		return serial, errors.ErrInvalidSerial
 	}
 
-	if strings.HasPrefix(ipmi.FruInfo.Chassis.SerialNum, "S") {
-		serial = strings.TrimSpace(fmt.Sprintf("%s_%s", strings.TrimSpace(ipmi.FruInfo.Chassis.SerialNum), strings.TrimSpace(ipmi.FruInfo.Board.SerialNum)))
-	} else {
-		serial = strings.TrimSpace(fmt.Sprintf("%s_%s", strings.TrimSpace(ipmi.FruInfo.Product.SerialNum), strings.TrimSpace(ipmi.FruInfo.Board.SerialNum)))
-	}
-
-	return strings.ToLower(serial), err
+	return strings.ToLower(strings.TrimSpace(ipmi.FruInfo.Chassis.SerialNum)), err
 }
 
-// BmcType returns just Model id string - supermicrox10
-func (s *SupermicroX10) BmcType() (model string) {
+// HardwareType returns just Model id string - supermicrox10
+func (s *SupermicroX10) HardwareType() (model string) {
 	return BmcType
 }
 
@@ -288,8 +296,8 @@ func (s *SupermicroX10) Model() (model string, err error) {
 	return model, err
 }
 
-// BmcVersion returns the version of the bmc we are running
-func (s *SupermicroX10) BmcVersion() (bmcVersion string, err error) {
+// Version returns the version of the bmc we are running
+func (s *SupermicroX10) Version() (bmcVersion string, err error) {
 	ipmi, err := s.query("GENERIC_INFO.XML=(0,0)")
 	if err != nil {
 		return bmcVersion, err
@@ -387,8 +395,12 @@ func (s *SupermicroX10) PowerKw() (power float64, err error) {
 	}
 
 	if ipmi.NodeInfo != nil {
+		serial, err := s.Serial()
+		if err != nil {
+			return power, err
+		}
 		for _, node := range ipmi.NodeInfo.Nodes {
-			if node.IP == strings.Split(s.ip, ":")[0] {
+			if strings.ToLower(node.NodeSerial) == serial {
 				value, err := strconv.Atoi(node.Power)
 				if err != nil {
 					return power, err
@@ -424,8 +436,12 @@ func (s *SupermicroX10) TempC() (temp int, err error) {
 	}
 
 	if ipmi.NodeInfo != nil {
+		serial, err := s.Serial()
+		if err != nil {
+			return temp, err
+		}
 		for _, node := range ipmi.NodeInfo.Nodes {
-			if node.IP == strings.Split(s.ip, ":")[0] {
+			if strings.ToLower(node.NodeSerial) == serial {
 				temp, err := strconv.Atoi(node.SystemTemp)
 				if err != nil {
 					return temp, err
@@ -441,7 +457,50 @@ func (s *SupermicroX10) TempC() (temp int, err error) {
 
 // IsBlade returns if the current hardware is a blade or not
 func (s *SupermicroX10) IsBlade() (isBlade bool, err error) {
+	ipmi, err := s.query("Get_PlatformCap.XML=(0,0)")
+	if err != nil {
+		return isBlade, err
+	}
+
+	if ipmi.Platform.MultiNode != "0" {
+		return true, err
+	}
+
 	return false, err
+}
+
+// Slot returns the current slot within the chassis
+func (s *SupermicroX10) Slot() (slot int, err error) {
+	ipmi, err := s.query("Get_PlatformCap.XML=(0,0)")
+	if err != nil {
+		return slot, err
+	}
+
+	slot, err = strconv.Atoi(ipmi.Platform.TwinNodeNumber)
+	if err != nil {
+		if strings.Contains(err.Error(), "invalid syntax") {
+			ipmi, err := s.query("Get_NodeInfoReadings.XML=(0,0)")
+			if err != nil {
+				return slot, err
+			}
+
+			if ipmi.NodeInfo != nil {
+				serial, err := s.Serial()
+				if err != nil {
+					return slot, err
+				}
+				for _, node := range ipmi.NodeInfo.Nodes {
+					if strings.ToLower(node.NodeSerial) == serial {
+						return node.ID + 1, err
+					}
+				}
+			}
+		}
+	} else {
+		slot = slot + 1
+	}
+
+	return slot, err
 }
 
 // Nics returns all found Nics in the device
@@ -528,18 +587,19 @@ func (s *SupermicroX10) Vendor() (vendor string) {
 }
 
 // ServerSnapshot do best effort to populate the server data and returns a blade or discrete
+// nolint: gocyclo
 func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 	if isBlade, _ := s.IsBlade(); isBlade {
 		blade := &devices.Blade{}
 		blade.Vendor = s.Vendor()
 		blade.BmcAddress = s.ip
-		blade.BmcType = s.BmcType()
+		blade.BmcType = s.HardwareType()
 
 		blade.Serial, err = s.Serial()
 		if err != nil {
 			return nil, err
 		}
-		blade.BmcVersion, err = s.BmcVersion()
+		blade.BmcVersion, err = s.Version()
 		if err != nil {
 			return nil, err
 		}
@@ -591,18 +651,26 @@ func (s *SupermicroX10) ServerSnapshot() (server interface{}, err error) {
 		if err != nil {
 			return nil, err
 		}
+		blade.BladePosition, err = s.Slot()
+		if err != nil {
+			return nil, err
+		}
+		blade.ChassisSerial, err = s.ChassisSerial()
+		if err != nil {
+			return nil, err
+		}
 		server = blade
 	} else {
 		discrete := &devices.Discrete{}
 		discrete.Vendor = s.Vendor()
 		discrete.BmcAddress = s.ip
-		discrete.BmcType = s.BmcType()
+		discrete.BmcType = s.HardwareType()
 
 		discrete.Serial, err = s.Serial()
 		if err != nil {
 			return nil, err
 		}
-		discrete.BmcVersion, err = s.BmcVersion()
+		discrete.BmcVersion, err = s.Version()
 		if err != nil {
 			return nil, err
 		}
