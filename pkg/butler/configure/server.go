@@ -49,6 +49,10 @@ func NewBmcConfigurator(bmc devices.Bmc,
 		butlerConfig: butlerConfig,
 		logger:       logger,
 		stopChan:     stopChan,
+		ip:           asset.IPAddress,
+		serial:       asset.Serial,
+		vendor:       asset.Vendor,
+		model:        asset.Model,
 	}
 }
 
@@ -199,6 +203,18 @@ func (b *Bmc) Apply() {
 		}
 	}
 
+	if len(failed) > 0 {
+		b.logger.WithFields(logrus.Fields{
+			"Vendor":       b.vendor,
+			"Model":        b.model,
+			"Serial":       b.serial,
+			"IPAddress":    b.ip,
+			"applied":      strings.Join(success, ", "),
+			"unsuccessful": strings.Join(failed, ", "),
+		}).Warn("One or more resources failed to apply.")
+		return
+	}
+
 	b.logger.WithFields(logrus.Fields{
 		"Vendor":       b.vendor,
 		"Model":        b.model,
@@ -206,6 +222,6 @@ func (b *Bmc) Apply() {
 		"IPAddress":    b.ip,
 		"applied":      strings.Join(success, ", "),
 		"unsuccessful": strings.Join(failed, ", "),
-	}).Debug("Server BMC configuration actions done.")
+	}).Info("BMC configuration actions successful.")
 
 }
