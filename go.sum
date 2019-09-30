@@ -12,6 +12,8 @@ github.com/bmc-toolbox/bmclib v0.2.9-0.20190507094908-e87cfd10ffa5/go.mod h1:V1y
 github.com/bmc-toolbox/bmclib v0.3.2/go.mod h1:V1ynUIaaWF6Ycxs5/h1mhCURaYhu4rRWn2NsvP74/KA=
 github.com/bmc-toolbox/bmclib v0.3.3-0.20190726085631-6a01426cb973 h1:xnNnkObkGZOpqTnef+TzF5GERKr/j2FS7y9ojPbr9QM=
 github.com/bmc-toolbox/bmclib v0.3.3-0.20190726085631-6a01426cb973/go.mod h1:V1ynUIaaWF6Ycxs5/h1mhCURaYhu4rRWn2NsvP74/KA=
+github.com/bmc-toolbox/bmclib v0.3.5-0.20190930112234-93f4ca6d591c h1:WpXZhhfWwZZp3J8zKJDT+ljuVOzATyw781gxK5TD4Ps=
+github.com/bmc-toolbox/bmclib v0.3.5-0.20190930112234-93f4ca6d591c/go.mod h1:23sB7E57x9yrLlgWEIeW+uv5WnnNPtZ9/J8LecSIkZc=
 github.com/bmc-toolbox/bmclogin v0.0.3 h1:TlaiA+9qhL5zGLm8LWSLKqfknV8ByR5Ge0HCGNQhtpE=
 github.com/bmc-toolbox/bmclogin v0.0.3/go.mod h1:eKb7WSyDadrzy0//gHywlz1FjgpZQXbW/ro8AsLbO4o=
 github.com/bmc-toolbox/gin-go-metrics v0.0.0-20190425145145-130c9ad985ff h1:fcp5EaStADQBTjrYL4pUtn4xknLA3CqJKkQd1HSSEdQ=
@@ -405,6 +407,8 @@ golang.org/x/sys v0.0.0-20190329044733-9eb1bfa1ce65 h1:hOY+O8MxdkPV10pNf7/XEHayS
 golang.org/x/sys v0.0.0-20190329044733-9eb1bfa1ce65/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0 h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
+golang.org/x/text v0.3.2 h1:tW2bmiBqwgJj/UpqtC8EpXEZVYOwU0yG4iWbprSVAcs=
+golang.org/x/text v0.3.2/go.mod h1:bEr9sfX3Q8Zfm5fL9x+3itogRgK3+ptLWKqgva+5dAk=
 golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
 golang.org/x/tools v0.0.0-20181003024731-2f84ea8ef872/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
 golang.org/x/tools v0.0.0-20181006002542-f60d9635b16a/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=

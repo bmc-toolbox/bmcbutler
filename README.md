@@ -26,10 +26,15 @@ Need help? See kiwiirc link above/find us on the freenode IRC channel `##bmc-too
 ##### Build
 `go get github.com/bmc-toolbox/bmcbutler`
 
-###### Build with vendored modules (go 1.11)
+###### Build with vendored modules (>= go 1.11)
 `GO111MODULE=on go build -mod vendor -v`
 
 ###### Notes on working with go mod
+
+To point to a local copy of bmclib, add to the bottom of the `go.mod` file
+
+`replace github.com/bmc-toolbox/bmclib => ../bmclib`
+
 To pick a specific bmclib SHA.
 
 `GO111MODULE=on go get github.com/bmc-toolbox/bmclib@2d1bd1cb`
