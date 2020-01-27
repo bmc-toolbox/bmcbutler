@@ -14,6 +14,8 @@ github.com/bmc-toolbox/bmclib v0.3.3-0.20190726085631-6a01426cb973 h1:xnNnkObkGZ
 github.com/bmc-toolbox/bmclib v0.3.3-0.20190726085631-6a01426cb973/go.mod h1:V1ynUIaaWF6Ycxs5/h1mhCURaYhu4rRWn2NsvP74/KA=
 github.com/bmc-toolbox/bmclib v0.3.5-0.20190930112234-93f4ca6d591c h1:WpXZhhfWwZZp3J8zKJDT+ljuVOzATyw781gxK5TD4Ps=
 github.com/bmc-toolbox/bmclib v0.3.5-0.20190930112234-93f4ca6d591c/go.mod h1:23sB7E57x9yrLlgWEIeW+uv5WnnNPtZ9/J8LecSIkZc=
+github.com/bmc-toolbox/bmclib v0.3.5-0.20200124145945-8015b54d5757 h1:g/D0CU7uGlsxG9Zxe25pQ9VkMiIy2hYat2c3jFhvfP4=
+github.com/bmc-toolbox/bmclib v0.3.5-0.20200124145945-8015b54d5757/go.mod h1:92xDZFxOa+GGc8+qk1CLlVKNCYY9DExkrTDz66eb4cc=
 github.com/bmc-toolbox/bmclogin v0.0.3 h1:TlaiA+9qhL5zGLm8LWSLKqfknV8ByR5Ge0HCGNQhtpE=
 github.com/bmc-toolbox/bmclogin v0.0.3/go.mod h1:eKb7WSyDadrzy0//gHywlz1FjgpZQXbW/ro8AsLbO4o=
 github.com/bmc-toolbox/gin-go-metrics v0.0.0-20190425145145-130c9ad985ff h1:fcp5EaStADQBTjrYL4pUtn4xknLA3CqJKkQd1HSSEdQ=

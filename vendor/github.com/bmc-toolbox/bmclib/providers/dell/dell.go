@@ -49,6 +49,14 @@ type ChassisGroupMemberHealthBlob struct {
 	ChassisStatus *ChassisStatus    `json:"chassis_status"`
 	CMCStatus     *CMCStatus        `json:"cmc_status"`
 	Fans          map[string]*Fan   `json:"fans_status"`
+	ActiveAlerts  struct {
+		Chassis map[string]*Alerts `json:"Chassis"`
+	} `json:"active_alerts"`
+}
+
+type Alerts struct {
+	CriticalCount int               `json:"criticalCount"`
+	Critical      map[string]string `json:"critical"`
 }
 
 // Fan contains dell fan data
@@ -449,4 +457,17 @@ type HwDetection struct {
 		SysDesc        string `json:"sysDesc"`
 		Status         string `json:"status"`
 	} `json:"aimGetProp"`
+}
+
+// SystemTopology struct contains details on the blade slot for the C6420
+type SystemTopology struct {
+	SystemServerTopology struct {
+		AisleName              string `json:"AisleName"`
+		BladeSlotNumInChassis  string `json:"BladeSlotNumInChassis"`
+		DataCenterName         string `json:"DataCenterName"`
+		RackName               string `json:"RackName"`
+		RackSlot               string `json:"RackSlot"`
+		RoomName               string `json:"RoomName"`
+		SizeOfManagedSystemInU string `json:"SizeOfManagedSystemInU"`
+	} `json:"System.ServerTopology"`
 }
