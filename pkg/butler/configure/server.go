@@ -141,6 +141,10 @@ func (b *Bmc) Apply() {
 			if b.config.HTTPSCert != nil {
 				reset, err = b.certificateSetup()
 			}
+		case "power":
+			if b.config.Power != nil {
+				err = b.configure.Power(b.config.Power)
+			}
 		default:
 			b.logger.WithFields(logrus.Fields{
 				"resource": resource,

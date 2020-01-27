@@ -37,3 +37,6 @@ inventory:
   #  apiURL: http://dora.example.com/api
   #csv:
   #  file: /etc/bmcbutler/inventory.csv
+power:
+  hpe:
+    regulator: static_high
