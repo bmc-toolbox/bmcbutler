@@ -1,9 +1,10 @@
 module github.com/bmc-toolbox/bmcbutler
 
 require (
-	github.com/bmc-toolbox/bmclib v0.3.5
+	github.com/bmc-toolbox/bmclib v0.3.6-0.20200213112039-6c5423e70568
 	github.com/bmc-toolbox/bmclogin v0.0.3
 	github.com/bmc-toolbox/gin-go-metrics v0.0.0-20190425145145-130c9ad985ff
+	github.com/davecgh/go-spew v1.1.1
 	github.com/gammazero/deque v0.0.0-20190130191400-2afb3858e9c7 // indirect
 	github.com/gammazero/workerpool v0.0.0-20181230203049-86a96b5d5d92
 	github.com/gobuffalo/envy v1.6.11 // indirect

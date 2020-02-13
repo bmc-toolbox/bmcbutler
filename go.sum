@@ -20,6 +20,8 @@ github.com/bmc-toolbox/bmclib v0.3.5-0.20200127150651-00b738cb1545 h1:/NOLFVMH5c
 github.com/bmc-toolbox/bmclib v0.3.5-0.20200127150651-00b738cb1545/go.mod h1:92xDZFxOa+GGc8+qk1CLlVKNCYY9DExkrTDz66eb4cc=
 github.com/bmc-toolbox/bmclib v0.3.5 h1:0pXswDAewkH/XasmkBAjJbkI9rGkkC9U5WuCwPHR5tw=
 github.com/bmc-toolbox/bmclib v0.3.5/go.mod h1:92xDZFxOa+GGc8+qk1CLlVKNCYY9DExkrTDz66eb4cc=
+github.com/bmc-toolbox/bmclib v0.3.6-0.20200213112039-6c5423e70568 h1:6GsySw2VKmGbOanOqYucl/HRUfdXUpHcishC3RdBc5Y=
+github.com/bmc-toolbox/bmclib v0.3.6-0.20200213112039-6c5423e70568/go.mod h1:92xDZFxOa+GGc8+qk1CLlVKNCYY9DExkrTDz66eb4cc=
 github.com/bmc-toolbox/bmclogin v0.0.3 h1:TlaiA+9qhL5zGLm8LWSLKqfknV8ByR5Ge0HCGNQhtpE=
 github.com/bmc-toolbox/bmclogin v0.0.3/go.mod h1:eKb7WSyDadrzy0//gHywlz1FjgpZQXbW/ro8AsLbO4o=
 github.com/bmc-toolbox/gin-go-metrics v0.0.0-20190425145145-130c9ad985ff h1:fcp5EaStADQBTjrYL4pUtn4xknLA3CqJKkQd1HSSEdQ=
