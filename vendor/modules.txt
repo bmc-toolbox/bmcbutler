@@ -1,8 +1,9 @@
-# github.com/bmc-toolbox/bmclib v0.3.6-0.20200213112039-6c5423e70568
+# github.com/bmc-toolbox/bmclib v0.3.7
 github.com/bmc-toolbox/bmclib/cfgresources
 github.com/bmc-toolbox/bmclib/devices
 github.com/bmc-toolbox/bmclib/discover
 github.com/bmc-toolbox/bmclib/errors
+github.com/bmc-toolbox/bmclib/internal
 github.com/bmc-toolbox/bmclib/internal/helper
 github.com/bmc-toolbox/bmclib/internal/httpclient
 github.com/bmc-toolbox/bmclib/internal/ipmi
@@ -24,8 +25,6 @@ github.com/bmc-toolbox/bmclogin
 github.com/bmc-toolbox/gin-go-metrics
 # github.com/cyberdelia/go-metrics-graphite v0.0.0-20161219230853-39f87cc3b432
 github.com/cyberdelia/go-metrics-graphite
-# github.com/davecgh/go-spew v1.1.1
-github.com/davecgh/go-spew/spew
 # github.com/fatih/structs v1.1.0
 github.com/fatih/structs
 # github.com/fsnotify/fsnotify v1.4.7
