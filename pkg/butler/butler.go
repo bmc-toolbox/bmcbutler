@@ -23,6 +23,7 @@ import (
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	"github.com/bmc-toolbox/bmcbutler/pkg/config"
+	"github.com/bmc-toolbox/bmcbutler/pkg/secrets"
 )
 
 // Msg (butler messages) are passed over the butlerChan
@@ -43,6 +44,7 @@ type Butler struct {
 	SyncWG     *sync.WaitGroup
 	WorkerPool *workerpool.WorkerPool
 	interrupt  bool
+	Secrets    *secrets.Store
 }
 
 // Runner spawns a pool of butlers, waits until they are done.

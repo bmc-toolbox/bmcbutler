@@ -1,13 +1,27 @@
 locations: ['fra4', 'ams4'] 
 butlersToSpawn: 1
 bmcCfgDir: /etc/bmcbutler/cfg
+secretsFromVault: true
+vault:
+  hostAddress: "http://172.18.0.2:8200"
+  #token: "s.vhyEi66wK5PCeqkslrm4Ekd8"
+  tokenFromFile: "samples/vault-token.test"
+  #tokenFromEnv: true #VAULT_TOKEN env var required to be set
+  secretsPath: /secret/baremetal/bmc
+# with secretsFromVault, credentials can be looked up from vault
 credentials:
-  - Administrator: "foobar1"
-  - Administrator: "hunter2"
-  - user1: "barbar"
-  - Administrator: "password"
-  - root: "calvin"
-  - ADMIN: "ADMIN"
+  - Administrator: lookup_secret::Administrator
+  - Adminstrator: oldpassword
+  - root: calvin
+  - ADMIN: ADMIN
+# To declare plain text credentials
+#credentials:
+#  - Administrator: "foobar1"
+#  - Administrator: "hunter2"
+#  - user1: "barbar"
+#  - Administrator: "password"
+#  - root: "calvin"
+#  - ADMIN: "ADMIN"
 metrics:
   graphite:
     host: graphite.example.foo

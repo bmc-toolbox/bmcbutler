@@ -99,6 +99,62 @@ To have this setup,
 The signer executable is required to accept a CSR through STDIN and spit out the signed cert through STDOUT.
 An example signer that uses [lemur](https://github.com/Netflix/lemur) can be found under [helpers](../master/helpers)
 
+###### Load credentials from [Vault](https://www.vaultproject.io)
+
+Credentials to login to BMCs and configure them can be declared in the configuration file,
+or can be looked up from Vault.
+
+To setup secrets lookup from Vault, 
+
+- enable `secretsFromVault: true` in [bmcbutler.yml](../master/samples/bmcbutler.yml.sample)
+- Use the `lookup_secret::Administrator` parameter in place of the credential in [bmcbutler.yml](../master/samples/bmcbutler.yml.sample)
+- Use the `<%= lookup_secret("Administrator") %>` YAML templating parameter in place of credentials in [configuration.yml sample](../master/samples/cfg/configuration.yml)
+- See the sample bmcbutler.yml for options to set the vault token.
+
+Examples 
+
+Set credentials in Vault
+```
+curl -H "X-Vault-Token: $VAULT_TOKEN" \
+    -H "Content-Type: application/json" \
+    -X POST -d '{"Administrator": "hunter2", "Ops": "foobar"}' https://vault.example.com/v1/secret/baremetal/bmc
+```
+
+Check credentials were set
+```
+curl --header "X-Vault-Token: $VAULT_TOKEN" \
+      -X GET https://vault.example.com/v1/secret/baremetal/bmc
+```
+
+bmcbutler.yml - declare Vault config and replace credentials
+```
+secretsFromVault: true
+vault:
+  hostAddress: "http://172.18.0.2:8200"
+  tokenFromFile: "samples/vault-token.test"
+  secretsPath: /secret/baremetal/bmc
+credentials:
+  - Administrator: lookup_secret::Administrator
+  - Administrator: lookup_secret::Admin2
+  - root: lookup_secret::dell_default
+  - ADMIN: lookup_secret::sm_default
+```
+
+configuration.yml - declare BMC user account config with `lookup_secrets` template method.
+```
+user:
+  - name: Administrator
+    # lookup_secret - requires 'secretsFromVault: true' in bmcbutler.yml
+    # note - double quotes required
+    password: <%= lookup_secret("Administrator") %>
+    role: admin
+    enable: true
+  - name: Ops
+    password: <%= lookup_secret("Ops") %>
+    role: user
+    enable: false
+```
+
 ##### Run
 
 Configure Blades/Chassis/Discretes

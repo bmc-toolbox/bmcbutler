@@ -15,33 +15,29 @@
 package config
 
 import (
-	"fmt"
-	"log"
-	"os"
 	"time"
-
-	"github.com/mitchellh/go-homedir"
-	"github.com/spf13/viper"
 )
 
 // Params struct holds all bmcbutler configuration parameters
 type Params struct {
-	ButlersToSpawn int                 `mapstructure:"butlersToSpawn"`
-	Credentials    []map[string]string `mapstructure:"credentials"`
-	CertSigner     *CertSigner         `mapstructure:"cert_signer"`
-	Inventory      *Inventory          `mapstructure:"inventory"`
-	Locations      []string            `mapstructure:"locations"`
-	Metrics        *Metrics            `mapstructure:"metrics"`
-	FilterParams   *FilterParams
-	CfgFile        string
-	Configure      bool //indicates configure was invoked
-	DryRun         bool //when set, don't carry out any actions, just log.
-	Execute        bool //indicates execute was invoked
-	IgnoreLocation bool
-	Resources      []string
-	Version        string
-	Debug          bool
-	Trace          bool
+	ButlersToSpawn   int                 `mapstructure:"butlersToSpawn"`
+	Credentials      []map[string]string `mapstructure:"credentials"`
+	CertSigner       *CertSigner         `mapstructure:"cert_signer"`
+	Inventory        *Inventory          `mapstructure:"inventory"`
+	Locations        []string            `mapstructure:"locations"`
+	Metrics          *Metrics            `mapstructure:"metrics"`
+	FilterParams     *FilterParams
+	CfgFile          string
+	Configure        bool //indicates configure was invoked
+	DryRun           bool //when set, don't carry out any actions, just log.
+	Execute          bool //indicates execute was invoked
+	IgnoreLocation   bool
+	Resources        []string
+	Version          string
+	Debug            bool
+	Trace            bool
+	SecretsFromVault bool   `mapstructure:"secretsFromVault"`
+	Vault            *Vault `mapstructure:"vault"`
 }
 
 // Inventory struct holds inventory configuration parameters.
@@ -117,86 +113,11 @@ type FilterParams struct {
 	Ips     string
 }
 
-// Load sets up bmcbutler configuration.
-// nolint: gocyclo
-func (p *Params) Load(cfgFile string) {
-
-	//FilterParams holds the configure/setup/execute related host filter cli args.
-	p.FilterParams = &FilterParams{}
-
-	//read in config file with viper
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		viper.SetConfigName("bmcbutler")
-		viper.AddConfigPath("/etc/bmcbutler")
-		viper.AddConfigPath(fmt.Sprintf("%s/.bmcbutler", home))
-	}
-
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = viper.Unmarshal(&p)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// metrics config
-	if p.Metrics != nil {
-		if p.Metrics.Graphite != nil {
-			p.Metrics.Client = "graphite"
-		} else {
-			log.Println("[WARN] Invalid metrics client declared in config.")
-		}
-	}
-
-	//signer config
-	if p.CertSigner != nil {
-		if p.CertSigner.FakeSigner != nil {
-			p.CertSigner.Client = "fakeSigner"
-
-		} else if p.CertSigner.LemurSigner != nil {
-			p.CertSigner.Client = "lemurSigner"
-
-		} else {
-			log.Println("[WARN] Invalid cert_signer declared in config.")
-		}
-	}
-
-	//inventory config
-	if p.Inventory != nil {
-
-		if p.Inventory.Enc != nil {
-			p.Inventory.Source = "enc"
-
-		} else if p.Inventory.Dora != nil {
-			p.Inventory.Source = "dora"
-
-		} else if p.Inventory.Csv != nil {
-			p.Inventory.Source = "csv"
-
-		} else {
-			log.Println("[WARN] Invalid inventory source declared in configuration.")
-		}
-	}
-
-	//Butlers to spawn
-	if p.ButlersToSpawn == 0 {
-		p.ButlersToSpawn = 5
-	}
-
-	if p.Credentials == nil {
-		log.Println("[Error] No credentials declared in configuration.")
-		os.Exit(1)
-	}
+// Vault struct declares vault config attributes
+type Vault struct {
+	TokenFromFile string `mapstructure:"tokenFromFile"`
+	TokenFromEnv  bool   `mapstructure:"tokenFromEnv"`
+	SecretsPath   string `mapstructure:"secretsPath"`
+	HostAddress   string `mapstructure:"hostAddress"`
+	Token         string `mapstructure:"token"`
 }

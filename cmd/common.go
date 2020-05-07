@@ -11,6 +11,7 @@ import (
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	"github.com/bmc-toolbox/bmcbutler/pkg/butler"
 	"github.com/bmc-toolbox/bmcbutler/pkg/inventory"
+	"github.com/bmc-toolbox/bmcbutler/pkg/secrets"
 	metrics "github.com/bmc-toolbox/gin-go-metrics"
 )
 
@@ -143,6 +144,23 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 		Config:     runConfig,
 		Log:        log,
 		SyncWG:     &commandWG,
+	}
+
+	// load secrets from vault if set
+	if runConfig.SecretsFromVault {
+
+		store, err := secrets.Load(*runConfig.Vault)
+		if err != nil {
+			log.Fatalf("[Error] loading secrets from vault: %s", err.Error())
+		}
+
+		runConfig.Credentials, err = store.UpdateConfigCredentials(runConfig.Credentials)
+		if err != nil {
+			log.Fatalf("[Error] loading secrets from vault: %s", err.Error())
+		}
+
+		butlers.Secrets = store
+
 	}
 
 	go butlers.Runner()

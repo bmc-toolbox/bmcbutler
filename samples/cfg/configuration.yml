@@ -11,11 +11,13 @@ syslog:
 
 user:
   - name: Administrator
-    password: changeme
+    # lookup_secret - requires 'secretsFromVault: true' in bmcbutler.yml
+    # note: double quotes required!
+    password: <%= lookup_secret("Administrator") %>
     role: admin
     enable: true
-  - name: foobar
-    password: changeme
+  - name: Ops
+    password: <%= lookup_secret("Ops") %>
     role: user
     enable: false
 

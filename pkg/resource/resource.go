@@ -24,6 +24,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
+	"github.com/bmc-toolbox/bmcbutler/pkg/secrets"
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 )
@@ -31,8 +32,9 @@ import (
 // Resource struct holds configuration resource related attributes
 // Config resources are configuration parameters butlers apply to assets.
 type Resource struct {
-	Log   *logrus.Logger
-	Asset *asset.Asset
+	Log     *logrus.Logger
+	Asset   *asset.Asset
+	Secrets *secrets.Store
 }
 
 // ReadYamlTemplate reads the given config .yml file, returns it as a slice of bytes.
@@ -70,6 +72,14 @@ func (r *Resource) RenderYamlTemplate(yamlTemplate []byte) (yamlData []byte) {
 	ctx.Set("serial", strings.ToLower(r.Asset.Serial))
 	ctx.Set("ipaddress", strings.ToLower(r.Asset.IPAddress))
 	ctx.Set("extra", r.Asset.Extra)
+
+	// r.Secrets is non nil if the bmcbutler.yml declares secretsFromVault: true
+	if r.Secrets != nil {
+		ctx.Set("lookup_secret", func(s string) string {
+			secret, _ := r.Secrets.Get(s)
+			return secret
+		})
+	}
 
 	//render, plush is awesome!
 	s, err := plush.Render(string(yamlTemplate), ctx)
