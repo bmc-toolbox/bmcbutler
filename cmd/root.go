@@ -85,8 +85,11 @@ func setupLogger() {
 func init() {
 
 	//bmcbutler runtime configuration.
+	//NOTE: to override any config from the flags declared here, see overrideConfigFromFlags in common.go
 	runConfig = &config.Params{}
-	runConfig.Load(cfgFile)
+
+	//FilterParams holds the configure/setup/execute related host filter cli args.
+	runConfig.FilterParams = &config.FilterParams{}
 
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.Debug, "debug", "d", false, "debug logging")
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.Trace, "trace", "t", false, "trace logging")
@@ -103,10 +106,9 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&butlersToSpawn, "butlers", "b", 0, "Number of butlers to spawn (override butlersToSpawn directive in config)")
 	rootCmd.PersistentFlags().StringVarP(&locations, "locations", "l", "", "Action assets by given location(s). (override locations directive in config)")
 	rootCmd.PersistentFlags().StringVarP(&resources, "resources", "r", "", "Apply one or more resources instead of the whole config (e.g -r syslog,ntp).")
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Configuration file for bmcbutler (default: /etc/bmcbutler/bmcbutler.yml)")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "/etc/bmcbutler/bmcbutler.yml", "Configuration file for bmcbutler (default: /etc/bmcbutler/bmcbutler.yml)")
 
 	//move to exec
 	rootCmd.PersistentFlags().StringVarP(&execCommand, "command", "", "", "Command to execute on BMCs.")
 
-	//NOTE: to override any config from the flags declared here, see overrideConfigFromFlags in common.go
 }

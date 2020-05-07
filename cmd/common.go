@@ -43,6 +43,8 @@ func overrideConfigFromFlags() {
 		runConfig.Resources = strings.Split(resources, ",")
 	}
 
+	runConfig.CfgFile = cfgFile
+
 	if runConfig.DryRun {
 		log.Info("Invoked with --dryrun.")
 	}
@@ -58,10 +60,11 @@ func overrideConfigFromFlags() {
 // - Return inventory channel, butler channel.
 func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopChan chan struct{}) {
 
+	// load config
 	overrideConfigFromFlags()
+	runConfig.Load(runConfig.CfgFile)
 
 	//Channel used to indicate goroutines to exit.
-
 	stopChan = make(chan struct{})
 
 	//Initialize metrics collection.
