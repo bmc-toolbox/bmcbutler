@@ -138,6 +138,7 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 
 	// Spawn butlers to work
 	butlerChan = make(chan butler.Msg, 2)
+
 	butlers = &butler.Butler{
 		ButlerChan: butlerChan,
 		StopChan:   stopChan,
@@ -146,7 +147,7 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 		SyncWG:     &commandWG,
 	}
 
-	// load secrets from vault if set
+	// load secrets from vault
 	if runConfig.SecretsFromVault {
 
 		store, err := secrets.Load(*runConfig.Vault)

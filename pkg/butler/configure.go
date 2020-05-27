@@ -69,6 +69,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		//Setup a resource instance
 		//Get any templated values in the asset config rendered
 		resourceInstance := resource.Resource{Log: log, Asset: asset, Secrets: b.Secrets}
+
 		//rendered config is a *cfgresources.ResourcesConfig type
 		renderedConfig := resourceInstance.LoadConfigResources(config)
 		if renderedConfig == nil {

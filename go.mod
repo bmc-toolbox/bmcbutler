@@ -1,5 +1,7 @@
 module github.com/bmc-toolbox/bmcbutler
 
+go 1.14
+
 require (
 	github.com/bmc-toolbox/bmclib v0.3.7
 	github.com/bmc-toolbox/bmclogin v0.0.3
@@ -20,5 +22,3 @@ require (
 	gopkg.in/yaml.v2 v2.2.2
 
 )
-
-go 1.13
