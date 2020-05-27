@@ -54,8 +54,30 @@ func (s *Store) Get(k string) (string, error) {
 	return value, nil
 }
 
-// UpdateConfigCredentials updates credentials that contain the lookup_secret keyword
-func (s *Store) UpdateConfigCredentials(config []map[string]string) ([]map[string]string, error) {
+// GetSignerToken is a helper method to retrieve and return the signer token key
+func (s *Store) GetSignerToken(v string) (string, error) {
+
+	prefix := "lookup_secret::"
+
+	if !strings.HasPrefix(v, prefix) {
+		return "", fmt.Errorf("expected prefix lookup_secret:: for signer token, got: %s", v)
+	}
+
+	lookup := strings.Replace(v, prefix, "", -1)
+	if lookup == "" {
+		return "", fmt.Errorf("signer token value %s declares invalid lookup parameter", v)
+	}
+
+	secret, err := s.Get(lookup)
+	if err != nil {
+		return secret, err
+	}
+
+	return secret, nil
+}
+
+// SetCredentials updates credentials that contain the lookup_secret keyword
+func (s *Store) SetCredentials(config []map[string]string) ([]map[string]string, error) {
 
 	lookupPrefix := "lookup_secret::"
 	// config is a []map[string]string

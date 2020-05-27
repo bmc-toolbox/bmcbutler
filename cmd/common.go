@@ -155,13 +155,17 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 			log.Fatalf("[Error] loading secrets from vault: %s", err.Error())
 		}
 
-		runConfig.Credentials, err = store.UpdateConfigCredentials(runConfig.Credentials)
+		runConfig.Credentials, err = store.SetCredentials(runConfig.Credentials)
+		if err != nil {
+			log.Fatalf("[Error] loading secrets from vault: %s", err.Error())
+		}
+
+		runConfig.CertSigner.LemurSigner.Key, err = store.GetSignerToken(runConfig.CertSigner.LemurSigner.Key)
 		if err != nil {
 			log.Fatalf("[Error] loading secrets from vault: %s", err.Error())
 		}
 
 		butlers.Secrets = store
-
 	}
 
 	go butlers.Runner()
