@@ -26,11 +26,11 @@ func (p *Params) Load(cfgFile string) {
 
 	// slice of config section validators
 	validators := []func() error{
+		p.validateVaultCfg,
 		p.validateMetricsCfg,
 		p.validateInventoryCfg,
-		p.validateCertSignerCfg,
 		p.defaults,
-		p.validateVaultCfg,
+		p.validateCertSignerCfg,
 	}
 
 	// validate config sections
@@ -40,6 +40,7 @@ func (p *Params) Load(cfgFile string) {
 			log.Fatalf("[Error] %s", err.Error())
 		}
 	}
+
 }
 
 func (p *Params) unmarshalConfig(cfgFile string) error {

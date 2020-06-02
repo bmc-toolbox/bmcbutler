@@ -138,6 +138,7 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 
 	// Spawn butlers to work
 	butlerChan = make(chan butler.Msg, 2)
+
 	butlers = &butler.Butler{
 		ButlerChan: butlerChan,
 		StopChan:   stopChan,
@@ -146,7 +147,7 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 		SyncWG:     &commandWG,
 	}
 
-	// load secrets from vault if set
+	// load secrets from vault
 	if runConfig.SecretsFromVault {
 
 		store, err := secrets.Load(*runConfig.Vault)
@@ -154,13 +155,17 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 			log.Fatalf("[Error] loading secrets from vault: %s", err.Error())
 		}
 
-		runConfig.Credentials, err = store.UpdateConfigCredentials(runConfig.Credentials)
+		runConfig.Credentials, err = store.SetCredentials(runConfig.Credentials)
+		if err != nil {
+			log.Fatalf("[Error] loading secrets from vault: %s", err.Error())
+		}
+
+		runConfig.CertSigner.LemurSigner.Key, err = store.GetSignerToken(runConfig.CertSigner.LemurSigner.Key)
 		if err != nil {
 			log.Fatalf("[Error] loading secrets from vault: %s", err.Error())
 		}
 
 		butlers.Secrets = store
-
 	}
 
 	go butlers.Runner()

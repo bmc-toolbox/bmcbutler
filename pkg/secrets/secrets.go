@@ -9,10 +9,12 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 )
 
+// Store holds a copy of secrets from vault
 type Store struct {
 	data map[string]string
 }
 
+// Load connects to Vault and returns a secret Store populated with secrets
 func Load(c config.Vault) (*Store, error) {
 
 	s := &Store{data: make(map[string]string)}
@@ -45,6 +47,7 @@ func Load(c config.Vault) (*Store, error) {
 	return s, nil
 }
 
+// Get retrieves a secret based on the given key
 func (s *Store) Get(k string) (string, error) {
 	value, exists := s.data[k]
 	if !exists {
@@ -54,8 +57,30 @@ func (s *Store) Get(k string) (string, error) {
 	return value, nil
 }
 
-// UpdateConfigCredentials updates credentials that contain the lookup_secret keyword
-func (s *Store) UpdateConfigCredentials(config []map[string]string) ([]map[string]string, error) {
+// GetSignerToken is a helper method to retrieve and return the signer token key
+func (s *Store) GetSignerToken(v string) (string, error) {
+
+	prefix := "lookup_secret::"
+
+	if !strings.HasPrefix(v, prefix) {
+		return "", fmt.Errorf("expected prefix lookup_secret:: for signer token, got: %s", v)
+	}
+
+	lookup := strings.TrimPrefix(v, prefix)
+	if lookup == "" {
+		return "", fmt.Errorf("signer token value %s declares invalid lookup parameter", v)
+	}
+
+	secret, err := s.Get(lookup)
+	if err != nil {
+		return secret, err
+	}
+
+	return secret, nil
+}
+
+// SetCredentials updates credentials that contain the lookup_secret keyword
+func (s *Store) SetCredentials(config []map[string]string) ([]map[string]string, error) {
 
 	lookupPrefix := "lookup_secret::"
 	// config is a []map[string]string
@@ -65,7 +90,7 @@ func (s *Store) UpdateConfigCredentials(config []map[string]string) ([]map[strin
 
 				lookup := strings.Replace(v, lookupPrefix, "", -1)
 				if lookup == "" {
-					return config, fmt.Errorf("config credentails key %s declares invalid lookup parameter", k)
+					return config, fmt.Errorf("config credentials key %s declares invalid lookup parameter", k)
 				}
 
 				secret, err := s.Get(lookup)

@@ -33,6 +33,11 @@ func (b *Bmc) certificateSetup() (bool, error) {
 		return false, fmt.Errorf("Declared certificate configuration requires a commonName")
 	}
 
+	// validate the CN doesn't begin with a '.' - for cases where the template variables aren't rendered.
+	if strings.HasPrefix(b.config.HTTPSCert.Attributes.CommonName, ".") {
+		return false, fmt.Errorf("Declared certificate commonName invalid: %s", b.config.HTTPSCert.Attributes.CommonName)
+	}
+
 	// replace any underscores with hyphens
 	b.config.HTTPSCert.Attributes.CommonName = strings.Replace(b.config.HTTPSCert.Attributes.CommonName, "_", "-", -1)
 	commonName := b.config.HTTPSCert.Attributes.CommonName
