@@ -59,7 +59,7 @@ Setup configuration Bmcbutler requires to run.
 mkdir ~/.bmcbutler/
 ```
 Copy the sample config into ~/.bmcbutler/
-[bmcbutler.yml sample](../master/samples/bmcbutler.yml.sample)
+[bmcbutler.yml sample](../master/samples/bmcbutler.yml)
 
 ###### BMC configuration
 Configuration to be applied to BMCs.
@@ -82,7 +82,7 @@ a csv inventory example is provided to play with.
 The 'inventory' parameter points Bmcbutler to the inventory source.
 
 ###### BMC HTTPS cert signing
-Bmcbutler can manage certs for BMCs, 
+Bmcbutler can manage certs for BMCs,
 It compares the current HTTPS cert Subject attributes of a BMC with the ones declared in its configuration,
 if the attributes don't match, it proceeds to,
 
@@ -94,7 +94,7 @@ if the attributes don't match, it proceeds to,
 To have this setup,
 
 1. Declare a `https_cert` configuration section in the BMC config template, see [configuration.yml sample](../master/samples/cfg/configuration.yml)
-2. Declare a signer executable in the bmcbutler config, see [bmcbutler.yml sample](../master/samples/bmcbutler.yml.sample) 
+2. Declare a signer executable in the bmcbutler config, see [bmcbutler.yml sample](../master/samples/bmcbutler.yml)
 
 The signer executable is required to accept a CSR through STDIN and spit out the signed cert through STDOUT.
 An example signer that uses [lemur](https://github.com/Netflix/lemur) can be found under [helpers](../master/helpers)
@@ -104,14 +104,14 @@ An example signer that uses [lemur](https://github.com/Netflix/lemur) can be fou
 Credentials to login to BMCs and configure them can be declared in the configuration file,
 or can be looked up from Vault.
 
-To setup secrets lookup from Vault, 
+To setup secrets lookup from Vault,
 
-- enable `secretsFromVault: true` in [bmcbutler.yml](../master/samples/bmcbutler.yml.sample)
-- Use the `lookup_secret::Administrator` parameter in place of the credential in [bmcbutler.yml](../master/samples/bmcbutler.yml.sample)
+- enable `secretsFromVault: true` in [bmcbutler.yml](../master/samples/bmcbutler.yml)
+- Use the `lookup_secret::Administrator` parameter in place of the credential in [bmcbutler.yml](../master/samples/bmcbutler.yml)
 - Use the `<%= lookup_secret("Administrator") %>` YAML templating parameter in place of credentials in [configuration.yml sample](../master/samples/cfg/configuration.yml)
 - See the sample bmcbutler.yml for options to set the vault token.
 
-Examples 
+Examples
 
 Set credentials in Vault
 ```
@@ -167,7 +167,7 @@ bmcbutler configure --all --dryrun --debug
 bmcbutler configure --servers --locations ams2
 
 #configure all chassis in given locations
-bmcbutler configure --chassis --locations ams2,lhr3 
+bmcbutler configure --chassis --locations ams2,lhr3
 
 #configure all servers in given location, spawning given butlers
 bmcbutler configure --servers --locations lhr5 --butlers 200
