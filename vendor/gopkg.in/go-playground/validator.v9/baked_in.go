@@ -62,105 +62,110 @@ var (
 	// you can add, remove or even replace items to suite your needs,
 	// or even disregard and use your own map if so desired.
 	bakedInValidators = map[string]Func{
-		"required":         hasValue,
-		"isdefault":        isDefault,
-		"len":              hasLengthOf,
-		"min":              hasMinOf,
-		"max":              hasMaxOf,
-		"eq":               isEq,
-		"ne":               isNe,
-		"lt":               isLt,
-		"lte":              isLte,
-		"gt":               isGt,
-		"gte":              isGte,
-		"eqfield":          isEqField,
-		"eqcsfield":        isEqCrossStructField,
-		"necsfield":        isNeCrossStructField,
-		"gtcsfield":        isGtCrossStructField,
-		"gtecsfield":       isGteCrossStructField,
-		"ltcsfield":        isLtCrossStructField,
-		"ltecsfield":       isLteCrossStructField,
-		"nefield":          isNeField,
-		"gtefield":         isGteField,
-		"gtfield":          isGtField,
-		"ltefield":         isLteField,
-		"ltfield":          isLtField,
-		"fieldcontains":    fieldContains,
-		"fieldexcludes":    fieldExcludes,
-		"alpha":            isAlpha,
-		"alphanum":         isAlphanum,
-		"alphaunicode":     isAlphaUnicode,
-		"alphanumunicode":  isAlphanumUnicode,
-		"numeric":          isNumeric,
-		"number":           isNumber,
-		"hexadecimal":      isHexadecimal,
-		"hexcolor":         isHEXColor,
-		"rgb":              isRGB,
-		"rgba":             isRGBA,
-		"hsl":              isHSL,
-		"hsla":             isHSLA,
-		"email":            isEmail,
-		"url":              isURL,
-		"uri":              isURI,
-		"urn_rfc2141":      isUrnRFC2141, // RFC 2141
-		"file":             isFile,
-		"base64":           isBase64,
-		"base64url":        isBase64URL,
-		"contains":         contains,
-		"containsany":      containsAny,
-		"containsrune":     containsRune,
-		"excludes":         excludes,
-		"excludesall":      excludesAll,
-		"excludesrune":     excludesRune,
-		"startswith":       startsWith,
-		"endswith":         endsWith,
-		"isbn":             isISBN,
-		"isbn10":           isISBN10,
-		"isbn13":           isISBN13,
-		"eth_addr":         isEthereumAddress,
-		"btc_addr":         isBitcoinAddress,
-		"btc_addr_bech32":  isBitcoinBech32Address,
-		"uuid":             isUUID,
-		"uuid3":            isUUID3,
-		"uuid4":            isUUID4,
-		"uuid5":            isUUID5,
-		"uuid_rfc4122":     isUUIDRFC4122,
-		"uuid3_rfc4122":    isUUID3RFC4122,
-		"uuid4_rfc4122":    isUUID4RFC4122,
-		"uuid5_rfc4122":    isUUID5RFC4122,
-		"ascii":            isASCII,
-		"printascii":       isPrintableASCII,
-		"multibyte":        hasMultiByteCharacter,
-		"datauri":          isDataURI,
-		"latitude":         isLatitude,
-		"longitude":        isLongitude,
-		"ssn":              isSSN,
-		"ipv4":             isIPv4,
-		"ipv6":             isIPv6,
-		"ip":               isIP,
-		"cidrv4":           isCIDRv4,
-		"cidrv6":           isCIDRv6,
-		"cidr":             isCIDR,
-		"tcp4_addr":        isTCP4AddrResolvable,
-		"tcp6_addr":        isTCP6AddrResolvable,
-		"tcp_addr":         isTCPAddrResolvable,
-		"udp4_addr":        isUDP4AddrResolvable,
-		"udp6_addr":        isUDP6AddrResolvable,
-		"udp_addr":         isUDPAddrResolvable,
-		"ip4_addr":         isIP4AddrResolvable,
-		"ip6_addr":         isIP6AddrResolvable,
-		"ip_addr":          isIPAddrResolvable,
-		"unix_addr":        isUnixAddrResolvable,
-		"mac":              isMAC,
-		"hostname":         isHostnameRFC952,  // RFC 952
-		"hostname_rfc1123": isHostnameRFC1123, // RFC 1123
-		"fqdn":             isFQDN,
-		"unique":           isUnique,
-		"oneof":            isOneOf,
-		"html":             isHTML,
-		"html_encoded":     isHTMLEncoded,
-		"url_encoded":      isURLEncoded,
-		"dir":              isDir,
+		"required":             hasValue,
+		"required_with":        requiredWith,
+		"required_with_all":    requiredWithAll,
+		"required_without":     requiredWithout,
+		"required_without_all": requiredWithoutAll,
+		"isdefault":            isDefault,
+		"len":                  hasLengthOf,
+		"min":                  hasMinOf,
+		"max":                  hasMaxOf,
+		"eq":                   isEq,
+		"ne":                   isNe,
+		"lt":                   isLt,
+		"lte":                  isLte,
+		"gt":                   isGt,
+		"gte":                  isGte,
+		"eqfield":              isEqField,
+		"eqcsfield":            isEqCrossStructField,
+		"necsfield":            isNeCrossStructField,
+		"gtcsfield":            isGtCrossStructField,
+		"gtecsfield":           isGteCrossStructField,
+		"ltcsfield":            isLtCrossStructField,
+		"ltecsfield":           isLteCrossStructField,
+		"nefield":              isNeField,
+		"gtefield":             isGteField,
+		"gtfield":              isGtField,
+		"ltefield":             isLteField,
+		"ltfield":              isLtField,
+		"fieldcontains":        fieldContains,
+		"fieldexcludes":        fieldExcludes,
+		"alpha":                isAlpha,
+		"alphanum":             isAlphanum,
+		"alphaunicode":         isAlphaUnicode,
+		"alphanumunicode":      isAlphanumUnicode,
+		"numeric":              isNumeric,
+		"number":               isNumber,
+		"hexadecimal":          isHexadecimal,
+		"hexcolor":             isHEXColor,
+		"rgb":                  isRGB,
+		"rgba":                 isRGBA,
+		"hsl":                  isHSL,
+		"hsla":                 isHSLA,
+		"e164":                 isE164,
+		"email":                isEmail,
+		"url":                  isURL,
+		"uri":                  isURI,
+		"urn_rfc2141":          isUrnRFC2141, // RFC 2141
+		"file":                 isFile,
+		"base64":               isBase64,
+		"base64url":            isBase64URL,
+		"contains":             contains,
+		"containsany":          containsAny,
+		"containsrune":         containsRune,
+		"excludes":             excludes,
+		"excludesall":          excludesAll,
+		"excludesrune":         excludesRune,
+		"startswith":           startsWith,
+		"endswith":             endsWith,
+		"isbn":                 isISBN,
+		"isbn10":               isISBN10,
+		"isbn13":               isISBN13,
+		"eth_addr":             isEthereumAddress,
+		"btc_addr":             isBitcoinAddress,
+		"btc_addr_bech32":      isBitcoinBech32Address,
+		"uuid":                 isUUID,
+		"uuid3":                isUUID3,
+		"uuid4":                isUUID4,
+		"uuid5":                isUUID5,
+		"uuid_rfc4122":         isUUIDRFC4122,
+		"uuid3_rfc4122":        isUUID3RFC4122,
+		"uuid4_rfc4122":        isUUID4RFC4122,
+		"uuid5_rfc4122":        isUUID5RFC4122,
+		"ascii":                isASCII,
+		"printascii":           isPrintableASCII,
+		"multibyte":            hasMultiByteCharacter,
+		"datauri":              isDataURI,
+		"latitude":             isLatitude,
+		"longitude":            isLongitude,
+		"ssn":                  isSSN,
+		"ipv4":                 isIPv4,
+		"ipv6":                 isIPv6,
+		"ip":                   isIP,
+		"cidrv4":               isCIDRv4,
+		"cidrv6":               isCIDRv6,
+		"cidr":                 isCIDR,
+		"tcp4_addr":            isTCP4AddrResolvable,
+		"tcp6_addr":            isTCP6AddrResolvable,
+		"tcp_addr":             isTCPAddrResolvable,
+		"udp4_addr":            isUDP4AddrResolvable,
+		"udp6_addr":            isUDP6AddrResolvable,
+		"udp_addr":             isUDPAddrResolvable,
+		"ip4_addr":             isIP4AddrResolvable,
+		"ip6_addr":             isIP6AddrResolvable,
+		"ip_addr":              isIPAddrResolvable,
+		"unix_addr":            isUnixAddrResolvable,
+		"mac":                  isMAC,
+		"hostname":             isHostnameRFC952,  // RFC 952
+		"hostname_rfc1123":     isHostnameRFC1123, // RFC 1123
+		"fqdn":                 isFQDN,
+		"unique":               isUnique,
+		"oneof":                isOneOf,
+		"html":                 isHTML,
+		"html_encoded":         isHTMLEncoded,
+		"url_encoded":          isURLEncoded,
+		"dir":                  isDir,
 	}
 )
 
@@ -220,14 +225,28 @@ func isOneOf(fl FieldLevel) bool {
 func isUnique(fl FieldLevel) bool {
 
 	field := fl.Field()
+	param := fl.Param()
 	v := reflect.ValueOf(struct{}{})
 
 	switch field.Kind() {
 	case reflect.Slice, reflect.Array:
-		m := reflect.MakeMap(reflect.MapOf(field.Type().Elem(), v.Type()))
+		if param == "" {
+			m := reflect.MakeMap(reflect.MapOf(field.Type().Elem(), v.Type()))
 
+			for i := 0; i < field.Len(); i++ {
+				m.SetMapIndex(field.Index(i), v)
+			}
+			return field.Len() == m.Len()
+		}
+
+		sf, ok := field.Type().Elem().FieldByName(param)
+		if !ok {
+			panic(fmt.Sprintf("Bad field name %s", param))
+		}
+
+		m := reflect.MakeMap(reflect.MapOf(sf.Type, v.Type()))
 		for i := 0; i < field.Len(); i++ {
-			m.SetMapIndex(field.Index(i), v)
+			m.SetMapIndex(field.Index(i).FieldByName(param), v)
 		}
 		return field.Len() == m.Len()
 	case reflect.Map:
@@ -1215,6 +1234,11 @@ func isFile(fl FieldLevel) bool {
 	panic(fmt.Sprintf("Bad field type %T", field.Interface()))
 }
 
+// IsE164 is the validation function for validating if the current field's value is a valid e.164 formatted phone number.
+func isE164(fl FieldLevel) bool {
+	return e164Regex.MatchString(fl.Field().String())
+}
+
 // IsEmail is the validation function for validating if the current field's value is a valid email address.
 func isEmail(fl FieldLevel) bool {
 	return emailRegex.MatchString(fl.Field().String())
@@ -1297,20 +1321,85 @@ func isDefault(fl FieldLevel) bool {
 
 // HasValue is the validation function for validating if the current field's value is not the default static value.
 func hasValue(fl FieldLevel) bool {
-
 	field := fl.Field()
-
 	switch field.Kind() {
 	case reflect.Slice, reflect.Map, reflect.Ptr, reflect.Interface, reflect.Chan, reflect.Func:
 		return !field.IsNil()
 	default:
-
 		if fl.(*validate).fldIsPointer && field.Interface() != nil {
 			return true
 		}
-
 		return field.IsValid() && field.Interface() != reflect.Zero(field.Type()).Interface()
 	}
+}
+
+// requireCheckField is a func for check field kind
+func requireCheckFieldKind(fl FieldLevel, param string, defaultNotFoundValue bool) bool {
+	field := fl.Field()
+	kind := field.Kind()
+	var nullable, found bool
+	if len(param) > 0 {
+		field, kind, nullable, found = fl.GetStructFieldOKAdvanced2(fl.Parent(), param)
+		if !found {
+			return defaultNotFoundValue
+		}
+	}
+	switch kind {
+	case reflect.Invalid:
+		return defaultNotFoundValue
+	case reflect.Slice, reflect.Map, reflect.Ptr, reflect.Interface, reflect.Chan, reflect.Func:
+		return field.IsNil()
+	default:
+		if nullable && field.Interface() != nil {
+			return false
+		}
+		return field.IsValid() && field.Interface() == reflect.Zero(field.Type()).Interface()
+	}
+}
+
+// RequiredWith is the validation function
+// The field under validation must be present and not empty only if any of the other specified fields are present.
+func requiredWith(fl FieldLevel) bool {
+	params := parseOneOfParam2(fl.Param())
+	for _, param := range params {
+		if !requireCheckFieldKind(fl, param, true) {
+			return hasValue(fl)
+		}
+	}
+	return true
+}
+
+// RequiredWithAll is the validation function
+// The field under validation must be present and not empty only if all of the other specified fields are present.
+func requiredWithAll(fl FieldLevel) bool {
+	params := parseOneOfParam2(fl.Param())
+	for _, param := range params {
+		if requireCheckFieldKind(fl, param, true) {
+			return true
+		}
+	}
+	return hasValue(fl)
+}
+
+// RequiredWithout is the validation function
+// The field under validation must be present and not empty only when any of the other specified fields are not present.
+func requiredWithout(fl FieldLevel) bool {
+	if requireCheckFieldKind(fl, strings.TrimSpace(fl.Param()), true) {
+		return hasValue(fl)
+	}
+	return true
+}
+
+// RequiredWithoutAll is the validation function
+// The field under validation must be present and not empty only when all of the other specified fields are not present.
+func requiredWithoutAll(fl FieldLevel) bool {
+	params := parseOneOfParam2(fl.Param())
+	for _, param := range params {
+		if !requireCheckFieldKind(fl, param, true) {
+			return true
+		}
+	}
+	return hasValue(fl)
 }
 
 // IsGteField is the validation function for validating if the current field's value is greater than or equal to the field specified by the param's value.

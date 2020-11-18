@@ -13,10 +13,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/bmc-toolbox/bmclib/providers/dell"
 	multierror "github.com/hashicorp/go-multierror"
-
-	// this make possible to setup logging and properties at any stage
-	_ "github.com/bmc-toolbox/bmclib/logging"
-	log "github.com/sirupsen/logrus"
 )
 
 func (i *IDrac8) httpLogin() (err error) {
@@ -29,7 +25,7 @@ func (i *IDrac8) httpLogin() (err error) {
 		return err
 	}
 
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": dell.VendorID, "ip": i.ip}).Debug("connecting to bmc")
+	i.log.V(1).Info("connecting to bmc", "step", "bmc connection", "vendor", dell.VendorID, "ip", i.ip)
 
 	data := fmt.Sprintf("user=%s&password=%s", i.username, i.password)
 	url := fmt.Sprintf("https://%s/data/login", i.ip)
@@ -115,7 +111,7 @@ func (i *IDrac8) Close() error {
 			multiErr = multierror.Append(multiErr, err)
 		} else {
 			defer resp.Body.Close()
-			defer io.Copy(ioutil.Discard, resp.Body)
+			defer io.Copy(ioutil.Discard, resp.Body) // nolint
 		}
 	}
 

@@ -3,7 +3,6 @@ package butler
 import (
 	"github.com/sirupsen/logrus"
 
-	bmclibLogger "github.com/bmc-toolbox/bmclib/logging"
 	metrics "github.com/bmc-toolbox/gin-go-metrics"
 )
 
@@ -30,16 +29,6 @@ func (b *Butler) msgHandler(msg Msg) {
 	component := "msgHandler"
 
 	metrics.IncrCounter([]string{"butler", "asset_recvd"}, 1)
-
-	//set bmclib logger params
-	bmclibLogger.SetFormatter(&logrus.TextFormatter{})
-	if log.Level == logrus.TraceLevel {
-		bmclibLogger.SetLevel(logrus.TraceLevel)
-	}
-
-	if log.Level == logrus.DebugLevel {
-		bmclibLogger.SetLevel(logrus.DebugLevel)
-	}
 
 	//if asset has no IPAddress, we can't do anything about it
 	if len(msg.Asset.IPAddresses) == 0 {

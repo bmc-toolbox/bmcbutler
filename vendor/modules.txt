@@ -1,4 +1,4 @@
-# github.com/bmc-toolbox/bmclib v0.3.7
+# github.com/bmc-toolbox/bmclib v0.4.4
 ## explicit
 github.com/bmc-toolbox/bmclib/cfgresources
 github.com/bmc-toolbox/bmclib/devices
@@ -20,19 +20,20 @@ github.com/bmc-toolbox/bmclib/providers/hp/c7000
 github.com/bmc-toolbox/bmclib/providers/hp/ilo
 github.com/bmc-toolbox/bmclib/providers/supermicro
 github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox
+github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox11
 # github.com/bmc-toolbox/bmclogin v0.0.3
 ## explicit
 github.com/bmc-toolbox/bmclogin
 # github.com/bmc-toolbox/gin-go-metrics v0.0.0-20190425145145-130c9ad985ff
 ## explicit
 github.com/bmc-toolbox/gin-go-metrics
+# github.com/bombsimon/logrusr v1.0.0
+github.com/bombsimon/logrusr
 # github.com/cyberdelia/go-metrics-graphite v0.0.0-20161219230853-39f87cc3b432
 github.com/cyberdelia/go-metrics-graphite
-# github.com/davecgh/go-spew v1.1.1
-## explicit
 # github.com/fatih/structs v1.1.0
 github.com/fatih/structs
-# github.com/fsnotify/fsnotify v1.4.7
+# github.com/fsnotify/fsnotify v1.4.9
 github.com/fsnotify/fsnotify
 # github.com/gammazero/deque v0.0.0-20190130191400-2afb3858e9c7
 ## explicit
@@ -40,10 +41,12 @@ github.com/gammazero/deque
 # github.com/gammazero/workerpool v0.0.0-20181230203049-86a96b5d5d92
 ## explicit
 github.com/gammazero/workerpool
-# github.com/go-playground/locales v0.12.1
+# github.com/go-logr/logr v0.3.0
+github.com/go-logr/logr
+# github.com/go-playground/locales v0.13.0
 github.com/go-playground/locales
 github.com/go-playground/locales/currency
-# github.com/go-playground/universal-translator v0.16.0
+# github.com/go-playground/universal-translator v0.17.0
 github.com/go-playground/universal-translator
 # github.com/gobuffalo/envy v1.6.11
 ## explicit
@@ -84,11 +87,11 @@ github.com/gofrs/uuid
 github.com/golang/snappy
 # github.com/google/go-querystring v1.0.0
 github.com/google/go-querystring/query
-# github.com/hashicorp/errwrap v1.0.0
+# github.com/hashicorp/errwrap v1.1.0
 github.com/hashicorp/errwrap
 # github.com/hashicorp/go-cleanhttp v0.5.1
 github.com/hashicorp/go-cleanhttp
-# github.com/hashicorp/go-multierror v1.0.0
+# github.com/hashicorp/go-multierror v1.1.0
 github.com/hashicorp/go-multierror
 # github.com/hashicorp/go-retryablehttp v0.5.4
 github.com/hashicorp/go-retryablehttp
@@ -121,11 +124,9 @@ github.com/hashicorp/vault/sdk/helper/strutil
 github.com/inconshreveable/mousetrap
 # github.com/joho/godotenv v1.3.0
 github.com/joho/godotenv
-# github.com/konsorten/go-windows-terminal-sequences v1.0.1
-github.com/konsorten/go-windows-terminal-sequences
-# github.com/leodido/go-urn v1.1.0
+# github.com/leodido/go-urn v1.2.0
 github.com/leodido/go-urn
-# github.com/magiconair/properties v1.8.0
+# github.com/magiconair/properties v1.8.4
 github.com/magiconair/properties
 # github.com/markbates/inflect v1.0.4
 github.com/markbates/inflect
@@ -133,19 +134,18 @@ github.com/markbates/inflect
 github.com/microcosm-cc/bluemonday
 # github.com/mitchellh/go-homedir v1.1.0
 github.com/mitchellh/go-homedir
-# github.com/mitchellh/mapstructure v1.1.2
+# github.com/mitchellh/mapstructure v1.3.3
 github.com/mitchellh/mapstructure
-# github.com/pelletier/go-toml v1.2.0
+# github.com/pelletier/go-toml v1.8.1
 github.com/pelletier/go-toml
 # github.com/pierrec/lz4 v2.0.5+incompatible
 github.com/pierrec/lz4
 github.com/pierrec/lz4/internal/xxh32
 # github.com/pkg/errors v0.8.1
-## explicit
 github.com/pkg/errors
 # github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a
 github.com/rcrowley/go-metrics
-# github.com/rogpeppe/go-internal v1.0.0
+# github.com/rogpeppe/go-internal v1.3.0
 github.com/rogpeppe/go-internal/modfile
 github.com/rogpeppe/go-internal/module
 github.com/rogpeppe/go-internal/semver
@@ -155,7 +155,7 @@ github.com/ryanuber/go-glob
 github.com/serenize/snaker
 # github.com/sergi/go-diff v1.0.0
 github.com/sergi/go-diff/diffmatchpatch
-# github.com/sirupsen/logrus v1.4.1
+# github.com/sirupsen/logrus v1.7.0
 ## explicit
 github.com/sirupsen/logrus
 github.com/sirupsen/logrus/hooks/syslog
@@ -163,32 +163,35 @@ github.com/sirupsen/logrus/hooks/syslog
 github.com/sourcegraph/annotate
 # github.com/sourcegraph/syntaxhighlight v0.0.0-20170531221838-bd320f5d308e
 github.com/sourcegraph/syntaxhighlight
-# github.com/spf13/afero v1.1.2
+# github.com/spf13/afero v1.4.1
 github.com/spf13/afero
 github.com/spf13/afero/mem
-# github.com/spf13/cast v1.3.0
+# github.com/spf13/cast v1.3.1
 github.com/spf13/cast
 # github.com/spf13/cobra v0.0.3
 ## explicit
 github.com/spf13/cobra
-# github.com/spf13/jwalterweatherman v1.0.0
+# github.com/spf13/jwalterweatherman v1.1.0
 github.com/spf13/jwalterweatherman
-# github.com/spf13/pflag v1.0.3
+# github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
-# github.com/spf13/viper v1.3.2
+# github.com/spf13/viper v1.7.1
 ## explicit
 github.com/spf13/viper
-# golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c
-## explicit
+# github.com/subosito/gotenv v1.2.0
+github.com/subosito/gotenv
+# golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
+golang.org/x/crypto/blowfish
+golang.org/x/crypto/chacha20
 golang.org/x/crypto/curve25519
 golang.org/x/crypto/ed25519
 golang.org/x/crypto/ed25519/internal/edwards25519
-golang.org/x/crypto/internal/chacha20
 golang.org/x/crypto/internal/subtle
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/poly1305
 golang.org/x/crypto/ssh
-# golang.org/x/net v0.0.0-20190620200207-3b0461eec859
+golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
+# golang.org/x/net v0.0.0-20201031054903-ff519b6c9102
 golang.org/x/net/html
 golang.org/x/net/html/atom
 golang.org/x/net/http/httpguts
@@ -196,23 +199,27 @@ golang.org/x/net/http2
 golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/publicsuffix
-# golang.org/x/sys v0.0.0-20190403152447-81d4e9dc473e
+# golang.org/x/sys v0.0.0-20201101102859-da207088b7d1
 golang.org/x/sys/cpu
+golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
-# golang.org/x/text v0.3.2
+golang.org/x/sys/windows
+# golang.org/x/text v0.3.4
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 # golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 golang.org/x/time/rate
-# gopkg.in/go-playground/validator.v9 v9.28.0
+# gopkg.in/go-playground/validator.v9 v9.31.0
 gopkg.in/go-playground/validator.v9
+# gopkg.in/ini.v1 v1.62.0
+gopkg.in/ini.v1
 # gopkg.in/square/go-jose.v2 v2.3.1
 gopkg.in/square/go-jose.v2
 gopkg.in/square/go-jose.v2/cipher
 gopkg.in/square/go-jose.v2/json
 gopkg.in/square/go-jose.v2/jwt
-# gopkg.in/yaml.v2 v2.2.2
+# gopkg.in/yaml.v2 v2.3.0
 ## explicit
 gopkg.in/yaml.v2
