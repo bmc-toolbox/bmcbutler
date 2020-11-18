@@ -2,6 +2,7 @@ package supermicrox
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
@@ -14,16 +15,13 @@ import (
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
+	"github.com/go-logr/logr"
 
 	"github.com/bmc-toolbox/bmclib/providers/supermicro"
-
-	// this make possible to setup logging and properties at any stage
-	_ "github.com/bmc-toolbox/bmclib/logging"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
-	// HardwareType defines the bmc model that is supported by this package
+	// BmcType defines the bmc model that is supported by this package
 	BmcType = "supermicrox"
 
 	// X10 is the constant for x10 servers
@@ -38,11 +36,18 @@ type SupermicroX struct {
 	username   string
 	password   string
 	httpClient *http.Client
+	ctx        context.Context
+	log        logr.Logger
 }
 
 // New returns a new SupermicroX instance ready to be used
-func New(ip string, username string, password string) (sm *SupermicroX, err error) {
-	return &SupermicroX{ip: ip, username: username, password: password}, err
+func New(ctx context.Context, ip string, username string, password string, log logr.Logger) (sm *SupermicroX, err error) {
+	return &SupermicroX{
+		ip:       ip,
+		username: username,
+		password: password,
+		ctx:      ctx,
+		log:      log}, err
 }
 
 // CheckCredentials verify whether the credentials are valid or not
@@ -74,15 +79,8 @@ func (s *SupermicroX) get(endpoint string) (payload []byte, err error) {
 		}
 	}
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println(fmt.Sprintf("[Request] https://%s/%s", bmcURL, endpoint))
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	s.log.V(2).Info("", "request", fmt.Sprintf("https://%s/%s", bmcURL, endpoint), "requestDump", string(reqDump))
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
@@ -90,15 +88,8 @@ func (s *SupermicroX) get(endpoint string) (payload []byte, err error) {
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	s.log.V(2).Info("", "responseDump", string(respDump))
 
 	payload, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -152,16 +143,8 @@ func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, 
 		}
 	}
 
-	if log.GetLevel() == log.TraceLevel {
-		fmt.Println(fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint))
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println("[Request]")
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	s.log.V(2).Info("", "url", fmt.Sprintf("https://%s/cgi/%s", s.ip, endpoint), "requestDump", string(reqDump))
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
@@ -169,23 +152,14 @@ func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, 
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	s.log.V(2).Info("", "responseDump", string(respDump))
 
 	statusCode = resp.StatusCode
 	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return statusCode, err
 	}
-	//fmt.Printf("-->> %d\n", resp.StatusCode)
-	//fmt.Printf("%s\n", body)
 	return statusCode, err
 }
 
@@ -196,7 +170,7 @@ func (s *SupermicroX) query(requestType string) (ipmi *supermicro.IPMI, err erro
 	}
 
 	bmcURL := fmt.Sprintf("https://%s/cgi/ipmi.cgi", s.ip)
-	log.WithFields(log.Fields{"step": "bmc connection", "vendor": supermicro.VendorID, "ip": s.ip}).Debug("retrieving data from bmc")
+	s.log.V(1).Info("retrieving data from bmc", "step", "bmc connection", "vendor", string(supermicro.VendorID), "ip", s.ip)
 
 	req, err := http.NewRequest("POST", bmcURL, bytes.NewBufferString(requestType))
 	if err != nil {
@@ -212,16 +186,8 @@ func (s *SupermicroX) query(requestType string) (ipmi *supermicro.IPMI, err erro
 			req.AddCookie(cookie)
 		}
 	}
-	if log.GetLevel() == log.TraceLevel {
-		log.Println(fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip))
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println("[Request]")
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	s.log.V(2).Info("trace", "url", fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip), "requestDump", string(reqDump))
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
@@ -234,16 +200,8 @@ func (s *SupermicroX) query(requestType string) (ipmi *supermicro.IPMI, err erro
 		return ipmi, err
 	}
 
-	if log.GetLevel() == log.TraceLevel {
-		log.Println(fmt.Sprintf("https://%s/cgi/%s", bmcURL, s.ip))
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println("[Request]")
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	s.log.V(2).Info("", "responseDump", string(respDump))
 
 	ipmi = &supermicro.IPMI{}
 	err = xml.Unmarshal(payload, ipmi)
@@ -289,12 +247,10 @@ func (s *SupermicroX) HardwareType() (model string) {
 	m, err := s.Model()
 	if err != nil {
 		// Here is your sin
+		s.log.V(1).Info("error getting hardwaretype", "err", err.Error())
 		return model
 	}
-
-	if strings.Contains(strings.ToLower(m), X11) {
-		return X11
-	} else if strings.Contains(strings.ToLower(m), X10) {
+	if strings.Contains(strings.ToLower(m), X10) {
 		return X10
 	}
 
@@ -504,33 +460,23 @@ func (s *SupermicroX) IsBlade() (isBlade bool, err error) {
 
 // Slot returns the current slot within the chassis
 func (s *SupermicroX) Slot() (slot int, err error) {
-	ipmi, err := s.query("Get_PlatformCap.XML=(0,0)")
+	slot = 1
+	ipmi, err := s.query("Get_NodeInfoReadings.XML=(0,0)")
 	if err != nil {
 		return slot, err
 	}
 
-	slot, err = strconv.Atoi(ipmi.Platform.TwinNodeNumber)
+	if ipmi.NodeInfo == nil {
+		return slot, errors.ErrUnableToReadData
+	}
+	serial, err := s.Serial()
 	if err != nil {
-		if strings.Contains(err.Error(), "invalid syntax") {
-			ipmi, err := s.query("Get_NodeInfoReadings.XML=(0,0)")
-			if err != nil {
-				return slot, err
-			}
-
-			if ipmi.NodeInfo != nil {
-				serial, err := s.Serial()
-				if err != nil {
-					return slot, err
-				}
-				for _, node := range ipmi.NodeInfo.Nodes {
-					if strings.ToLower(node.NodeSerial) == serial {
-						return node.ID + 1, err
-					}
-				}
-			}
+		return slot, err
+	}
+	for _, node := range ipmi.NodeInfo.Nodes {
+		if strings.ToLower(node.NodeSerial) == serial {
+			slot = node.ID + 1
 		}
-	} else {
-		slot = slot + 1
 	}
 
 	return slot, err

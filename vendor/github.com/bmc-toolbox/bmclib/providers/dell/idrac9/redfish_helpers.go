@@ -3,7 +3,6 @@ package idrac9
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,9 +11,8 @@ import (
 	"reflect"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-
 	bmclibErrors "github.com/bmc-toolbox/bmclib/errors"
+	"github.com/pkg/errors"
 )
 
 //diffs two BiosSettings and returns a BiosSettings with the difference.
@@ -71,6 +69,7 @@ func (i *IDrac9) getBiosSettings() (biosSettings *BiosSettings, err error) {
 
 }
 
+/*
 //returns the bios settings pending reboot
 func (i *IDrac9) biosSettingsPendingReboot() (pendingBiosSettings *BiosSettings, err error) {
 
@@ -94,6 +93,7 @@ func (i *IDrac9) biosSettingsPendingReboot() (pendingBiosSettings *BiosSettings,
 	return oData.Attributes, err
 
 }
+*/
 
 // PATCHs Bios settings, queues setting to be applied at next boot.
 func (i *IDrac9) setBiosSettings(biosSettings *BiosSettings) (err error) {
@@ -187,7 +187,6 @@ func (i *IDrac9) purgeJobsForBiosSettings() (err error) {
 
 //Purges jobs of the given type - if they are in the "Scheduled" state
 func (i *IDrac9) purgeJobsByType(jobIDs []string, jobType string) (err error) {
-
 	for _, jobID := range jobIDs {
 		jState, jType, err := i.getJob(jobID)
 		if err != nil {
@@ -198,7 +197,7 @@ func (i *IDrac9) purgeJobsByType(jobIDs []string, jobType string) (err error) {
 			return i.purgeJob(jobID)
 		}
 
-		return fmt.Errorf(fmt.Sprintf("Job not in Scheduled state cannot be purged, state: %s, id: %s", jState, jobID))
+		return errors.Wrapf(err, "Job not in Scheduled state cannot be purged, state: %s, id: %s", jState, jobID) // nolint
 	}
 
 	return err
@@ -298,15 +297,8 @@ func (i *IDrac9) queryRedfish(method string, endpoint string, payload []byte) (s
 		}
 	}
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
-			log.Println(fmt.Sprintf("[Request] %s/%s", bmcURL, endpoint))
-			log.Println(">>>>>>>>>>>>>>>")
-			log.Printf("%s\n\n", dump)
-			log.Println(">>>>>>>>>>>>>>>")
-		}
-	}
+	reqDump, _ := httputil.DumpRequestOut(req, true)
+	i.log.V(2).Info("requestTrace", "requestDump", string(reqDump), "url", fmt.Sprintf("%s/%s", bmcURL, endpoint))
 
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
@@ -314,15 +306,8 @@ func (i *IDrac9) queryRedfish(method string, endpoint string, payload []byte) (s
 	}
 	defer resp.Body.Close()
 
-	if log.GetLevel() == log.TraceLevel {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[Response]")
-			log.Println("<<<<<<<<<<<<<<")
-			log.Printf("%s\n\n", dump)
-			log.Println("<<<<<<<<<<<<<<")
-		}
-	}
+	respDump, _ := httputil.DumpResponse(resp, true)
+	i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
 	if resp.StatusCode == 401 {
 		return resp.StatusCode, response, bmclibErrors.Err401Redfish
