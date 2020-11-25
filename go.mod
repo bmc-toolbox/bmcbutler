@@ -3,7 +3,7 @@ module github.com/bmc-toolbox/bmcbutler
 go 1.14
 
 require (
-	github.com/bmc-toolbox/bmclib v0.4.4
+	github.com/bmc-toolbox/bmclib v0.4.5
 	github.com/bmc-toolbox/bmclogin v0.0.3
 	github.com/bmc-toolbox/gin-go-metrics v0.0.0-20190425145145-130c9ad985ff
 	github.com/gammazero/deque v0.0.0-20190130191400-2afb3858e9c7 // indirect
