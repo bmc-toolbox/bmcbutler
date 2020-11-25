@@ -1,4 +1,4 @@
-# github.com/bmc-toolbox/bmclib v0.4.4
+# github.com/bmc-toolbox/bmclib v0.4.5
 ## explicit
 github.com/bmc-toolbox/bmclib/cfgresources
 github.com/bmc-toolbox/bmclib/devices
