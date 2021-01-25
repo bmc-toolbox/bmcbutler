@@ -113,16 +113,17 @@ To setup secrets lookup from Vault,
 
 Examples
 
-Set credentials in Vault
+Set credentials in Vault, using `--config` and command substitution to prevent leaking the vault token
+to other processes (command line arguments are visible to all processes).
 ```
-curl -H "X-Vault-Token: $VAULT_TOKEN" \
+curl --config <( builtin printf 'header = "X-Vault-Token: %s"' "${VAULT_TOKEN}" ) \
     -H "Content-Type: application/json" \
     -X POST -d '{"Administrator": "hunter2", "Ops": "foobar"}' https://vault.example.com/v1/secret/baremetal/bmc
 ```
 
 Check credentials were set
 ```
-curl --header "X-Vault-Token: $VAULT_TOKEN" \
+curl --config <( builtin printf 'header = "X-Vault-Token: %s"' "${VAULT_TOKEN}" ) \
       -X GET https://vault.example.com/v1/secret/baremetal/bmc
 ```
 
