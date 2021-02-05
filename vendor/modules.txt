@@ -1,4 +1,6 @@
-# github.com/bmc-toolbox/bmclib v0.4.6
+# github.com/aymerick/douceur v0.2.0
+github.com/aymerick/douceur/css
+# github.com/bmc-toolbox/bmclib v0.4.11-0.20210312180730-5016703cffdd
 ## explicit
 github.com/bmc-toolbox/bmclib/cfgresources
 github.com/bmc-toolbox/bmclib/devices
@@ -24,78 +26,104 @@ github.com/bmc-toolbox/bmclib/providers/supermicro/supermicrox11
 # github.com/bmc-toolbox/bmclogin v0.0.3
 ## explicit
 github.com/bmc-toolbox/bmclogin
-# github.com/bmc-toolbox/gin-go-metrics v0.0.0-20190425145145-130c9ad985ff
+# github.com/bmc-toolbox/gin-go-metrics v0.0.2
 ## explicit
 github.com/bmc-toolbox/gin-go-metrics
 # github.com/bombsimon/logrusr v1.0.0
 github.com/bombsimon/logrusr
+# github.com/chris-ramon/douceur v0.2.0
+github.com/chris-ramon/douceur/parser
 # github.com/cyberdelia/go-metrics-graphite v0.0.0-20161219230853-39f87cc3b432
 github.com/cyberdelia/go-metrics-graphite
 # github.com/fatih/structs v1.1.0
 github.com/fatih/structs
+# github.com/frankban/quicktest v1.11.3
+## explicit
 # github.com/fsnotify/fsnotify v1.4.9
 github.com/fsnotify/fsnotify
-# github.com/gammazero/deque v0.0.0-20190130191400-2afb3858e9c7
+# github.com/gammazero/deque v0.0.0-20201010052221-3932da5530cc
 ## explicit
 github.com/gammazero/deque
-# github.com/gammazero/workerpool v0.0.0-20181230203049-86a96b5d5d92
+# github.com/gammazero/workerpool v1.1.1
 ## explicit
 github.com/gammazero/workerpool
-# github.com/go-logr/logr v0.3.0
+# github.com/go-logr/logr v0.4.0
 github.com/go-logr/logr
 # github.com/go-playground/locales v0.13.0
 github.com/go-playground/locales
 github.com/go-playground/locales/currency
 # github.com/go-playground/universal-translator v0.17.0
 github.com/go-playground/universal-translator
-# github.com/gobuffalo/envy v1.6.11
+# github.com/gobuffalo/flect v0.2.2
 ## explicit
-github.com/gobuffalo/envy
-# github.com/gobuffalo/flect v0.0.0-20181114183036-47375f6d8328
 github.com/gobuffalo/flect
-# github.com/gobuffalo/github_flavored_markdown v1.0.7
+github.com/gobuffalo/flect/name
+# github.com/gobuffalo/github_flavored_markdown v1.1.0
 github.com/gobuffalo/github_flavored_markdown
 github.com/gobuffalo/github_flavored_markdown/internal/russross/blackfriday
 github.com/gobuffalo/github_flavored_markdown/internal/shurcooL/highlight_diff
 github.com/gobuffalo/github_flavored_markdown/internal/shurcooL/highlight_go
 github.com/gobuffalo/github_flavored_markdown/internal/shurcooL/octicon
 github.com/gobuffalo/github_flavored_markdown/internal/shurcooL/sanitized_anchor_name
-# github.com/gobuffalo/plush v3.7.32+incompatible
+# github.com/gobuffalo/helpers v0.6.1
+## explicit
+github.com/gobuffalo/helpers
+github.com/gobuffalo/helpers/content
+github.com/gobuffalo/helpers/debug
+github.com/gobuffalo/helpers/encoders
+github.com/gobuffalo/helpers/env
+github.com/gobuffalo/helpers/escapes
+github.com/gobuffalo/helpers/forms
+github.com/gobuffalo/helpers/forms/bootstrap
+github.com/gobuffalo/helpers/hctx
+github.com/gobuffalo/helpers/inflections
+github.com/gobuffalo/helpers/iterators
+github.com/gobuffalo/helpers/meta
+github.com/gobuffalo/helpers/paths
+github.com/gobuffalo/helpers/tags
+github.com/gobuffalo/helpers/text
+# github.com/gobuffalo/plush v3.8.3+incompatible
 ## explicit
 github.com/gobuffalo/plush
 github.com/gobuffalo/plush/ast
 github.com/gobuffalo/plush/lexer
 github.com/gobuffalo/plush/parser
 github.com/gobuffalo/plush/token
-# github.com/gobuffalo/tags v2.0.15+incompatible
+# github.com/gobuffalo/tags v2.1.7+incompatible
 ## explicit
-github.com/gobuffalo/tags
-github.com/gobuffalo/tags/form
-github.com/gobuffalo/tags/form/bootstrap
-# github.com/gobuffalo/uuid v2.0.5+incompatible
-github.com/gobuffalo/uuid
-# github.com/gobuffalo/validate v2.0.3+incompatible
-github.com/gobuffalo/validate
-github.com/gobuffalo/validate/validators
-# github.com/gocarina/gocsv v0.0.0-20181213162136-af1d9380204a
+# github.com/gobuffalo/tags/v3 v3.1.0
+github.com/gobuffalo/tags/v3
+github.com/gobuffalo/tags/v3/form
+github.com/gobuffalo/tags/v3/form/bootstrap
+# github.com/gobuffalo/validate/v3 v3.3.0
+## explicit
+github.com/gobuffalo/validate/v3
+github.com/gobuffalo/validate/v3/validators
+# github.com/gocarina/gocsv v0.0.0-20201208093247-67c824bc04d4
 ## explicit
 github.com/gocarina/gocsv
-# github.com/gofrs/uuid v3.2.0+incompatible
+# github.com/gofrs/uuid v4.0.0+incompatible
 ## explicit
 github.com/gofrs/uuid
-# github.com/golang/snappy v0.0.1
+# github.com/golang/snappy v0.0.3
+## explicit
 github.com/golang/snappy
 # github.com/google/go-querystring v1.0.0
 github.com/google/go-querystring/query
+# github.com/gorilla/css v1.0.0
+github.com/gorilla/css/scanner
 # github.com/hashicorp/errwrap v1.1.0
 github.com/hashicorp/errwrap
-# github.com/hashicorp/go-cleanhttp v0.5.1
+# github.com/hashicorp/go-cleanhttp v0.5.2
+## explicit
 github.com/hashicorp/go-cleanhttp
-# github.com/hashicorp/go-multierror v1.1.0
+# github.com/hashicorp/go-multierror v1.1.1
 github.com/hashicorp/go-multierror
-# github.com/hashicorp/go-retryablehttp v0.5.4
+# github.com/hashicorp/go-retryablehttp v0.6.8
+## explicit
 github.com/hashicorp/go-retryablehttp
-# github.com/hashicorp/go-rootcerts v1.0.1
+# github.com/hashicorp/go-rootcerts v1.0.2
+## explicit
 github.com/hashicorp/go-rootcerts
 # github.com/hashicorp/go-sockaddr v1.0.2
 github.com/hashicorp/go-sockaddr
@@ -122,40 +150,36 @@ github.com/hashicorp/vault/sdk/helper/parseutil
 github.com/hashicorp/vault/sdk/helper/strutil
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
-# github.com/joho/godotenv v1.3.0
-github.com/joho/godotenv
-# github.com/leodido/go-urn v1.2.0
+# github.com/leodido/go-urn v1.2.1
 github.com/leodido/go-urn
+# github.com/magefile/mage v1.11.0
+github.com/magefile/mage/mg
+github.com/magefile/mage/sh
 # github.com/magiconair/properties v1.8.4
 github.com/magiconair/properties
-# github.com/markbates/inflect v1.0.4
-github.com/markbates/inflect
-# github.com/microcosm-cc/bluemonday v1.0.1
+# github.com/microcosm-cc/bluemonday v1.0.4
+## explicit
 github.com/microcosm-cc/bluemonday
 # github.com/mitchellh/go-homedir v1.1.0
 github.com/mitchellh/go-homedir
-# github.com/mitchellh/mapstructure v1.3.3
+# github.com/mitchellh/mapstructure v1.4.1
 github.com/mitchellh/mapstructure
 # github.com/pelletier/go-toml v1.8.1
 github.com/pelletier/go-toml
-# github.com/pierrec/lz4 v2.0.5+incompatible
+# github.com/pierrec/lz4 v2.6.0+incompatible
+## explicit
 github.com/pierrec/lz4
 github.com/pierrec/lz4/internal/xxh32
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
-# github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a
+# github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
+## explicit
 github.com/rcrowley/go-metrics
-# github.com/rogpeppe/go-internal v1.3.0
-github.com/rogpeppe/go-internal/modfile
-github.com/rogpeppe/go-internal/module
-github.com/rogpeppe/go-internal/semver
 # github.com/ryanuber/go-glob v1.0.0
 github.com/ryanuber/go-glob
-# github.com/serenize/snaker v0.0.0-20171204205717-a683aaf2d516
-github.com/serenize/snaker
-# github.com/sergi/go-diff v1.0.0
+# github.com/sergi/go-diff v1.1.0
 github.com/sergi/go-diff/diffmatchpatch
-# github.com/sirupsen/logrus v1.7.0
+# github.com/sirupsen/logrus v1.7.1
 ## explicit
 github.com/sirupsen/logrus
 github.com/sirupsen/logrus/hooks/syslog
@@ -163,12 +187,12 @@ github.com/sirupsen/logrus/hooks/syslog
 github.com/sourcegraph/annotate
 # github.com/sourcegraph/syntaxhighlight v0.0.0-20170531221838-bd320f5d308e
 github.com/sourcegraph/syntaxhighlight
-# github.com/spf13/afero v1.4.1
+# github.com/spf13/afero v1.5.1
 github.com/spf13/afero
 github.com/spf13/afero/mem
 # github.com/spf13/cast v1.3.1
 github.com/spf13/cast
-# github.com/spf13/cobra v0.0.3
+# github.com/spf13/cobra v1.1.3
 ## explicit
 github.com/spf13/cobra
 # github.com/spf13/jwalterweatherman v1.1.0
@@ -180,8 +204,7 @@ github.com/spf13/pflag
 github.com/spf13/viper
 # github.com/subosito/gotenv v1.2.0
 github.com/subosito/gotenv
-# golang.org/x/crypto v0.0.0-20201208171446-5f87f3452ae9
-## explicit
+# golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/chacha20
 golang.org/x/crypto/curve25519
@@ -192,8 +215,7 @@ golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/poly1305
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
-# golang.org/x/net v0.0.0-20201207224615-747e23833adb
-## explicit
+# golang.org/x/net v0.0.0-20210226172049-e18ecbb05110
 golang.org/x/net/html
 golang.org/x/net/html/atom
 golang.org/x/net/http/httpguts
@@ -201,28 +223,29 @@ golang.org/x/net/http2
 golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/publicsuffix
-# golang.org/x/sys v0.0.0-20201207223542-d4d67f95c62d
-## explicit
+# golang.org/x/sys v0.0.0-20210309074719-68d13333faf2
 golang.org/x/sys/cpu
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.3.4
+# golang.org/x/text v0.3.5
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
+# golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
+## explicit
 golang.org/x/time/rate
 # gopkg.in/go-playground/validator.v9 v9.31.0
 gopkg.in/go-playground/validator.v9
 # gopkg.in/ini.v1 v1.62.0
 gopkg.in/ini.v1
-# gopkg.in/square/go-jose.v2 v2.3.1
+# gopkg.in/square/go-jose.v2 v2.5.1
+## explicit
 gopkg.in/square/go-jose.v2
 gopkg.in/square/go-jose.v2/cipher
 gopkg.in/square/go-jose.v2/json
 gopkg.in/square/go-jose.v2/jwt
-# gopkg.in/yaml.v2 v2.3.0
+# gopkg.in/yaml.v2 v2.4.0
 ## explicit
 gopkg.in/yaml.v2

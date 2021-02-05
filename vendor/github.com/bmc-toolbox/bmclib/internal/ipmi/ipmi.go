@@ -53,7 +53,7 @@ func (i *Ipmi) run(ctx context.Context, command []string) (output string, err er
 	if ctx.Err() == context.DeadlineExceeded {
 		return string(out), ctx.Err()
 	}
-	return string(out), err
+	return string(out), errors.Wrap(err, strings.TrimSpace(string(out)))
 }
 
 // PowerCycle reboots the machine via bmc
@@ -207,7 +207,6 @@ func (i *Ipmi) BootDeviceSet(ctx context.Context, bootDevice string, setPersiste
 		ipmiCmd = append(ipmiCmd, optsFull)
 	}
 
-	fmt.Println(ipmiCmd)
 	output, err := i.run(ctx, ipmiCmd)
 	if err != nil {
 		return false, fmt.Errorf("%v: %v", err, output)

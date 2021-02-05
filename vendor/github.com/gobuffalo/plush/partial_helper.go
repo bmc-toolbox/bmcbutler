@@ -13,7 +13,7 @@ import (
 type PartialFeeder func(string) (string, error)
 
 func partialHelper(name string, data map[string]interface{}, help HelperContext) (template.HTML, error) {
-	if help.Context == nil || help.Context.data == nil {
+	if help.Context == nil {
 		return "", errors.New("invalid context. abort")
 	}
 
@@ -39,6 +39,7 @@ func partialHelper(name string, data map[string]interface{}, help HelperContext)
 
 	if strings.HasSuffix(name, ".md") {
 		part = string(github_flavored_markdown.Markdown([]byte(part)))
+		part = strings.TrimSuffix(part, "\n")
 	}
 
 	if ct, ok := help.Value("contentType").(string); ok {

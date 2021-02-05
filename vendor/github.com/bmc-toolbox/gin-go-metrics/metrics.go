@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cyberdelia/go-metrics-graphite"
+	graphite "github.com/cyberdelia/go-metrics-graphite"
 	"github.com/rcrowley/go-metrics"
 	log "github.com/sirupsen/logrus"
 )
@@ -151,6 +151,12 @@ func (e *emitter) store() {
 //key = slice of strings that will be joined with "." to be used as the metric namespace
 //val = float64 metric value
 func IncrCounter(key []string, value int64) {
+
+	// incase this method was invoked without the emmiter being initialized.
+	if emm == nil {
+		return
+	}
+
 	d := metric{
 		Type:  "counter",
 		Key:   key,
@@ -164,6 +170,12 @@ func IncrCounter(key []string, value int64) {
 //key = slice of strings that will be joined with "." to be used as the metric namespace
 //val = float64 metric value
 func UpdateGauge(key []string, value int64) {
+
+	// incase this method was invoked without the emmiter being initialized.
+	if emm == nil {
+		return
+	}
+
 	d := metric{
 		Type:  "gauge",
 		Key:   key,
@@ -177,6 +189,12 @@ func UpdateGauge(key []string, value int64) {
 //key = slice of strings that will be joined with "." to be used as the metric namespace
 //val = time.Time metric value
 func UpdateTimer(key []string, value time.Duration) {
+
+	// incase this method was invoked without the emmiter being initialized.
+	if emm == nil {
+		return
+	}
+
 	d := metric{
 		Type:  "timer",
 		Key:   key,
@@ -190,6 +208,12 @@ func UpdateTimer(key []string, value time.Duration) {
 //key = slice of strings that will be joined with "." to be used as the metric namespace
 //val = int64 metric value
 func UpdateHistogram(key []string, value int64) {
+
+	// incase this method was invoked without the emmiter being initialized.
+	if emm == nil {
+		return
+	}
+
 	d := metric{
 		Type:  "histogram",
 		Key:   key,
@@ -201,6 +225,12 @@ func UpdateHistogram(key []string, value int64) {
 
 // Close runs cleanup actions
 func Close(printStats bool) {
+
+	// incase this method was invoked without the emmiter being initialized.
+	if emm == nil {
+		return
+	}
+
 	if printStats {
 		log.Info(emm.registry.GetAll())
 	}

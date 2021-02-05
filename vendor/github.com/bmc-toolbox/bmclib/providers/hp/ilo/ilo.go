@@ -106,7 +106,7 @@ func (i *Ilo) CheckCredentials() (err error) {
 }
 
 // get calls a given json endpoint of the iLO and returns the data
-func (i *Ilo) get(endpoint string) (payload []byte, err error) {
+func (i *Ilo) get(endpoint string, useSession bool) (payload []byte, err error) {
 	i.log.V(1).Info("retrieving data from bmc", "step", "bmc connection", "vendor", hp.VendorID, "ip", i.ip, "endpoint", endpoint)
 
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
@@ -120,10 +120,14 @@ func (i *Ilo) get(endpoint string) (payload []byte, err error) {
 		return payload, err
 	}
 
-	for _, cookie := range i.httpClient.Jar.Cookies(u) {
-		if cookie.Name == "sessionKey" {
-			req.AddCookie(cookie)
+	if useSession {
+		for _, cookie := range i.httpClient.Jar.Cookies(u) {
+			if cookie.Name == "sessionKey" {
+				req.AddCookie(cookie)
+			}
 		}
+	} else {
+		req.SetBasicAuth(i.username, i.password)
 	}
 
 	reqDump, _ := httputil.DumpRequestOut(req, true)
@@ -194,38 +198,30 @@ func (i *Ilo) Serial() (serial string, err error) {
 }
 
 // ChassisSerial returns the serial number of the chassis where the blade is attached
-func (i *Ilo) ChassisSerial() (serial string, err error) {
-	err = i.httpLogin()
+func (i *Ilo) ChassisSerial() (string, error) {
+	err := i.httpLogin()
 	if err != nil {
-		return serial, err
+		return "", err
 	}
 
-	url := "json/rck_info"
-	payload, err := i.get(url)
+	payload, err := i.get("json/rck_info", true)
 	if err != nil {
-		return serial, err
+		return "", err
 	}
 
 	rckInfo := &hp.RckInfo{}
 	err = json.Unmarshal(payload, rckInfo)
 	if err != nil {
-		return serial, err
+		return "", err
 	}
 
 	if rckInfo.EncSn == "Unknown" {
-		url := "json/chassis_info"
-		payload, err = i.get(url)
+		chassisInfo, err := i.parseChassisInfo()
 		if err != nil {
-			return serial, err
+			return "", err
 		}
 
-		chassisInfo := &hp.ChassisInfo{}
-		err = json.Unmarshal(payload, chassisInfo)
-		if err != nil {
-			return serial, err
-		}
-
-		return strings.ToLower(chassisInfo.ChassisSn), err
+		return strings.ToLower(chassisInfo.ChassisSn), nil
 	}
 
 	return strings.ToLower(rckInfo.EncSn), err
@@ -265,7 +261,7 @@ func (i *Ilo) Name() (name string, err error) {
 	}
 
 	url := "json/overview"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return name, err
 	}
@@ -287,7 +283,7 @@ func (i *Ilo) Status() (health string, err error) {
 	}
 
 	url := "json/overview"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return health, err
 	}
@@ -313,7 +309,7 @@ func (i *Ilo) Memory() (mem int, err error) {
 	}
 
 	url := "json/mem_info"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return mem, err
 	}
@@ -343,7 +339,7 @@ func (i *Ilo) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCount i
 	}
 
 	url := "json/proc_info"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return cpu, cpuCount, coreCount, hyperthreadCount, err
 	}
@@ -369,7 +365,7 @@ func (i *Ilo) BiosVersion() (version string, err error) {
 	}
 
 	url := "json/overview"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return version, err
 	}
@@ -395,7 +391,7 @@ func (i *Ilo) PowerKw() (power float64, err error) {
 	}
 
 	url := "json/power_summary"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return power, err
 	}
@@ -417,7 +413,7 @@ func (i *Ilo) PowerState() (state string, err error) {
 	}
 
 	url := "json/power_summary"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return state, err
 	}
@@ -439,7 +435,7 @@ func (i *Ilo) TempC() (temp int, err error) {
 	}
 
 	url := "json/health_temperature"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return temp, err
 	}
@@ -492,7 +488,7 @@ func (i *Ilo) License() (name string, licType string, err error) {
 	}
 
 	url := "json/license"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return name, licType, err
 	}
@@ -506,6 +502,55 @@ func (i *Ilo) License() (name string, licType string, err error) {
 	return hpIloLicense.Name, hpIloLicense.Type, err
 }
 
+func (i *Ilo) parseChassisInfo() (*hp.ChassisInfo, error) {
+	err := i.httpLogin()
+	if err != nil {
+		return nil, err
+	}
+
+	chassisInfo := &hp.ChassisInfo{}
+	// We try the new way of doing things first (RedFish).
+	payload, err := i.get(hp.ChassisInfoNewURL, false)
+	if err == nil {
+		err = json.Unmarshal(payload, chassisInfo)
+		if err != nil {
+			return nil, err
+		}
+		if chassisInfo.Error.Code != "" {
+			e := "Code: " + chassisInfo.Error.Code + ", Message: " + chassisInfo.Error.Message
+			for i, s := range chassisInfo.Error.ExtendedMessage {
+				e += fmt.Sprintf(", Extended[%d]: %s", i, s)
+			}
+			return nil, fmt.Errorf(e)
+		}
+
+		// Matching the new interface to the old one, since the code still drops
+		//   off to the old interface in case the new interface is not available.
+		chassisInfo.ChassisSn = chassisInfo.SerialNumber
+		chassisInfo.NodeNumber = chassisInfo.Oem.Hpe.BayNumber
+
+		return chassisInfo, nil
+	}
+
+	if err != errors.ErrPageNotFound {
+		// This is a real error, just give up...
+		return nil, err
+	}
+
+	// This just means that we have to try the old way of doing things, since RedFish is not available.
+	payload, err = i.get(hp.ChassisInfoOldURL, true)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(payload, chassisInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return chassisInfo, nil
+}
+
 // Psus returns a list of psus installed on the device
 func (i *Ilo) Psus() (psus []*devices.Psu, err error) {
 	err = i.httpLogin()
@@ -514,7 +559,7 @@ func (i *Ilo) Psus() (psus []*devices.Psu, err error) {
 	}
 
 	url := "json/power_supplies"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return psus, err
 	}
@@ -557,7 +602,7 @@ func (i *Ilo) Disks() (disks []*devices.Disk, err error) {
 	}
 
 	url := "json/health_phy_drives"
-	payload, err := i.get(url)
+	payload, err := i.get(url, true)
 	if err != nil {
 		return disks, err
 	}
@@ -606,63 +651,36 @@ func (i *Ilo) Disks() (disks []*devices.Disk, err error) {
 	return disks, err
 }
 
-// IsBlade returns if the current hardware is a blade or not
+// Returns whether the current hardware is a blade.
 func (i *Ilo) IsBlade() (isBlade bool, err error) {
 	if i.rimpBlade.BladeSystem != nil {
-		isBlade = true
-	} else {
-		err = i.httpLogin()
-		if err != nil {
-			return isBlade, err
-		}
-
-		url := "json/chassis_info"
-		payload, err := i.get(url)
-		if err != nil {
-			return isBlade, err
-		}
-
-		chassisInfo := &hp.ChassisInfo{}
-		err = json.Unmarshal(payload, chassisInfo)
-		if err != nil {
-			return isBlade, err
-		}
-		if chassisInfo.ChassisSn != "" {
-			isBlade = true
-		}
+		return true, nil
 	}
 
-	return isBlade, err
+	chassisInfo, err := i.parseChassisInfo()
+	if err != nil {
+		return false, err
+	}
+
+	return chassisInfo.ChassisType == "Blade", nil
 }
 
 // Slot returns the current slot within the chassis
 func (i *Ilo) Slot() (slot int, err error) {
 	if i.rimpBlade.BladeSystem != nil {
-		return i.rimpBlade.BladeSystem.Bay, err
+		return i.rimpBlade.BladeSystem.Bay, nil
 	}
 
-	err = i.httpLogin()
-	if err != nil {
-		return -1, err
-	}
-
-	url := "json/chassis_info"
-	payload, err := i.get(url)
-	if err != nil {
-		return -1, err
-	}
-
-	chassisInfo := &hp.ChassisInfo{}
-	err = json.Unmarshal(payload, chassisInfo)
+	chassisInfo, err := i.parseChassisInfo()
 	if err != nil {
 		return -1, err
 	}
 
 	if chassisInfo.NodeNumber != 0 {
-		return chassisInfo.NodeNumber, err
+		return chassisInfo.NodeNumber, nil
 	}
 
-	return -1, err
+	return -1, nil
 }
 
 // Vendor returns bmc's vendor

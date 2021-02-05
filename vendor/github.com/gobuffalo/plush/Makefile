@@ -2,24 +2,24 @@ TAGS ?= "sqlite"
 GO_BIN ?= go
 
 install:
-	packr
+	packr2
 	$(GO_BIN) install -v ./plush
 
 deps:
 	$(GO_BIN) get github.com/gobuffalo/release
-	$(GO_BIN) get github.com/gobuffalo/packr/packr
+	$(GO_BIN) get github.com/gobuffalo/packr/v2/packr2
 	$(GO_BIN) get -tags ${TAGS} -t ./...
 ifeq ($(GO111MODULE),on)
 	$(GO_BIN) mod tidy
 endif
 
 build:
-	packr
+	packr2
 	$(GO_BIN) build -v .
 
 test:
-	packr
-	$(GO_BIN) test -tags ${TAGS} ./...
+	packr2
+	$(GO_BIN) test -cover -tags ${TAGS} ./...
 
 ci-test:
 	$(GO_BIN) test -tags ${TAGS} -race ./...
@@ -32,7 +32,7 @@ update:
 ifeq ($(GO111MODULE),on)
 	$(GO_BIN) mod tidy
 endif
-	packr
+	packr2
 	make test
 	make install
 ifeq ($(GO111MODULE),on)
