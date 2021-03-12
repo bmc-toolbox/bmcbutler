@@ -20,6 +20,7 @@ type Request struct {
 	Owner         string `json:"owner"`
 	CommonName    string `json:"commonName"`
 	ValidityYears string `json:"validityYears"`
+	Notify        bool   `json:"notify"`
 	Key           string `json:"-"`
 	Endpoint      string `json:"-"`
 	Debug         bool   `json:"-"`
@@ -66,6 +67,7 @@ func main() {
 	authority := flag.String("authority", "", "lemur CSR authority attribute.")
 	owner := flag.String("owner", "", "lemur CSR payload email address attribute.")
 	validYears := flag.String("valid-years", "1", "The time period this certificate should be valid for (default 1 year).")
+	notify := flag.Bool("notify", false, "Whether you should get notified about certificate expiration.")
 
 	flag.Parse()
 
@@ -106,6 +108,7 @@ func main() {
 		CommonName:    *commonName,
 		Authority:     a,
 		ValidityYears: *validYears,
+		Notify:        *notify,
 		Key:           key,
 		Endpoint:      endpoint,
 		CSR:           string(csr),
