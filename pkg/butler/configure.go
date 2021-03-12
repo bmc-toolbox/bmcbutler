@@ -1,6 +1,7 @@
 package butler
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -80,7 +81,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		c := configure.NewBmcConfigurator(bmc, asset, b.Config.Resources, renderedConfig, b.Config, b.StopChan, log)
 		c.Apply()
 
-		bmc.Close()
+		bmc.Close(context.TODO())
 	case devices.Cmc:
 		chassis := client.(devices.Cmc)
 

@@ -1,6 +1,7 @@
 package configure
 
 import (
+	"context"
 	"strings"
 
 	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
@@ -191,7 +192,7 @@ func (b *Bmc) Apply() {
 		}).Info("BMC to be reset.")
 
 		// Close the current connection - so we don't leave connections hanging.
-		b.bmc.Close()
+		b.bmc.Close(context.TODO())
 
 		//// reset BMC using SSH.
 		_, err := b.bmc.PowerCycleBmc()

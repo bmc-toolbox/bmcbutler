@@ -1,6 +1,7 @@
 package butler
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -70,7 +71,7 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 			}).Debug("Command executed.")
 
 		}
-		bmc.Close()
+		bmc.Close(context.TODO())
 	case devices.Cmc:
 		chassis := client.(devices.Cmc)
 		//b.executeCommandChassis(chassis, command)
