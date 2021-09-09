@@ -445,7 +445,6 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 // LdapGroups implements the Configure interface.
 // nolint: gocyclo
 func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
-
 	directoryGroups, err := i.queryDirectoryGroups()
 	if err != nil {
 		msg := "Unable to query existing Ldap groups"
@@ -459,7 +458,6 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 	}
 
 	for _, group := range cfgGroups {
-
 		var postPayload bool
 		if group.Group == "" {
 			msg := "Ldap resource parameter Group required but not declared."
@@ -481,10 +479,9 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 			return errors.New(msg)
 		}
 
-		groupDn := group.Group
-		directoryGroup, gexists := ldapGroupExists(groupDn, directoryGroups)
+		directoryGroup, gexists := ldapGroupExists(group.Group, directoryGroups)
 
-		directoryGroup.Dn = groupDn
+		directoryGroup.Dn = group.Group + "," + group.GroupBaseDn
 		directoryGroup.SessionKey = i.sessionKey
 
 		//if the group is enabled setup parameters
