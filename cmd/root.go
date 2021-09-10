@@ -58,8 +58,6 @@ func Execute() {
 }
 
 func setupLogger() {
-
-	//setup logging
 	log = logrus.New()
 	log.Out = os.Stdout
 
@@ -71,9 +69,9 @@ func setupLogger() {
 	}
 
 	switch {
-	case runConfig.Debug == true:
+	case runConfig.Debug:
 		log.SetLevel(logrus.DebugLevel)
-	case runConfig.Trace == true:
+	case runConfig.Trace:
 		log.SetLevel(logrus.TraceLevel)
 	default:
 		log.SetLevel(logrus.InfoLevel)

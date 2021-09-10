@@ -155,14 +155,18 @@ func (i *Ilo) get(endpoint string, useSession bool) (payload []byte, err error) 
 }
 
 // posts the payload to the given endpoint
-func (i *Ilo) post(endpoint string, data []byte) (statusCode int, body []byte, err error) {
-
+func (i *Ilo) post(endpoint string, data []byte, usePut bool) (statusCode int, body []byte, err error) {
 	u, err := url.Parse(fmt.Sprintf("https://%s/%s", i.ip, endpoint))
 	if err != nil {
 		return 0, []byte{}, err
 	}
 
-	req, err := http.NewRequest("POST", u.String(), bytes.NewReader(data))
+	method := "POST"
+	if usePut {
+		method = "PUT"
+	}
+
+	req, err := http.NewRequest(method, u.String(), bytes.NewReader(data))
 	if err != nil {
 		return 0, []byte{}, err
 	}

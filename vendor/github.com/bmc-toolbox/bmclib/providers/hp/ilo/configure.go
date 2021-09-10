@@ -192,7 +192,7 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 			}
 
 			endpoint := "json/user_info"
-			statusCode, response, err := i.post(endpoint, payload)
+			statusCode, response, err := i.post(endpoint, payload, false)
 			if err != nil || statusCode != 200 {
 				msg := "POST request to set User config returned error."
 				i.log.V(1).Info(msg,
@@ -267,7 +267,7 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 	}
 
 	endpoint := "json/remote_syslog"
-	statusCode, response, err := i.post(endpoint, payload)
+	statusCode, response, err := i.post(endpoint, payload, false)
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set User config returned error."
 		i.log.V(1).Info(msg,
@@ -316,7 +316,7 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 	}
 
 	endpoint := "json/license_info"
-	statusCode, response, err := i.post(endpoint, payload)
+	statusCode, response, err := i.post(endpoint, payload, false)
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set User config returned error."
 		i.log.V(1).Info(msg,
@@ -421,7 +421,7 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 	}
 
 	endpoint := "json/network_sntp"
-	statusCode, response, err := i.post(endpoint, payload)
+	statusCode, response, err := i.post(endpoint, payload, false)
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set NTP config returned error."
 		i.log.V(1).Info(msg,
@@ -536,7 +536,8 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 			}
 
 			endpoint := "json/directory_groups"
-			statusCode, response, err := i.post(endpoint, payload)
+
+			statusCode, response, err := i.post(endpoint, payload, directoryGroup.Method == "mod_group")
 			if err != nil || statusCode != 200 {
 				i.log.V(1).Info("POST request to set User config returned error.",
 					"IP", i.ip,
@@ -627,7 +628,7 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	}
 
 	endpoint := "json/directory"
-	statusCode, response, err := i.post(endpoint, payload)
+	statusCode, response, err := i.post(endpoint, payload, false)
 	if err != nil || statusCode != 200 {
 		msg := "POST request to set Ldap config returned error."
 		i.log.V(1).Info(msg,
@@ -672,7 +673,7 @@ func (i *Ilo) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error
 	}
 
 	endpoint := "json/csr"
-	statusCode, response, err := i.post(endpoint, payload)
+	statusCode, response, err := i.post(endpoint, payload, false)
 	if statusCode == 500 {
 		return []byte{}, fmt.Errorf("CSR being generated, retry later")
 	}
@@ -714,7 +715,7 @@ func (i *Ilo) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyF
 	}
 
 	endpoint := "json/certificate"
-	statusCode, _, err := i.post(endpoint, payload)
+	statusCode, _, err := i.post(endpoint, payload, false)
 	if err != nil {
 		return false, err
 	}
@@ -744,7 +745,7 @@ func (i *Ilo) Network(cfg *cfgresources.Network) (reset bool, err error) {
 		}
 
 		endpoint := "json/access_settings"
-		statusCode, _, err := i.post(endpoint, payload)
+		statusCode, _, err := i.post(endpoint, payload, false)
 		if err != nil || statusCode != 200 {
 			return reset, fmt.Errorf("Error/non 200 response calling access_settings, status: %d, error: %s", statusCode, err)
 		}
@@ -766,7 +767,7 @@ func (i *Ilo) Network(cfg *cfgresources.Network) (reset bool, err error) {
 		}
 
 		endpoint := "json/network_ipv4/interface/0"
-		statusCode, _, err := i.post(endpoint, payload)
+		statusCode, _, err := i.post(endpoint, payload, false)
 		if err != nil || statusCode != 200 {
 			return reset, fmt.Errorf("Error/non 200 response calling access_settings, status: %d, error: %s", statusCode, err)
 		}
@@ -830,7 +831,7 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 	}
 
 	endpoint := "json/power_regulator"
-	statusCode, _, err := i.post(endpoint, payload)
+	statusCode, _, err := i.post(endpoint, payload, false)
 	if err != nil || statusCode != 200 {
 		return fmt.Errorf("Error/non 200 response calling power_regulator, status: %d, error: %s", statusCode, err)
 	}
