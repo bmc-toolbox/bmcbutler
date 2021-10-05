@@ -160,7 +160,7 @@ func (c *C7000) applysetLdapInfo4(cfg *cfgresources.Ldap) (err error) {
 			"step", "applysetLdapInfo4",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
+			"StatusCode", statusCode,
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
@@ -301,7 +301,7 @@ func (c *C7000) applyRemoveLdapGroup(group string) (err error) {
 			"step", "applyRemoveLdapGroup",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
+			"StatusCode", statusCode,
 		)
 		return nil
 	}
@@ -311,7 +311,7 @@ func (c *C7000) applyRemoveLdapGroup(group string) (err error) {
 			"step", "applyRemoveLdapGroup",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
+			"StatusCode", statusCode,
 		)
 		return err
 	}
@@ -336,7 +336,7 @@ func (c *C7000) applyAddLdapGroup(group string) (err error) {
 			"step", "applyAddLdapGroup",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
+			"StatusCode", statusCode,
 		)
 		return nil
 	}
@@ -346,7 +346,7 @@ func (c *C7000) applyAddLdapGroup(group string) (err error) {
 			"step", "applyAddLdapGroup",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
+			"StatusCode", statusCode,
 		)
 		return err
 	}
@@ -379,7 +379,7 @@ func (c *C7000) applyLdapGroupBayACL(role string, group string) (err error) {
 			"step", "applyLdapGroupBayACL",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
+			"StatusCode", statusCode,
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
@@ -462,7 +462,7 @@ func (c *C7000) applyAddLdapGroupBayAccess(group string) (err error) {
 			"step", "applyAddLdapGroupBayAccess",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
+			"StatusCode", statusCode,
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
@@ -679,7 +679,7 @@ func (c *C7000) applyAddUserBayAccess(user string) (err error) {
 			"step", "applyAddUserBayAccess",
 			"IP", c.ip,
 			"HardwareType", c.HardwareType(),
-			"statusCode", statusCode,
+			"StatusCode", statusCode,
 			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err

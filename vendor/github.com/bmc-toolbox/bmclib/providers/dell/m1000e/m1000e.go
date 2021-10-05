@@ -349,7 +349,7 @@ func (m *M1000e) StorageBlades() (storageBlades []*devices.StorageBlade, err err
 					"ip", m.ip,
 					"position", storageBlade.BladePosition,
 					"type", "chassis",
-					"error", internal.ErrStringOrEmpty(err),
+					"Error", internal.ErrStringOrEmpty(err),
 				)
 				continue
 			}

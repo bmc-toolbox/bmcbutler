@@ -83,10 +83,10 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) (err error) {
 	resp, err := http.Get(queryURL)
 	if err != nil || resp.StatusCode != 200 {
 		log.WithFields(logrus.Fields{
-			"component":   component,
-			"url":         queryURL,
-			"error":       err,
-			"Status code": resp.StatusCode,
+			"component":  component,
+			"url":        queryURL,
+			"Error":      err,
+			"StatusCode": resp.StatusCode,
 		}).Warn("Unable to query Dora for IP location info.")
 		return err
 	}
@@ -100,7 +100,7 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) (err error) {
 		log.WithFields(logrus.Fields{
 			"component": component,
 			"url":       queryURL,
-			"error":     err,
+			"Error":     err,
 		}).Warn("Unable to unmarshal Dora scanned IP info.")
 		return err
 	}
@@ -171,7 +171,7 @@ func (d *Dora) AssetIterBySerial() {
 			log.WithFields(logrus.Fields{
 				"component": component,
 				"url":       queryURL,
-				"error":     err,
+				"Error":     err,
 			}).Fatal("Failed to query dora for serial(s).")
 		}
 
@@ -180,19 +180,18 @@ func (d *Dora) AssetIterBySerial() {
 			log.WithFields(logrus.Fields{
 				"component": component,
 				"url":       queryURL,
-				"error":     err,
+				"Error":     err,
 			}).Fatal("Failed to query dora for serial(s).")
 		}
 		resp.Body.Close()
 
-		//dora returns a list of assets
 		var doraAssets DoraAsset
 		err = json.Unmarshal(body, &doraAssets)
 		if err != nil {
 			log.WithFields(logrus.Fields{
 				"component": component,
 				"url":       queryURL,
-				"error":     err,
+				"Error":     err,
 			}).Fatal("Unable to unmarshal data returned from dora.")
 		}
 
@@ -270,7 +269,7 @@ func (d *Dora) AssetIter() {
 				log.WithFields(logrus.Fields{
 					"component": component,
 					"url":       queryURL,
-					"error":     err,
+					"Error":     err,
 				}).Fatal("Error querying Dora for assets.")
 			}
 
@@ -279,7 +278,7 @@ func (d *Dora) AssetIter() {
 				log.WithFields(logrus.Fields{
 					"component": component,
 					"url":       queryURL,
-					"error":     err,
+					"Error":     err,
 				}).Fatal("Error querying Dora for assets.")
 			}
 			resp.Body.Close()
@@ -290,7 +289,7 @@ func (d *Dora) AssetIter() {
 				log.WithFields(logrus.Fields{
 					"component": component,
 					"url":       queryURL,
-					"error":     err,
+					"Error":     err,
 				}).Fatal("Error unmarshaling data returned from Dora.")
 			}
 

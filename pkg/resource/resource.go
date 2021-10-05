@@ -84,7 +84,7 @@ func (r *Resource) RenderYamlTemplate(yamlTemplate []byte) (yamlData []byte) {
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"error":     err,
+			"Error":     err,
 		}).Fatal("Error rendering configuration yml template.")
 	}
 
@@ -102,7 +102,7 @@ func (r *Resource) LoadConfigResources(yamlTemplate []byte) (config *cfgresource
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"error":     err,
+			"Error":     err,
 		}).Fatal("Unable to Unmarshal config resources template.")
 	}
 
