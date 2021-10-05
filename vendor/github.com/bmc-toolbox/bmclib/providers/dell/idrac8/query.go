@@ -89,7 +89,7 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
-			"status", statusCode,
+			"StatusCode", statusCode,
 			"step", helper.WhosCalling(),
 		)
 		return userInfo, err

@@ -104,11 +104,11 @@ func (i *IDrac9) setBiosSettings(biosSettings *BiosSettings) (err error) {
 		return errors.New(msg)
 	}
 
-	//PATCH bios settings
 	statusCode, _, err := i.queryRedfish("PATCH", biosSettingsURI, payload)
-	if err != nil || statusCode != 200 {
-		msg := fmt.Sprintf("PATCH request to set Bios config, returned code: %d", statusCode)
-		return errors.New(msg)
+	if statusCode != 200 {
+		return fmt.Errorf("PATCH request to set BIOS config failed with status code %d!", statusCode)
+	} else if err != nil {
+		return fmt.Errorf("PATCH request to set BIOS config failed with error %s!", err.Error())
 	}
 
 	// Queue config to be set at next boot.
@@ -134,9 +134,10 @@ func (i *IDrac9) queueJobs(jobURI string) (err error) {
 	}
 
 	statusCode, _, err := i.queryRedfish("POST", endpoint, payload)
-	if err != nil || statusCode != 200 {
-		msg := fmt.Sprintf("POST request to queue job, returned code: %d", statusCode)
-		return errors.New(msg)
+	if statusCode != 200 {
+		return fmt.Errorf("POST request to queue job %s failed with status code %d!", jobURI, statusCode)
+	} else if err != nil {
+		return fmt.Errorf("POST request to queue job %s failed with error %s!", jobURI, err.Error())
 	}
 
 	return nil
@@ -151,9 +152,10 @@ func (i *IDrac9) purgeJob(jobID string) (err error) {
 	endpoint := fmt.Sprintf("%s/%s", "redfish/v1/Managers/iDRAC.Embedded.1/Jobs", jobID)
 
 	statusCode, _, err := i.queryRedfish("DELETE", endpoint, nil)
-	if err != nil || statusCode != 200 {
-		msg := fmt.Sprintf("DELETE request to purge job, returned code: %d", statusCode)
-		return errors.New(msg)
+	if statusCode != 200 {
+		return fmt.Errorf("POST request to purge job %s failed with status code %d!", jobID, statusCode)
+	} else if err != nil {
+		return fmt.Errorf("POST request to purge job %s failed with error %s!", jobID, err.Error())
 	}
 
 	return nil

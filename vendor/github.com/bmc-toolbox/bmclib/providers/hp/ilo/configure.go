@@ -183,8 +183,13 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 			endpoint := "json/user_info"
 			statusCode, response, err := i.post(endpoint, payload)
 			if err != nil || statusCode != 200 {
-				msg := "POST request to set User config returned error."
-				i.log.V(1).Info(msg,
+				if err == nil {
+					err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+				} else {
+					err = fmt.Errorf("POST request to %s failed with error: ", endpoint, err.Error())
+				}
+
+				i.log.V(1).Error(err, "POST request to set User config failed.",
 					"IP", i.ip,
 					"HardwareType", i.HardwareType(),
 					"endpoint", endpoint,
@@ -192,9 +197,7 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 					"User", user.Name,
 					"StatusCode", statusCode,
 					"response", string(response),
-					"Error", internal.ErrStringOrEmpty(err),
 				)
-
 				continue
 			}
 
@@ -257,17 +260,21 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 	endpoint := "json/remote_syslog"
 	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
-		msg := "POST request to set User config returned error."
-		i.log.V(1).Info(msg,
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+		} else {
+			err = fmt.Errorf("POST request to %s failed with error: ", endpoint, err.Error())
+		}
+
+		i.log.V(1).Error(err, "POST request to set Syslog config failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"StatusCode", statusCode,
 			"response", string(response),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return errors.New(msg)
+		return err
 	}
 
 	i.log.V(1).Info("Syslog parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
@@ -293,19 +300,24 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 	payload, err := json.Marshal(license)
 	if err != nil {
 		msg := "Unable to marshal License payload to activate License."
-		i.log.V(1).Info(msg,
+		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return errors.New(msg)
+		return errors.New(msg + ": " + err.Error())
 	}
 
 	endpoint := "json/license_info"
 	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
-		msg := "POST request to set User config returned error."
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+		} else {
+			err = fmt.Errorf("POST request to %s failed with error: ", endpoint, err.Error())
+		}
+
+		msg := "POST request to set License failed."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
@@ -409,17 +421,21 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 	endpoint := "json/network_sntp"
 	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
-		msg := "POST request to set NTP config returned error."
-		i.log.V(1).Info(msg,
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+		} else {
+			err = fmt.Errorf("POST request to %s failed with error: ", endpoint, err.Error())
+		}
+
+		i.log.V(1).Error(err, "POST request to set NTP config failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"StatusCode", statusCode,
 			"response", string(response),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return errors.New(msg)
+		return err
 	}
 
 	i.log.V(1).Info("NTP parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType())
@@ -464,7 +480,13 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 
 		statusCode, response, err := i.post(endpoint, payload)
 		if err != nil || statusCode != 200 {
-			i.log.V(1).Info("POST request to set LDAP config returned error.",
+			if err == nil {
+				err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+			} else {
+				err = fmt.Errorf("POST request to %s failed with error: ", endpoint, err.Error())
+			}
+
+			i.log.V(1).Error(err, "POST request to delete LDAP groups failed.",
 				"IP", i.ip,
 				"HardwareType", i.HardwareType(),
 				"endpoint", endpoint,
@@ -472,15 +494,14 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 				"Group", group,
 				"StatusCode", statusCode,
 				"response", string(response),
-				"Error", internal.ErrStringOrEmpty(err),
 			)
 			continue
 		}
 
-		i.log.V(1).Info("Old LDAP groups removed successfully.",
+		i.log.V(1).Info("Old LDAP group deleted successfully.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"User", group,
+			"Group", group,
 		)
 	}
 
@@ -550,7 +571,13 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 
 		statusCode, response, err := i.post(endpoint, payload)
 		if err != nil || statusCode != 200 {
-			i.log.V(1).Info("POST request to set LDAP config returned error.",
+			if err == nil {
+				err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+			} else {
+				err = fmt.Errorf("POST request to %s failed with error: ", endpoint, err.Error())
+			}
+
+			i.log.V(1).Error(err, "POST request to set LDAP group failed.",
 				"IP", i.ip,
 				"HardwareType", i.HardwareType(),
 				"endpoint", endpoint,
@@ -566,7 +593,7 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 		i.log.V(1).Info("LdapGroup parameters applied.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"User", group.Group,
+			"Group", group.Group,
 		)
 	}
 
@@ -637,15 +664,19 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	endpoint := "json/directory"
 	statusCode, response, err := i.post(endpoint, payload)
 	if err != nil || statusCode != 200 {
-		msg := "POST request to set Ldap config returned error."
-		i.log.V(1).Info(msg,
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+		} else {
+			err = fmt.Errorf("POST request to %s failed with error: ", endpoint, err.Error())
+		}
+
+		i.log.V(1).Error(err, "POST request to set Ldap config failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 			"StatusCode", statusCode,
 			"response", string(response),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -748,8 +779,11 @@ func (i *Ilo) Network(cfg *cfgresources.Network) (reset bool, err error) {
 
 		endpoint := "json/access_settings"
 		statusCode, _, err := i.post(endpoint, payload)
-		if err != nil || statusCode != 200 {
-			return reset, fmt.Errorf("Error/non 200 response calling access_settings, status: %d, error: %s", statusCode, err)
+		if err != nil {
+			return false, fmt.Errorf("Error calling access_settings: %s", err)
+		}
+		if statusCode != 200 {
+			return false, fmt.Errorf("Non-200 response calling access_settings: %d", statusCode)
 		}
 
 		reset = true
@@ -769,8 +803,11 @@ func (i *Ilo) Network(cfg *cfgresources.Network) (reset bool, err error) {
 
 		endpoint := "json/network_ipv4/interface/0"
 		statusCode, _, err := i.post(endpoint, payload)
-		if err != nil || statusCode != 200 {
-			return reset, fmt.Errorf("Error/non 200 response calling access_settings, status: %d, error: %s", statusCode, err)
+		if err != nil {
+			return reset, fmt.Errorf("Error calling access_settings: %s", err)
+		}
+		if statusCode != 200 {
+			return reset, fmt.Errorf("Non-200 response calling access_settings: %d", statusCode)
 		}
 
 		reset = true
@@ -832,8 +869,11 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 
 	endpoint := "json/power_regulator"
 	statusCode, _, err := i.post(endpoint, payload)
-	if err != nil || statusCode != 200 {
-		return fmt.Errorf("Error/non 200 response calling power_regulator, status: %d, error: %s", statusCode, err)
+	if err != nil {
+		return fmt.Errorf("Error calling power_regulator: %s", err)
+	}
+	if statusCode != 200 {
+		return fmt.Errorf("Non-200 response calling power_regulator: %d", statusCode)
 	}
 
 	i.log.V(1).Info("power_regulator config applied.",

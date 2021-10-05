@@ -295,7 +295,7 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
-			"status", statusCode,
+			"StatusCode", statusCode,
 			"step", helper.WhosCalling(),
 			"response", string(response),
 		)
@@ -458,7 +458,7 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 				"IP", i.ip,
 				"HardwareType", i.HardwareType(),
 				"endpoint", endpoint,
-				"status", statusCode,
+				"StatusCode", statusCode,
 				"step", "applyLdapGroupParams",
 				"response", string(response),
 			)
@@ -574,7 +574,7 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
-			"status", statusCode,
+			"StatusCode", statusCode,
 			"step", helper.WhosCalling(),
 			"response", string(response),
 		)
@@ -662,7 +662,7 @@ func (i *IDrac8) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
-			"status", statusCode,
+			"StatusCode", statusCode,
 			"step", helper.WhosCalling(),
 		)
 		return []byte{}, err
@@ -720,7 +720,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"status", status,
+			"StatusCode", status,
 		)
 		return false, err
 	}
@@ -758,7 +758,7 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"status", status,
+			"StatusCode", status,
 		)
 		return false, err
 	}

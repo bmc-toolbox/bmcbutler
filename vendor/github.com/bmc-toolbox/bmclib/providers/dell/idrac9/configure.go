@@ -709,7 +709,7 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"status", status,
+			"StatusCode", status,
 		)
 		return false, err
 	}
@@ -747,7 +747,7 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
-			"status", status,
+			"StatusCode", status,
 		)
 		return false, err
 	}

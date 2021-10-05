@@ -156,7 +156,7 @@ func (e *Enc) SetChassisInstalled(serials string) {
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"error":     err,
+			"Error":     err,
 			"cmd":       fmt.Sprintf("%s %s", encBin, strings.Join(cmdArgs, " ")),
 			"output":    fmt.Sprintf("%s", out),
 		}).Warn("Command to update chassis state returned error.")
@@ -176,7 +176,7 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"error":     err,
+			"Error":     err,
 			"cmd":       fmt.Sprintf("%s %s", encBin, strings.Join(cmdArgs, " ")),
 			"output":    fmt.Sprintf("%s", out),
 		}).Fatal("Inventory query failed, lookup command returned error.")
@@ -187,7 +187,7 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"error":     err,
+			"Error":     err,
 			"cmd":       fmt.Sprintf("%s %s", encBin, strings.Join(cmdArgs, " ")),
 			"output":    fmt.Sprintf("%s", out),
 		}).Fatal("JSON Unmarshal command response returned error.")
@@ -263,7 +263,7 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"error":     err,
+			"Error":     err,
 			"cmd":       fmt.Sprintf("%s %s", encBin, strings.Join(cmdArgs, " ")),
 			"output":    fmt.Sprintf("%s", out),
 		}).Warn("Inventory query failed, lookup command returned error.")
@@ -277,7 +277,7 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"error":     err,
+			"Error":     err,
 			"cmd":       fmt.Sprintf("%s %s", encBin, strings.Join(cmdArgs, " ")),
 			"output":    fmt.Sprintf("%s", out),
 		}).Fatal("JSON Unmarshal command response returned error.")
@@ -372,7 +372,7 @@ func (e *Enc) encQueryByOffset(assetType string, offset int, limit int, location
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"error":     err,
+			"Error":     err,
 			"cmd":       fmt.Sprintf("%s %s", encBin, strings.Join(cmdArgs, " ")),
 			"output":    fmt.Sprintf("%s", out),
 		}).Fatal("Inventory query failed, lookup command returned error.")
@@ -383,7 +383,7 @@ func (e *Enc) encQueryByOffset(assetType string, offset int, limit int, location
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"error":     err,
+			"Error":     err,
 			"cmd":       fmt.Sprintf("%s %s", encBin, strings.Join(cmdArgs, " ")),
 			"output":    fmt.Sprintf("%s", out),
 		}).Fatal("JSON Unmarshal command response returned error.")
