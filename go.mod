@@ -14,9 +14,11 @@ require (
 	github.com/gocarina/gocsv v0.0.0-20181213162136-af1d9380204a
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
 	github.com/hashicorp/vault/api v1.0.4
+	github.com/rogpeppe/go-internal v1.6.2 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.7.1
+	golang.org/x/mod v0.4.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 
 )

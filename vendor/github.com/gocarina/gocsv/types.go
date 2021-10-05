@@ -2,12 +2,11 @@ package gocsv
 
 import (
 	"encoding"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
-
-	"encoding/json"
 )
 
 // --------------------------------------------------------------------------

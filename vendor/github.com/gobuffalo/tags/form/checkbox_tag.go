@@ -7,7 +7,7 @@ import (
 	"github.com/gobuffalo/tags"
 )
 
-//CheckboxTag builds a checkbox from the options passed
+// CheckboxTag builds a checkbox from the options passed
 func (f Form) CheckboxTag(opts tags.Options) *tags.Tag {
 	opts["type"] = "checkbox"
 

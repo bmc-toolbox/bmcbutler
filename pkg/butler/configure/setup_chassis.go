@@ -177,7 +177,6 @@ func (b *CmcSetup) Apply() { //nolint: gocyclo
 			}).Warn("Setup resource returned errors.")
 		} else {
 			success = append(success, resource)
-
 		}
 
 		b.log.WithFields(logrus.Fields{
@@ -190,7 +189,7 @@ func (b *CmcSetup) Apply() { //nolint: gocyclo
 
 	}
 
-	//if chassis setup is done successfully invoke post action.
+	// If chassis setup is done successfully, invoke post action.
 	if setupActionSuccess {
 		b.Post()
 	}
@@ -203,12 +202,10 @@ func (b *CmcSetup) Apply() { //nolint: gocyclo
 		"applied":      strings.Join(success, ", "),
 		"unsuccessful": strings.Join(failed, ", "),
 	}).Info("Chassis setup actions done.")
-
 }
 
 // Post method is when a chassis was setup successfully.
 func (b *CmcSetup) Post() {
-
 	enc := inventory.Enc{
 		Config: b.butlerConfig,
 		Log:    b.log,
@@ -222,7 +219,6 @@ func (b *CmcSetup) Post() {
 // ensurePoweredUp method checks if a chassis is powered off
 // and powers it back on.
 func (b *CmcSetup) ensurePoweredUp() (err error) {
-
 	status, _ := b.chassis.IsOn()
 	if status == false {
 		_, err := b.chassis.PowerOn()
@@ -237,11 +233,9 @@ func (b *CmcSetup) ensurePoweredUp() (err error) {
 }
 
 func (b *CmcSetup) addBladeBmcAdmins() (err error) {
-
 	component := "addBladeBmcAdmins"
 	cfg := b.config.AddBladeBmcAdmins
 
-	//retrieve list of blades in chassis
 	blades, err := b.chassis.Blades()
 	if len(blades) < 1 || err != nil {
 		b.log.WithFields(logrus.Fields{
@@ -289,10 +283,8 @@ func (b *CmcSetup) addBladeBmcAdmins() (err error) {
 }
 
 func (b *CmcSetup) removeBladeBmcUsers() (err error) {
-
 	component := "removeBladeBmcUsers"
 
-	//retrieve list of blades in chassis
 	blades, err := b.chassis.Blades()
 	if len(blades) < 1 || err != nil {
 		b.log.WithFields(logrus.Fields{
@@ -331,7 +323,6 @@ func (b *CmcSetup) removeBladeBmcUsers() (err error) {
 }
 
 func (b *CmcSetup) setDynamicPower() (err error) {
-
 	log := b.log
 	component := "setDynamicPower"
 
@@ -357,11 +348,9 @@ func (b *CmcSetup) setDynamicPower() (err error) {
 		"IPAddress": b.ip,
 	}).Debug("Dynamic Power config applied successfully.")
 	return err
-
 }
 
 func (b *CmcSetup) setIpmiOverLan() (err error) {
-
 	log := b.log
 	component := "setIpmiOverLan"
 
@@ -369,7 +358,6 @@ func (b *CmcSetup) setIpmiOverLan() (err error) {
 	chassis := b.chassis
 	setup := b.setup
 
-	//retrieve list of blades in chassis
 	blades, err := chassis.Blades()
 	if err != nil {
 		msg := "Unable to list blades for chassis."
@@ -396,9 +384,9 @@ func (b *CmcSetup) setIpmiOverLan() (err error) {
 			"Enable":         enable,
 		}).Debug("Updating IpmiOverLan config.")
 
-		//blade needs to be powered on to set this parameter
+		// Blade needs to be powered on to set this parameter!
 		isPoweredOn, _ := chassis.IsOnBlade(blade.BladePosition)
-		if isPoweredOn == false {
+		if !isPoweredOn {
 			_, err = chassis.PowerOnBlade(blade.BladePosition)
 			if err != nil {
 				msg := "Unable to power up blade to enable IpmiOverLan."
@@ -413,7 +401,7 @@ func (b *CmcSetup) setIpmiOverLan() (err error) {
 				return errors.New(msg)
 			}
 
-			//give it a few seconds to power on
+			// Give it a few seconds to power on...
 			time.Sleep(20 * time.Second)
 		}
 
@@ -443,7 +431,6 @@ func (b *CmcSetup) setIpmiOverLan() (err error) {
 	}).Debug("IpmiOverLan config applied successfully.")
 
 	return err
-
 }
 
 // Enables/ Disables FlexAddress status for each blade in a chassis.
@@ -458,7 +445,6 @@ func (b *CmcSetup) setFlexAddressState() (err error) { // nolint: gocyclo
 
 	enable := b.config.FlexAddress.Enable
 
-	//retrieve list of blades in chassis
 	blades, err := chassis.Blades()
 	if err != nil {
 		msg := "Unable to list blades for chassis."
@@ -474,9 +460,8 @@ func (b *CmcSetup) setFlexAddressState() (err error) { // nolint: gocyclo
 	}
 
 	for _, blade := range blades {
-		//Flex addresses are enabled, disable them.
-		if blade.FlexAddressEnabled == true && enable == false {
-
+		// Flex addresses are enabled, disable them.
+		if blade.FlexAddressEnabled && !enable {
 			log.WithFields(logrus.Fields{
 				"component":      component,
 				"Vendor":         b.vendor,
@@ -487,7 +472,7 @@ func (b *CmcSetup) setFlexAddressState() (err error) { // nolint: gocyclo
 				"Blade Position": blade.BladePosition,
 				"Current state":  blade.FlexAddressEnabled,
 				"Expected state": enable,
-			}).Debug("Disabling FlexAddress on blade.")
+			}).Debug("Disabling FlexAddress on blade...")
 
 			isPoweredOn, _ := chassis.IsOnBlade(blade.BladePosition)
 			if isPoweredOn {
@@ -505,9 +490,8 @@ func (b *CmcSetup) setFlexAddressState() (err error) { // nolint: gocyclo
 					return errors.New(msg)
 				}
 
-				//generally 10 seconds is enough for the blade to power off
+				// Generally, 10 seconds are enough for the blade to power off.
 				time.Sleep(10 * time.Second)
-
 			}
 
 			_, err = setup.SetFlexAddressState(blade.BladePosition, false)
@@ -524,7 +508,7 @@ func (b *CmcSetup) setFlexAddressState() (err error) { // nolint: gocyclo
 				return errors.New(msg)
 			}
 
-			//give it a few seconds to change the flex state
+			// Give it a few seconds to change the Flex state...
 			time.Sleep(10 * time.Second)
 
 			_, err := chassis.PowerOnBlade(blade.BladePosition)
@@ -540,11 +524,10 @@ func (b *CmcSetup) setFlexAddressState() (err error) { // nolint: gocyclo
 				}).Warn(msg)
 				return errors.New(msg)
 			}
-
 		}
-		//flex addresses are disabled, enable them
-		if blade.FlexAddressEnabled == false && enable == true {
 
+		// Flex addresses are disabled, enable them.
+		if !blade.FlexAddressEnabled && enable {
 			log.WithFields(logrus.Fields{
 				"component":      component,
 				"Vendor":         b.vendor,
@@ -555,11 +538,10 @@ func (b *CmcSetup) setFlexAddressState() (err error) { // nolint: gocyclo
 				"Blade Position": blade.BladePosition,
 				"Current state":  blade.FlexAddressEnabled,
 				"Expected state": enable,
-			}).Info("Enabling FlexAddress on blade.")
+			}).Info("Enabling FlexAddress on blade...")
 
 			isPoweredOn, _ := chassis.IsOnBlade(blade.BladePosition)
 			if isPoweredOn {
-
 				log.WithFields(logrus.Fields{
 					"component":      component,
 					"Vendor":         b.vendor,
@@ -586,7 +568,7 @@ func (b *CmcSetup) setFlexAddressState() (err error) { // nolint: gocyclo
 					return errors.New(msg)
 				}
 
-				//generally 10 seconds is enough for the blade to power off
+				// Generally, 10 seconds are enough for the blade to power off.
 				time.Sleep(10 * time.Second)
 			}
 
@@ -606,7 +588,7 @@ func (b *CmcSetup) setFlexAddressState() (err error) { // nolint: gocyclo
 				return errors.New(msg)
 			}
 
-			//give it a few seconds to change the flex state
+			// Give it a few seconds to change the Flex state...
 			time.Sleep(10 * time.Second)
 
 			_, err = chassis.PowerOnBlade(blade.BladePosition)
@@ -640,7 +622,6 @@ func (b *CmcSetup) setFlexAddressState() (err error) { // nolint: gocyclo
 
 // Powers up/down blades as defined in config.
 func (b *CmcSetup) setBladesPower() (err error) {
-
 	log := b.log
 	component := "setBladesPower"
 

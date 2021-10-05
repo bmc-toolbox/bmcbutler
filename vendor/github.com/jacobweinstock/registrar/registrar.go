@@ -56,7 +56,7 @@ func WithDrivers(drivers Drivers) Option {
 
 // NewRegistry returns a new Driver registry
 func NewRegistry(opts ...Option) *Registry {
-	var defaultRegistry = &Registry{
+	defaultRegistry := &Registry{
 		Logger: defaultLogger(),
 	}
 	for _, opt := range opts {
@@ -93,7 +93,7 @@ func (r Registry) GetDriverInterfaces() []interface{} {
 // interface. registered drivers must implement the Verifier interface for this.
 func (r Registry) FilterForCompatible(ctx context.Context) Drivers {
 	var wg sync.WaitGroup
-	var mutex = &sync.Mutex{}
+	mutex := &sync.Mutex{}
 	state := make(map[int]*Driver)
 
 	for index, elem := range r.Drivers {

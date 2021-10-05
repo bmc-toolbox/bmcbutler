@@ -10,7 +10,6 @@ import (
 // It will dive into pointers, customTypes and return you the
 // underlying value and it's kind.
 func (v *validate) extractTypeInternal(current reflect.Value, nullable bool) (reflect.Value, reflect.Kind, bool) {
-
 BEGIN:
 	switch current.Kind() {
 	case reflect.Ptr:
@@ -41,7 +40,6 @@ BEGIN:
 	default:
 
 		if v.v.hasCustomFuncs {
-
 			if fn, ok := v.v.customFuncs[current.Type()]; ok {
 				current = reflect.ValueOf(fn(current))
 				goto BEGIN
@@ -58,7 +56,6 @@ BEGIN:
 // NOTE: when not successful ok will be false, this can happen when a nested struct is nil and so the field
 // could not be retrieved because it didn't exist.
 func (v *validate) getStructFieldOKInternal(val reflect.Value, namespace string) (current reflect.Value, kind reflect.Kind, nullable bool, found bool) {
-
 BEGIN:
 	current, kind, nullable = v.ExtractType(val)
 	if kind == reflect.Invalid {
@@ -222,7 +219,6 @@ BEGIN:
 // asInt returns the parameter as a int64
 // or panics if it can't convert
 func asInt(param string) int64 {
-
 	i, err := strconv.ParseInt(param, 0, 64)
 	panicIf(err)
 
@@ -232,7 +228,6 @@ func asInt(param string) int64 {
 // asUint returns the parameter as a uint64
 // or panics if it can't convert
 func asUint(param string) uint64 {
-
 	i, err := strconv.ParseUint(param, 0, 64)
 	panicIf(err)
 
@@ -242,7 +237,6 @@ func asUint(param string) uint64 {
 // asFloat returns the parameter as a float64
 // or panics if it can't convert
 func asFloat(param string) float64 {
-
 	i, err := strconv.ParseFloat(param, 64)
 	panicIf(err)
 

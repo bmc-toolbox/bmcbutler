@@ -130,7 +130,6 @@ func (p *Policy) init() {
 // AllowAttrs() and/or AllowElements() to construct the whitelist of HTML
 // elements and attributes.
 func NewPolicy() *Policy {
-
 	p := Policy{}
 
 	p.addDefaultElementsWithoutAttrs()
@@ -146,7 +145,6 @@ func NewPolicy() *Policy {
 // The attribute policy is only added to the core policy when either Globally()
 // or OnElements(...) are called.
 func (p *Policy) AllowAttrs(attrNames ...string) *attrPolicyBuilder {
-
 	p.init()
 
 	abp := attrPolicyBuilder{
@@ -181,7 +179,6 @@ func (p *Policy) AllowDataAttributes() {
 // The attribute policy is only added to the core policy when OnElements(...)
 // are called.
 func (p *Policy) AllowNoAttrs() *attrPolicyBuilder {
-
 	p.init()
 
 	abp := attrPolicyBuilder{
@@ -196,7 +193,6 @@ func (p *Policy) AllowNoAttrs() *attrPolicyBuilder {
 // The attribute policy is only added to the core policy when OnElements(...)
 // are called.
 func (abp *attrPolicyBuilder) AllowNoAttrs() *attrPolicyBuilder {
-
 	abp.allowEmpty = true
 
 	return abp
@@ -206,7 +202,6 @@ func (abp *attrPolicyBuilder) AllowNoAttrs() *attrPolicyBuilder {
 // policy, and returns the attribute policy. Calling this more than once will
 // replace the existing regexp.
 func (abp *attrPolicyBuilder) Matching(regex *regexp.Regexp) *attrPolicyBuilder {
-
 	abp.regexp = regex
 
 	return abp
@@ -215,7 +210,6 @@ func (abp *attrPolicyBuilder) Matching(regex *regexp.Regexp) *attrPolicyBuilder 
 // OnElements will bind an attribute policy to a given range of HTML elements
 // and return the updated policy
 func (abp *attrPolicyBuilder) OnElements(elements ...string) *Policy {
-
 	for _, element := range elements {
 		element = strings.ToLower(element)
 
@@ -248,7 +242,6 @@ func (abp *attrPolicyBuilder) OnElements(elements ...string) *Policy {
 // Globally will bind an attribute policy to all HTML elements and return the
 // updated policy
 func (abp *attrPolicyBuilder) Globally() *Policy {
-
 	for _, attr := range abp.attrNames {
 		if _, ok := abp.p.globalAttrs[attr]; !ok {
 			abp.p.globalAttrs[attr] = attrPolicy{}
@@ -287,7 +280,6 @@ func (p *Policy) AllowElements(names ...string) *Policy {
 //
 // Note: This requires p.RequireParseableURLs(true) and will enable it.
 func (p *Policy) RequireNoFollowOnLinks(require bool) *Policy {
-
 	p.requireNoFollow = require
 	p.requireParseableURLs = true
 
@@ -300,7 +292,6 @@ func (p *Policy) RequireNoFollowOnLinks(require bool) *Policy {
 //
 // Note: This requires p.RequireParseableURLs(true) and will enable it.
 func (p *Policy) RequireNoFollowOnFullyQualifiedLinks(require bool) *Policy {
-
 	p.requireNoFollowFullyQualifiedLinks = require
 	p.requireParseableURLs = true
 
@@ -313,7 +304,6 @@ func (p *Policy) RequireNoFollowOnFullyQualifiedLinks(require bool) *Policy {
 //
 // Note: This requires p.RequireParseableURLs(true) and will enable it.
 func (p *Policy) AddTargetBlankToFullyQualifiedLinks(require bool) *Policy {
-
 	p.addTargetBlankToFullyQualifiedLinks = require
 	p.requireParseableURLs = true
 
@@ -330,7 +320,6 @@ func (p *Policy) AddTargetBlankToFullyQualifiedLinks(require bool) *Policy {
 // - link.href
 // - script.src
 func (p *Policy) RequireParseableURLs(require bool) *Policy {
-
 	p.requireParseableURLs = require
 
 	return p
@@ -340,7 +329,6 @@ func (p *Policy) RequireParseableURLs(require bool) *Policy {
 // are parseable, have no schema information and url.IsAbs() returns false
 // This permits local URLs
 func (p *Policy) AllowRelativeURLs(require bool) *Policy {
-
 	p.RequireParseableURLs(true)
 	p.allowRelativeURLs = require
 
@@ -395,7 +383,6 @@ func (p *Policy) AllowURLSchemeWithCustomPolicy(
 // " Hello  World " by setting AddSpaceWhenStrippingTag to true as this would
 // retain the intent of the text.
 func (p *Policy) AddSpaceWhenStrippingTag(allow bool) *Policy {
-
 	p.addSpaces = allow
 
 	return p
@@ -404,7 +391,6 @@ func (p *Policy) AddSpaceWhenStrippingTag(allow bool) *Policy {
 // SkipElementsContent adds the HTML elements whose tags is needed to be removed
 // with its content.
 func (p *Policy) SkipElementsContent(names ...string) *Policy {
-
 	p.init()
 
 	for _, element := range names {
@@ -421,7 +407,6 @@ func (p *Policy) SkipElementsContent(names ...string) *Policy {
 // AllowElementsContent marks the HTML elements whose content should be
 // retained after removing the tag.
 func (p *Policy) AllowElementsContent(names ...string) *Policy {
-
 	p.init()
 
 	for _, element := range names {
@@ -527,7 +512,6 @@ func (p *Policy) addDefaultElementsWithoutAttrs() {
 	p.setOfElementsAllowedWithoutAttrs["var"] = struct{}{}
 	p.setOfElementsAllowedWithoutAttrs["video"] = struct{}{}
 	p.setOfElementsAllowedWithoutAttrs["wbr"] = struct{}{}
-
 }
 
 // addDefaultSkipElementContent adds the HTML elements that we should skip

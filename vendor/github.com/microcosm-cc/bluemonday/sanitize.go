@@ -84,7 +84,6 @@ func (p *Policy) SanitizeReader(r io.Reader) *bytes.Buffer {
 
 // Performs the actual sanitization process.
 func (p *Policy) sanitize(r io.Reader) *bytes.Buffer {
-
 	// It is possible that the developer has created the policy via:
 	//   p := bluemonday.Policy{}
 	// rather than:
@@ -288,7 +287,6 @@ func (p *Policy) sanitizeAttrs(
 
 		// Is there a global attribute policy that applies?
 		if ap, ok := p.globalAttrs[htmlAttr.Key]; ok {
-
 			if ap.regexp != nil {
 				if ap.regexp.MatchString(htmlAttr.Val) {
 					cleanAttrs = append(cleanAttrs, htmlAttr)
@@ -395,7 +393,6 @@ func (p *Policy) sanitizeAttrs(
 
 						var appended bool
 						if htmlAttr.Key == "rel" && addNoFollow {
-
 							if strings.Contains(htmlAttr.Val, "nofollow") {
 								noFollowFound = true
 								tmpAttrs = append(tmpAttrs, htmlAttr)
@@ -530,7 +527,6 @@ func (p *Policy) validURL(rawurl string) (string, bool) {
 			urlPolicy, ok := p.allowURLSchemes[u.Scheme]
 			if !ok {
 				return "", false
-
 			}
 
 			if urlPolicy == nil || urlPolicy(u) == true {

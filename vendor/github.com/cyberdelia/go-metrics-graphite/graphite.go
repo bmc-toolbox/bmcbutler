@@ -40,7 +40,7 @@ func Graphite(r metrics.Registry, d time.Duration, prefix string, addr *net.TCPA
 // WithConfig is a blocking exporter function just like Graphite,
 // but it takes a GraphiteConfig instead.
 func WithConfig(c Config) {
-	for _ = range time.Tick(c.FlushInterval) {
+	for range time.Tick(c.FlushInterval) {
 		if err := graphite(&c); nil != err {
 			log.Println(err)
 		}

@@ -468,6 +468,7 @@ func writeCmdAliases(buf *bytes.Buffer, cmd *Command) {
 	buf.WriteString(`    fi`)
 	buf.WriteString("\n")
 }
+
 func writeArgAliases(buf *bytes.Buffer, cmd *Command) {
 	buf.WriteString("    noun_aliases=()\n")
 	sort.Sort(sort.StringSlice(cmd.ArgAliases))

@@ -180,7 +180,7 @@ func readTo(decoder Decoder, out interface{}) error {
 			if fieldInfo, ok := csvHeadersLabels[j]; ok { // Position found accordingly to header name
 				if err := setInnerField(&outInner, outInnerWasPointer, fieldInfo.IndexChain, csvColumnContent, fieldInfo.omitEmpty); err != nil { // Set field of struct
 					return &csv.ParseError{
-						Line:   i + 2, //add 2 to account for the header & 0-indexing of arrays
+						Line:   i + 2, // add 2 to account for the header & 0-indexing of arrays
 						Column: j + 1,
 						Err:    err,
 					}
@@ -245,7 +245,7 @@ func readEach(decoder SimpleDecoder, c interface{}) error {
 			if fieldInfo, ok := csvHeadersLabels[j]; ok { // Position found accordingly to header name
 				if err := setInnerField(&outInner, outInnerWasPointer, fieldInfo.IndexChain, csvColumnContent, fieldInfo.omitEmpty); err != nil { // Set field of struct
 					return &csv.ParseError{
-						Line:   i + 2, //add 2 to account for the header & 0-indexing of arrays
+						Line:   i + 2, // add 2 to account for the header & 0-indexing of arrays
 						Column: j + 1,
 						Err:    err,
 					}

@@ -66,14 +66,13 @@ type DoraAsset struct {
 
 // for a list of assets, update its location value
 func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) (err error) {
-
 	component := "inventory"
 	log := d.Log
 
 	apiURL := d.Config.Inventory.Dora.URL
 	queryURL := fmt.Sprintf("%s/v1/scanned_ports?filter[port]=22&filter[ip]=", apiURL)
 
-	//collect IPAddresses used to look up the location
+	// Collect IPAddresses used to look up the location.
 	ips := make([]string, 0)
 
 	for _, asset := range doraInventoryAssets {
@@ -118,11 +117,8 @@ func (d *Dora) setLocation(doraInventoryAssets []asset.Asset) (err error) {
 	return err
 }
 
-//AssetRetrieve looks at d.Config.FilterParams
-//and returns the appropriate function that will retrieve assets.
 func (d *Dora) AssetRetrieve() func() {
-
-	//setup the asset types we want to retrieve data for.
+	// Setup the asset types we want to retrieve data for.
 	switch {
 	case d.Config.FilterParams.Chassis:
 		d.FilterAssetType = append(d.FilterAssetType, "chassis")
@@ -133,21 +129,19 @@ func (d *Dora) AssetRetrieve() func() {
 		d.FilterAssetType = []string{"chassis", "blade", "discrete"}
 	}
 
-	//Based on the filter param given, return the asset iterator method.
+	// Based on the filter param given, return the asset iterator method.
 	switch {
 	case d.Config.FilterParams.Serials != "":
 		return d.AssetIterBySerial
 	default:
 		return d.AssetIter
 	}
-
 }
 
 // AssetIterBySerial is an iterator method,
 // to retrieve assets from Dora by the given serial numbers,
 // assets are then sent over the inventory channel.
 func (d *Dora) AssetIterBySerial() {
-
 	serials := d.Config.FilterParams.Serials
 	apiURL := d.Config.Inventory.Dora.URL
 
@@ -157,8 +151,8 @@ func (d *Dora) AssetIterBySerial() {
 	defer close(d.AssetsChan)
 
 	for _, assetType := range d.FilterAssetType {
+		// Setup the right dora query path.
 		var path string
-		//setup the right dora query path
 		switch assetType {
 		case "blade":
 			path = "blades"

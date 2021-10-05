@@ -16,9 +16,7 @@ const (
 	infinity = 1 << 30 // offset or line
 )
 
-var (
-	unindent = []byte("\uE123") // in the private use space
-)
+var unindent = []byte("\uE123") // in the private use space
 
 type printer struct {
 	cfg  Config

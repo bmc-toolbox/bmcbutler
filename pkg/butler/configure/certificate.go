@@ -28,7 +28,6 @@ import (
 // iDrac needs a reset
 // POST https://10.193.251.25/data?set=iDracReset:1
 func (b *Bmc) certificateSetup() (bool, error) {
-
 	if b.config.HTTPSCert.Attributes.CommonName == "" {
 		return false, fmt.Errorf("Declared certificate configuration requires a commonName")
 	}
@@ -120,12 +119,11 @@ func (b *Bmc) certificateSetup() (bool, error) {
 
 // signCSR signs the given csr with the configured signer
 func (b *Bmc) signCSR(csr []byte, commonName string) ([]byte, error) {
-
 	config := b.butlerConfig.CertSigner
 
 	var cmd string
 	var args []string
-	var env = make(map[string]string)
+	env := make(map[string]string)
 
 	// if we're in trace logging, pass the debugging env var to the signer.
 	if b.butlerConfig.Trace {
@@ -180,7 +178,6 @@ func (b *Bmc) signCSR(csr []byte, commonName string) ([]byte, error) {
 // return a string, bool - based on if the cert attributes aren't valid or is/will expired.
 // nolint: gocyclo
 func (b *Bmc) validateCert(certs []*x509.Certificate, config *cfgresources.HTTPSCert) (string, bool) {
-
 	// If there are no certs
 	if len(certs) == 0 {
 		return "No certs present.", false
@@ -259,7 +256,6 @@ func (b *Bmc) validateCert(certs []*x509.Certificate, config *cfgresources.HTTPS
 
 // match compares the subject fields in the certificate vs the declared configuration.
 func match(field []string, config string) bool {
-
 	// !!!!! if a configuration field is empty, this method assumes the user has not declared this attribute !!!!!
 	if config == "" {
 		return true
@@ -279,7 +275,6 @@ func match(field []string, config string) bool {
 
 // run command with args
 func execCmd(c string, env map[string]string, args []string, stdIn []byte) (stdOut string, stdErr string, exitCode int) {
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -298,7 +293,7 @@ func execCmd(c string, env map[string]string, args []string, stdIn []byte) (stdO
 	cmd.Stdout = &outBuf
 	cmd.Stderr = &errBuf
 
-	//feed in given stdin data
+	// feed in given stdin data
 	cmd.Stdin = bytes.NewBuffer(stdIn)
 
 	// To ignore SIGINTs received by the parent process,
@@ -336,9 +331,8 @@ func execCmd(c string, env map[string]string, args []string, stdIn []byte) (stdO
 }
 
 func generateCsr(c *cfgresources.HTTPSCertAttributes) (csr, privateKey []byte, err error) {
-
 	// https://oidref.com/1.2.840.113549.1.9.1
-	var oidEmailAddress = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}
+	oidEmailAddress := asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}
 
 	// Generate private key
 	keyBytes, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -390,5 +384,4 @@ func generateCsr(c *cfgresources.HTTPSCertAttributes) (csr, privateKey []byte, e
 	csr = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
 
 	return csr, privateKey, err
-
 }

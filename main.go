@@ -17,7 +17,6 @@ package main
 import (
 	"log"
 	"net/http"
-	_ "net/http/pprof" //pprof
 
 	"github.com/bmc-toolbox/bmcbutler/cmd"
 )

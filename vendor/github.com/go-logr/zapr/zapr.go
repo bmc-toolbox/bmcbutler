@@ -182,5 +182,7 @@ func NewLogger(l *zap.Logger) logr.Logger {
 	return newLoggerWithExtraSkip(l, 1)
 }
 
-var _ logr.Logger = &zapLogger{}
-var _ logr.CallDepthLogger = &zapLogger{}
+var (
+	_ logr.Logger          = &zapLogger{}
+	_ logr.CallDepthLogger = &zapLogger{}
+)

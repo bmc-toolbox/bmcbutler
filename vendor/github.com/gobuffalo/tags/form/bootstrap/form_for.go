@@ -9,14 +9,13 @@ import (
 	"github.com/gobuffalo/validate/validators"
 )
 
-//FormFor is the FormFor version for bootstrap
+// FormFor is the FormFor version for bootstrap
 type FormFor struct {
 	*form.FormFor
 }
 
-//CheckboxTag adds a checkbox to a form wrapped with a form-control and a label
+// CheckboxTag adds a checkbox to a form wrapped with a form-control and a label
 func (f FormFor) CheckboxTag(field string, opts tags.Options) *tags.Tag {
-
 	label := field
 	if opts["label"] != nil {
 		label = fmt.Sprint(opts["label"])
@@ -50,7 +49,7 @@ func (f FormFor) CheckboxTag(field string, opts tags.Options) *tags.Tag {
 	})
 }
 
-//InputTag builds an input[type=text] by default wrapped with a form-control and a label
+// InputTag builds an input[type=text] by default wrapped with a form-control and a label
 func (f FormFor) InputTag(field string, opts tags.Options) *tags.Tag {
 	opts = f.buildOptions(field, opts)
 	if opts["type"] == "hidden" {
@@ -62,13 +61,13 @@ func (f FormFor) InputTag(field string, opts tags.Options) *tags.Tag {
 	})
 }
 
-//HiddenTag adds an input[type=hidden] to the formFor
+// HiddenTag adds an input[type=hidden] to the formFor
 func (f FormFor) HiddenTag(field string, opts tags.Options) *tags.Tag {
 	opts = f.buildOptions(field, opts)
 	return f.FormFor.HiddenTag(field, opts)
 }
 
-//FileTag adds a bootstrap input[type=file] wrapped with a form-control and a label
+// FileTag adds a bootstrap input[type=file] wrapped with a form-control and a label
 func (f FormFor) FileTag(field string, opts tags.Options) *tags.Tag {
 	opts = f.buildOptions(field, opts)
 	return divWrapper(opts, func(o tags.Options) tags.Body {
@@ -76,12 +75,12 @@ func (f FormFor) FileTag(field string, opts tags.Options) *tags.Tag {
 	})
 }
 
-//RadioButton adds a bootstrap input[type=radio] wrapped with a form-control and a label
+// RadioButton adds a bootstrap input[type=radio] wrapped with a form-control and a label
 func (f FormFor) RadioButton(field string, opts tags.Options) *tags.Tag {
 	return f.RadioButtonTag(field, opts)
 }
 
-//RadioButtonTag adds a bootstrap input[type=radio] wrapped with a form-control and a label
+// RadioButtonTag adds a bootstrap input[type=radio] wrapped with a form-control and a label
 func (f FormFor) RadioButtonTag(field string, opts tags.Options) *tags.Tag {
 	opts = f.buildOptions(field, opts)
 	return divWrapper(opts, func(o tags.Options) tags.Body {
@@ -89,7 +88,7 @@ func (f FormFor) RadioButtonTag(field string, opts tags.Options) *tags.Tag {
 	})
 }
 
-//SelectTag adds a bootstrap select tag wrapped with a form-control and a label
+// SelectTag adds a bootstrap select tag wrapped with a form-control and a label
 func (f FormFor) SelectTag(field string, opts tags.Options) *tags.Tag {
 	opts = f.buildOptions(field, opts)
 	return divWrapper(opts, func(o tags.Options) tags.Body {
@@ -97,12 +96,12 @@ func (f FormFor) SelectTag(field string, opts tags.Options) *tags.Tag {
 	})
 }
 
-//TextArea adds a bootstrap textarea tag wrapped with a form-control and a label
+// TextArea adds a bootstrap textarea tag wrapped with a form-control and a label
 func (f FormFor) TextArea(field string, opts tags.Options) *tags.Tag {
 	return f.TextAreaTag(field, opts)
 }
 
-//TextAreaTag adds a bootstrap textarea tag wrapped with a form-control and a label
+// TextAreaTag adds a bootstrap textarea tag wrapped with a form-control and a label
 func (f FormFor) TextAreaTag(field string, opts tags.Options) *tags.Tag {
 	opts = f.buildOptions(field, opts)
 	return divWrapper(opts, func(o tags.Options) tags.Body {
@@ -110,12 +109,12 @@ func (f FormFor) TextAreaTag(field string, opts tags.Options) *tags.Tag {
 	})
 }
 
-//SubmitTag returns a tag for input type submit without wrapping
+// SubmitTag returns a tag for input type submit without wrapping
 func (f FormFor) SubmitTag(value string, opts tags.Options) *tags.Tag {
 	return f.FormFor.SubmitTag(value, opts)
 }
 
-//NewFormFor builds a form for a passed model
+// NewFormFor builds a form for a passed model
 func NewFormFor(model interface{}, opts tags.Options) *FormFor {
 	return &FormFor{form.NewFormFor(model, opts)}
 }

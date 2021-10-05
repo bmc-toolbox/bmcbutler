@@ -7,17 +7,17 @@ import (
 	"github.com/go-playground/locales"
 )
 
-var (
-	// ErrUnknowTranslation indicates the translation could not be found
-	ErrUnknowTranslation = errors.New("Unknown Translation")
-)
+// ErrUnknowTranslation indicates the translation could not be found
+var ErrUnknowTranslation = errors.New("Unknown Translation")
 
-var _ error = new(ErrConflictingTranslation)
-var _ error = new(ErrRangeTranslation)
-var _ error = new(ErrOrdinalTranslation)
-var _ error = new(ErrCardinalTranslation)
-var _ error = new(ErrMissingPluralTranslation)
-var _ error = new(ErrExistingTranslator)
+var (
+	_ error = new(ErrConflictingTranslation)
+	_ error = new(ErrRangeTranslation)
+	_ error = new(ErrOrdinalTranslation)
+	_ error = new(ErrCardinalTranslation)
+	_ error = new(ErrMissingPluralTranslation)
+	_ error = new(ErrExistingTranslator)
+)
 
 // ErrExistingTranslator is the error representing a conflicting translator
 type ErrExistingTranslator struct {
@@ -39,7 +39,6 @@ type ErrConflictingTranslation struct {
 
 // Error returns ErrConflictingTranslation's internal error text
 func (e *ErrConflictingTranslation) Error() string {
-
 	if _, ok := e.key.(string); !ok {
 		return fmt.Sprintf("error: conflicting key '%#v' rule '%s' with text '%s' for locale '%s', value being ignored", e.key, e.rule, e.text, e.locale)
 	}
@@ -88,7 +87,6 @@ type ErrMissingPluralTranslation struct {
 
 // Error returns ErrMissingPluralTranslation's internal error text
 func (e *ErrMissingPluralTranslation) Error() string {
-
 	if _, ok := e.key.(string); !ok {
 		return fmt.Sprintf("error: missing '%s' plural rule '%s' for translation with key '%#v' and locale '%s'", e.translationType, e.rule, e.key, e.locale)
 	}

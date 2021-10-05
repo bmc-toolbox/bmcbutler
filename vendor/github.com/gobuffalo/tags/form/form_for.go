@@ -162,7 +162,6 @@ func (f FormFor) SubmitTag(value string, opts tags.Options) *tags.Tag {
 }
 
 func (f FormFor) buildOptions(field string, opts tags.Options) {
-
 	if opts["value"] == nil {
 		opts["value"] = f.value(field)
 	}
@@ -174,7 +173,6 @@ func (f FormFor) buildOptions(field string, opts tags.Options) {
 	if opts["id"] == nil {
 		opts["id"] = fmt.Sprintf("%s-%s", f.dashedName, opts["name"])
 	}
-
 }
 
 type interfacer interface {

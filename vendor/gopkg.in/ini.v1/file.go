@@ -508,7 +508,7 @@ func (f *File) SaveToIndent(filename, indent string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(filename, buf.Bytes(), 0666)
+	return ioutil.WriteFile(filename, buf.Bytes(), 0o666)
 }
 
 // SaveTo writes content to file system.

@@ -90,7 +90,6 @@ func writeLevel(w io.Writer, root *Command, i int) {
 	fmt.Fprintln(w, "      *)")
 	fmt.Fprintln(w, "        _arguments '*: :_files'")
 	fmt.Fprintln(w, "      ;;")
-
 }
 
 func filterByLevel(c *Command, l int) []*Command {

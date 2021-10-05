@@ -92,10 +92,10 @@ func (s *Scanner) Token() ([]byte, syntaxhighlight.Kind) {
 	case len(s.line) == 0 || s.line[0] == ' ' || s.line[0] == '\\':
 		kind = 0
 	case s.line[0] == '+':
-		//kind = 1
+		// kind = 1
 		kind = 0
 	case s.line[0] == '-':
-		//kind = 2
+		// kind = 2
 		kind = 0
 	case s.line[0] == '@':
 		kind = 3

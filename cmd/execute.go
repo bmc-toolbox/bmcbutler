@@ -38,9 +38,9 @@ func execute() {
 	runConfig.Execute = true
 	inventoryChan, butlerChan, _ := pre()
 
-	//iterate over the inventory channel for assets,
-	//create a butler message for each asset along with the configuration,
-	//at this point templated values in the config are not yet rendered.
+	// Iterate over the inventory channel for assets.
+	// Create a butler message for each asset along with the configuration.
+	// At this point, templated values in the config are not yet rendered.
 	for assetList := range inventoryChan {
 		for _, asset := range assetList {
 			asset.Execute = true

@@ -131,7 +131,6 @@ func main() {
 // sign returns the signed cert, it will prepend a chain cert if any.
 // nolint: gocyclo
 func sign(request Request) (string, error) {
-
 	payload, err := json.Marshal(request)
 	if err != nil {
 		return "", err
@@ -147,7 +146,7 @@ func sign(request Request) (string, error) {
 		return "", err
 	}
 
-	var bearer = "Bearer " + request.Key
+	bearer := "Bearer " + request.Key
 	req.Header.Add("Authorization", bearer)
 	req.Header.Add("Content-Type", "application/json")
 

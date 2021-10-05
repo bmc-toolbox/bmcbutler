@@ -39,8 +39,7 @@ func init() {
 }
 
 func validateConfigureArgs() {
-
-	//one of these args are required
+	// At least one of these args is required.
 	if !runConfig.FilterParams.All &&
 		!runConfig.FilterParams.Chassis &&
 		!runConfig.FilterParams.Servers &&
@@ -69,11 +68,11 @@ func configure() {
 	assetConfigDir := viper.GetString("bmcCfgDir")
 	assetConfigFile := fmt.Sprintf("%s/%s", assetConfigDir, "configuration.yml")
 
-	//returns the file read as a slice of bytes
-	//config may contain templated values.
+	// Read the file as a slice of bytes.
+	// It may contain templated values.
 	assetConfig, err := resource.ReadYamlTemplate(assetConfigFile)
 	if err != nil {
-		log.Fatal("Unable to read BMC configuration: ", assetConfigFile, " Error: ", err)
+		log.Fatal("Unable to read BMC configuration file (", assetConfigFile, "), Error: ", err)
 		os.Exit(1)
 	}
 

@@ -40,14 +40,12 @@ func (p *Params) Load(cfgFile string) {
 			log.Fatalf("[Error] %s", err.Error())
 		}
 	}
-
 }
 
+// Read the config file using Viper.
 func (p *Params) unmarshalConfig(cfgFile string) error {
-
-	//read in config file with viper
 	if cfgFile != "" {
-		// Use config file from the flag.
+		// Use config file from the user-provided flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
 		viper.SetConfigName("bmcbutler")
@@ -88,10 +86,8 @@ func (p *Params) validateCertSignerCfg() error {
 	if p.CertSigner != nil {
 		if p.CertSigner.FakeSigner != nil {
 			p.CertSigner.Client = "fakeSigner"
-
 		} else if p.CertSigner.LemurSigner != nil {
 			p.CertSigner.Client = "lemurSigner"
-
 		} else {
 			log.Println("[WARN] Invalid cert_signer declared in config.")
 		}
@@ -101,18 +97,14 @@ func (p *Params) validateCertSignerCfg() error {
 }
 
 func (p *Params) validateInventoryCfg() error {
-	//inventory config
 	if p.Inventory != nil {
 
 		if p.Inventory.Enc != nil {
 			p.Inventory.Source = "enc"
-
 		} else if p.Inventory.Dora != nil {
 			p.Inventory.Source = "dora"
-
 		} else if p.Inventory.Csv != nil {
 			p.Inventory.Source = "csv"
-
 		} else {
 			log.Println("[WARN] Invalid inventory source declared in configuration.")
 		}
@@ -137,7 +129,6 @@ func (p *Params) validateMetricsCfg() error {
 
 // vault config
 func (p *Params) validateVaultCfg() error {
-
 	if !p.SecretsFromVault {
 		return nil
 	}
@@ -163,7 +154,6 @@ func (p *Params) validateVaultCfg() error {
 }
 
 func (p *Params) loadVaultToken() error {
-
 	// token declared in config file
 	if p.Vault.Token != "" {
 		return nil

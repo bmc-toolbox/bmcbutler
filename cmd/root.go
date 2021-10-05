@@ -41,14 +41,14 @@ var rootCmd = &cobra.Command{
 	Use:              "bmcbutler",
 	Short:            "A bmc config manager",
 	TraverseChildren: true,
-	//setup logger before we run our code, but after init()
-	//so cli flags are evaluated
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// Setup the logger before we run our code.
+		// This happens after init() which evaluates the CLI flags (needed to setup the logging).
 		setupLogger()
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
+// Add all child commands to the root command and set flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
@@ -83,17 +83,17 @@ func setupLogger() {
 }
 
 func init() {
-	//bmcbutler runtime configuration.
-	//NOTE: to override any config from the flags declared here, see overrideConfigFromFlags in common.go
+	// bmcbutler runtime configuration.
+	// NOTE: To override any config from the flags declared here, see overrideConfigFromFlags().
 	runConfig = &config.Params{}
 
-	//FilterParams holds the configure/setup/execute related host filter cli args.
+	// FilterParams holds the configure/setup/execute-related host filter CLI args.
 	runConfig.FilterParams = &config.FilterParams{}
 
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.Debug, "debug", "d", false, "debug logging")
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.Trace, "trace", "t", false, "trace logging")
 
-	//Asset filter params.
+	// Asset filter params.
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.All, "all", "", false, "Action all assets")
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.Chassis, "chassis", "", false, "Action just Chassis assets.")
 	rootCmd.PersistentFlags().BoolVarP(&runConfig.FilterParams.Servers, "servers", "", false, "Action just Server assets.")
@@ -107,7 +107,6 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&resources, "resources", "r", "", "Apply one or more resources instead of the whole config (e.g -r syslog,ntp).")
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "/etc/bmcbutler/bmcbutler.yml", "Configuration file for bmcbutler (default: /etc/bmcbutler/bmcbutler.yml)")
 
-	//move to exec
+	// TODO: Only for execute calls, perhaps move to a more specific place?
 	rootCmd.PersistentFlags().StringVarP(&execCommand, "command", "", "", "Command to execute on BMCs.")
-
 }

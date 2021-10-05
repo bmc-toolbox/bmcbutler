@@ -26,18 +26,18 @@ import (
 	"github.com/bmc-toolbox/bmcbutler/pkg/secrets"
 )
 
-// Msg (butler messages) are passed over the butlerChan
-// they declare assets for butlers to carry actions on.
+// Represents butler messages passed over the butlerChan.
+// These declare assets for butlers to carry actions on.
 type Msg struct {
-	Asset        asset.Asset //Asset to be configured
-	AssetConfig  []byte      //The BMC configuration read in from configuration.yml
-	AssetSetup   []byte      //The One time setup configuration read from setup.yml
-	AssetExecute string      //Commands to be executed on the BMC
+	Asset        asset.Asset // Asset to be configured
+	AssetConfig  []byte      // The BMC configuration read in from configuration.yml
+	AssetSetup   []byte      // The one-time-setup configuration read from setup.yml
+	AssetExecute string      // Commands to be executed on the BMC
 }
 
-// Butler struct holds attributes required to spawn butlers.
+// Holds attributes required to spawn butlers.
 type Butler struct {
-	Config     *config.Params //bmcbutler config, cli params
+	Config     *config.Params // bmcbutler config + CLI params passed by the user.
 	ButlerChan <-chan Msg
 	Log        *logrus.Logger
 	StopChan   <-chan struct{}
@@ -88,7 +88,6 @@ loop:
 			b.WorkerPool.Stop()
 			break loop
 		}
-
 	}
 
 	b.WorkerPool.StopWait()
@@ -97,5 +96,4 @@ loop:
 		"component": component,
 		"Count":     b.Config.ButlersToSpawn,
 	}).Debug("All butlers exited.")
-
 }

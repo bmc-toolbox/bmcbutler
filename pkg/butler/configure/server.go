@@ -241,5 +241,4 @@ func (b *Bmc) Apply() {
 		"success":      true,
 		"applied":      strings.Join(success, ", "),
 	}).Info("BMC configuration actions successful.")
-
 }

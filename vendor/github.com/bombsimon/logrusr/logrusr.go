@@ -120,7 +120,7 @@ func (l *logrusr) Error(err error, msg string, keysAndValues ...interface{}) {
 
 // listToLogrusFields converts a list of arbitrary length to key/value paris.
 func listToLogrusFields(formatter func(interface{}) string, keysAndValues ...interface{}) logrus.Fields {
-	var f = logrus.Fields{}
+	f := logrus.Fields{}
 
 	// Skip all fields if it's not an even lengthed list.
 	if len(keysAndValues)%2 != 0 {

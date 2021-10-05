@@ -35,8 +35,10 @@ func (f fieldInfo) matchesKey(key string) bool {
 	return false
 }
 
-var structMap = make(map[reflect.Type]*structInfo)
-var structMapMutex sync.RWMutex
+var (
+	structMap      = make(map[reflect.Type]*structInfo)
+	structMapMutex sync.RWMutex
+)
 
 func getStructInfo(rType reflect.Type) *structInfo {
 	structMapMutex.RLock()

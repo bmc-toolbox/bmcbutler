@@ -17,14 +17,12 @@ import (
 // gets any config templated data rendered
 // applies the configuration using bmclib
 func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) {
-
 	component := "executeCommand"
 	log := b.Log
 
 	if b.Config.DryRun {
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"Asset":     fmt.Sprintf("%+v", asset),
 		}).Info("Dry run, won't execute cmd on asset.")
 		return nil
 	}
@@ -36,7 +34,6 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 		Retries:         1,
 	}
 
-	//connect to the bmc/chassis bmc
 	client, loginInfo, err := bmcConn.Login()
 	if err != nil {
 		return err
@@ -53,7 +50,7 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 				"component":          component,
 				"Serial":             asset.Serial,
 				"Asset Type":         asset.Type,
-				"Vendor":             asset.Vendor, //at this point the vendor may or may not be known.
+				"Vendor":             asset.Vendor, // At this point, the vendor may or may not be known.
 				"Location":           asset.Location,
 				"IP Address":         asset.IPAddress,
 				"Command":            command,
@@ -80,13 +77,11 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 		//b.executeCommandChassis(chassis, command)
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"Asset":     fmt.Sprintf("%+v", asset),
 		}).Info("Command executed.")
 		chassis.Close()
 	default:
 		log.WithFields(logrus.Fields{
 			"component": component,
-			"Asset":     fmt.Sprintf("%+v", asset),
 		}).Warn("Unknown device type.")
 		return errors.New("unknown asset type")
 	}

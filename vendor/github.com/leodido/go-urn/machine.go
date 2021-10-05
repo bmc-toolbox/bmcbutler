@@ -13,11 +13,15 @@ var (
 	errParse          = "parsing error [col %d]"
 )
 
-const start int = 1
-const firstFinal int = 44
+const (
+	start      int = 1
+	firstFinal int = 44
+)
 
-const enFail int = 46
-const enMain int = 1
+const (
+	enFail int = 46
+	enMain int = 1
+)
 
 // Machine is the interface representing the FSM
 type Machine interface {

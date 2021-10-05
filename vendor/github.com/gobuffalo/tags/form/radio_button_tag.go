@@ -8,12 +8,12 @@ import (
 	"github.com/gobuffalo/tags"
 )
 
-//RadioButton creates a radio button for a form with the passed options
+// RadioButton creates a radio button for a form with the passed options
 func (f Form) RadioButton(opts tags.Options) *tags.Tag {
 	return f.RadioButtonTag(opts)
 }
 
-//RadioButtonTag creates a radio button for a form with the passed options
+// RadioButtonTag creates a radio button for a form with the passed options
 func (f Form) RadioButtonTag(opts tags.Options) *tags.Tag {
 	opts["type"] = "radio"
 

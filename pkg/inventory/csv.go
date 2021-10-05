@@ -18,7 +18,7 @@ import (
 type Csv struct {
 	Config          *config.Params
 	Log             *logrus.Logger
-	BatchSize       int //number of inventory assets to return per iteration
+	BatchSize       int // Number of inventory assets to return per iteration.
 	AssetsChan      chan<- []asset.Asset
 	FilterAssetType []string
 }
@@ -26,13 +26,12 @@ type Csv struct {
 // CsvAsset struct holds attributes of an asset listed in a csv file.
 type CsvAsset struct {
 	BmcAddress string `csv:"bmcaddress"`
-	Serial     string `csv:"serial"` //optional
-	Vendor     string `csv:"vendor"` //optional
-	Type       string `csv:"type"`   //optional
+	Serial     string `csv:"serial"` // optional
+	Vendor     string `csv:"vendor"` // optional
+	Type       string `csv:"type"`   // optional
 }
 
 func (c *Csv) readCsv() []*CsvAsset {
-
 	log := c.Log
 
 	var csvAssets []*CsvAsset
@@ -51,11 +50,9 @@ func (c *Csv) readCsv() []*CsvAsset {
 	return csvAssets
 }
 
-//AssetRetrieve looks at c.Config.FilterParams
-//and returns the appropriate function that will retrieve assets.
+// Looks at c.Config.FilterParams and returns the appropriate function that will retrieve assets.
 func (c *Csv) AssetRetrieve() func() {
-
-	//setup the asset types we want to retrieve data for.
+	// Setup the asset types we want to retrieve data for.
 	switch {
 	case c.Config.FilterParams.Chassis:
 		c.FilterAssetType = append(c.FilterAssetType, "chassis")
@@ -65,7 +62,7 @@ func (c *Csv) AssetRetrieve() func() {
 		c.FilterAssetType = []string{"chassis", "servers"}
 	}
 
-	//Based on the filter param given, return the asset iterator method.
+	// Based on the filter param given, return the asset iterator method.
 	switch {
 	case c.Config.FilterParams.Serials != "":
 		return c.AssetIterBySerial
@@ -74,12 +71,10 @@ func (c *Csv) AssetRetrieve() func() {
 	default:
 		return c.AssetIter
 	}
-
 }
 
-// AssetIterBySerial iterates over Assets and passes on the inventory channel.
+// Iterates over assets and passes these over the inventory channel.
 func (c *Csv) AssetIterBySerial() {
-
 	log := c.Log
 	csvAssets := c.readCsv()
 
@@ -97,32 +92,31 @@ func (c *Csv) AssetIterBySerial() {
 			}
 
 			if item.Serial == serial {
-				assets = append(assets, asset.Asset{IPAddresses: []string{item.BmcAddress},
-					Serial: item.Serial,
-					Vendor: item.Vendor,
-					Type:   item.Type})
+				assets = append(assets, asset.Asset{
+					IPAddresses: []string{item.BmcAddress},
+					Serial:      item.Serial,
+					Vendor:      item.Vendor,
+					Type:        item.Type,
+				})
 			}
 		}
 	}
 
-	//pass the asset to the channel
 	c.AssetsChan <- assets
 	close(c.AssetsChan)
-
 }
 
 // AssetIterByIP reads in list of ips passed in via cli,
 // attempts to lookup any attributes for the IP in the inventory,
 // and sends an asset for each attribute over the asset channel
 func (c *Csv) AssetIterByIP() {
-
 	defer close(c.AssetsChan)
 
 	csvAssets := c.readCsv()
 
 	ips := c.Config.FilterParams.Ips
 
-	//query csv inventory for asset attributes
+	// Query CSV inventory for asset attributes.
 	assets := make([]asset.Asset, 0)
 	for _, ip := range strings.Split(ips, ",") {
 
@@ -138,11 +132,9 @@ func (c *Csv) AssetIterByIP() {
 			}
 
 			if item.BmcAddress == ip {
-
 				a.Serial = item.Serial
 				a.Vendor = item.Vendor
 				a.Type = item.Type
-
 			}
 		}
 
@@ -154,8 +146,6 @@ func (c *Csv) AssetIterByIP() {
 
 // AssetIter reads in assets and passes them to the inventory channel.
 func (c *Csv) AssetIter() {
-
-	//Asset needs to be an inventory asset
 	csvAssets := c.readCsv()
 
 	assets := make([]asset.Asset, 0)
@@ -169,11 +159,12 @@ func (c *Csv) AssetIter() {
 			continue
 		}
 
-		assets = append(assets, asset.Asset{IPAddresses: []string{item.BmcAddress},
-			Serial: item.Serial,
-			Vendor: item.Vendor,
-			Type:   item.Type})
-
+		assets = append(assets, asset.Asset{
+			IPAddresses: []string{item.BmcAddress},
+			Serial:      item.Serial,
+			Vendor:      item.Vendor,
+			Type:        item.Type,
+		})
 	}
 
 	c.AssetsChan <- assets

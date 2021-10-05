@@ -6,7 +6,6 @@ import (
 )
 
 func initTestConfig() (*Params, error) {
-
 	// source config file
 	config := "../../samples/bmcbutler.yml"
 	params := &Params{}
@@ -16,7 +15,6 @@ func initTestConfig() (*Params, error) {
 	}
 
 	return params, nil
-
 }
 
 func TestLoadVaultToken(t *testing.T) {
@@ -48,5 +46,4 @@ func TestLoad(t *testing.T) {
 	if cfg.ButlersToSpawn != 1 {
 		t.Errorf("Expected ButlersToSpawn: 1, got %d", cfg.ButlersToSpawn)
 	}
-
 }

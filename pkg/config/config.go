@@ -28,9 +28,9 @@ type Params struct {
 	Metrics          *Metrics            `mapstructure:"metrics"`
 	FilterParams     *FilterParams
 	CfgFile          string
-	Configure        bool //indicates configure was invoked
-	DryRun           bool //when set, don't carry out any actions, just log.
-	Execute          bool //indicates execute was invoked
+	Configure        bool // The user invoked the configure action?
+	DryRun           bool // If true, don't carry out any actions. Just log.
+	Execute          bool // The user invoked the execute action?
 	IgnoreLocation   bool
 	Resources        []string
 	Version          string
@@ -42,7 +42,7 @@ type Params struct {
 
 // Inventory struct holds inventory configuration parameters.
 type Inventory struct {
-	Source string //dora, csv, enc
+	Source string // dora, csv, enc
 	Enc    *Enc   `mapstructure:"enc"`
 	Dora   *Dora  `mapstructure:"dora"`
 	Csv    *Csv   `mapstrucure:"csv"`
@@ -66,7 +66,7 @@ type Dora struct {
 
 // Metrics struct holds metrics emitter configuration parameters.
 type Metrics struct {
-	Client   string    //The metrics client.
+	Client   string    // The metrics client.
 	Graphite *Graphite `mapstructure:"graphite"`
 }
 
@@ -109,7 +109,7 @@ type FilterParams struct {
 	Chassis bool
 	Servers bool
 	All     bool
-	Serials string //can be one or more serials separated by commas.
+	Serials string // Can be one or more serials separated by commas.
 	Ips     string
 }
 

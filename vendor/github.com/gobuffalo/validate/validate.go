@@ -139,7 +139,7 @@ func Validate(validators ...Validator) *Errors {
 	errors := NewErrors()
 
 	wg := &sync.WaitGroup{}
-	for i, _ := range validators {
+	for i := range validators {
 		wg.Add(1)
 		go func(wg *sync.WaitGroup, i int) {
 			defer wg.Done()

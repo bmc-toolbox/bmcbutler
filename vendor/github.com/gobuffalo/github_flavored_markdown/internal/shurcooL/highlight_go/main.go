@@ -53,7 +53,7 @@ func Print(src []byte, w io.Writer, p syntaxhighlight.Printer) error {
 		}
 
 		// TODO: Clean this up.
-		//if tok == token.SEMICOLON {
+		// if tok == token.SEMICOLON {
 		if tok == token.SEMICOLON && lit == "\n" {
 			continue
 		}
@@ -109,7 +109,7 @@ func Annotate(src []byte, a syntaxhighlight.Annotator) (annotate.Annotations, er
 		}
 
 		// TODO: Clean this up.
-		//if tok == token.SEMICOLON {
+		// if tok == token.SEMICOLON {
 		if tok == token.SEMICOLON && lit == "\n" {
 			continue
 		}

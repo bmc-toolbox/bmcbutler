@@ -231,8 +231,10 @@ func (p *tomlParser) parseAssign() tomlParserStateFn {
 	return p.parseStart
 }
 
-var numberUnderscoreInvalidRegexp *regexp.Regexp
-var hexNumberUnderscoreInvalidRegexp *regexp.Regexp
+var (
+	numberUnderscoreInvalidRegexp    *regexp.Regexp
+	hexNumberUnderscoreInvalidRegexp *regexp.Regexp
+)
 
 func numberContainsInvalidUnderscore(value string) error {
 	if numberUnderscoreInvalidRegexp.MatchString(value) {
