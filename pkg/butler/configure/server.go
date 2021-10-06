@@ -53,14 +53,13 @@ func NewBmcConfigurator(bmc devices.Bmc,
 		ip:           asset.IPAddress,
 		serial:       asset.Serial,
 		vendor:       asset.Vendor,
-		model:        asset.Model,
+		hardwareType: asset.HardwareType,
 	}
 }
 
 // Apply applies configuration.
 // nolint: gocyclo
 func (b *Bmc) Apply() {
-
 	var interrupt bool
 
 	go func() { <-b.stopChan; interrupt = true }()
@@ -189,12 +188,10 @@ func (b *Bmc) Apply() {
 			"Serial":       b.serial,
 			"IPAddress":    b.ip,
 		}).Trace("Resource configuration applied.")
-
 	}
 
-	//// Reset BMC if needed.
+	// Reset BMC if needed.
 	if len(resetCause) > 0 {
-
 		b.logger.WithFields(logrus.Fields{
 			"Vendor":       b.vendor,
 			"HardwareType": b.hardwareType,
@@ -206,7 +203,7 @@ func (b *Bmc) Apply() {
 		// Close the current connection - so we don't leave connections hanging.
 		b.bmc.Close(context.TODO())
 
-		//// reset BMC using SSH.
+		// Reset BMC using SSH.
 		_, err := b.bmc.PowerCycleBmc()
 		if err != nil {
 			b.logger.WithFields(logrus.Fields{
@@ -216,7 +213,6 @@ func (b *Bmc) Apply() {
 				"IPAddress":    b.ip,
 				"Error":        err,
 			}).Warn("BMC reset failed.")
-
 		}
 	}
 

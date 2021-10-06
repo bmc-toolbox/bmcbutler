@@ -16,17 +16,12 @@ import (
 	"github.com/go-logr/logr"
 )
 
-const (
-	// BMCType defines the bmc model that is supported by this package
-	BMCType = "c7000"
-)
-
 // C7000 holds the status and properties of a connection to a BladeSystem device
 type C7000 struct {
 	ip         string
 	username   string
 	password   string
-	XMLToken   string //required to send SOAP XML payloads
+	XMLToken   string // Required to send SOAP XML payloads.
 	httpClient *http.Client
 	sshClient  *sshclient.SSHClient
 	Rimp       *hp.Rimp
@@ -90,7 +85,7 @@ func (c *C7000) Name() (name string, err error) {
 
 // HardwareType returns the model id string - c7000
 func (c *C7000) HardwareType() (model string) {
-	return BMCType
+	return "c7000"
 }
 
 // Model returns the full device model string

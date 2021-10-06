@@ -34,8 +34,6 @@ func (i *Ilo) Resources() []string {
 // ApplyCfg applies configuration
 // To be deprecated once the Configure interface is ready.
 func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
-
-	//check sessionKey is available
 	if i.sessionKey == "" {
 		msg := "Expected sessionKey not found, unable to configure BMC."
 		i.log.V(1).Info(msg,
@@ -51,7 +49,6 @@ func (i *Ilo) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 
 // Return bool value if the role is valid.
 func (i *Ilo) isRoleValid(role string) bool {
-
 	validRoles := []string{"admin", "user"}
 	for _, v := range validRoles {
 		if role == v {
@@ -64,7 +61,6 @@ func (i *Ilo) isRoleValid(role string) bool {
 
 // checks if a user is present in a given list
 func userExists(user string, usersInfo []UserInfo) (userInfo UserInfo, exists bool) {
-
 	for _, userInfo := range usersInfo {
 		if userInfo.UserName == user || userInfo.LoginName == user {
 			return userInfo, true
@@ -76,7 +72,6 @@ func userExists(user string, usersInfo []UserInfo) (userInfo UserInfo, exists bo
 
 // checks if a ldap group is present in a given list
 func ldapGroupExists(group string, directoryGroups []DirectoryGroups) (directoryGroup DirectoryGroups, exists bool) {
-
 	for _, directoryGroup := range directoryGroups {
 		if directoryGroup.Dn == group {
 			return directoryGroup, true
@@ -91,10 +86,9 @@ func ldapGroupExists(group string, directoryGroups []DirectoryGroups) (directory
 // User implements the Configure interface.
 // nolint: gocyclo
 func (i *Ilo) User(users []*cfgresources.User) (err error) {
-
 	existingUsers, err := i.queryUsers()
 	if err != nil {
-		msg := "Unable to query existing users"
+		msg := "Unable to query existing users."
 		i.log.V(1).Info(msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
@@ -126,12 +120,9 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 			return errors.New(msg)
 		}
 
-		//retrive userInfo
 		userinfo, uexists := userExists(user.Name, existingUsers)
-		//set session key
 		userinfo.SessionKey = i.sessionKey
 
-		//if the user is enabled setup parameters
 		if user.Enable {
 			userinfo.RemoteConsPriv = 1
 			userinfo.VirtualMediaPriv = 1
@@ -147,7 +138,6 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 				userinfo.LoginPriv = 0
 			}
 
-			//if the user exists, modify it
 			if uexists {
 				userinfo.Method = "mod_user"
 				userinfo.UserID = userinfo.ID
@@ -164,7 +154,6 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 			postPayload = true
 		}
 
-		//if the user is disabled remove it
 		if !user.Enable && uexists {
 			userinfo.Method = "del_user"
 			userinfo.UserID = userinfo.ID
@@ -224,7 +213,6 @@ func (i *Ilo) User(users []*cfgresources.User) (err error) {
 // Syslog applies the Syslog configuration resource
 // Syslog implements the Configure interface
 func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
-
 	var port int
 	enable := 1
 
@@ -290,7 +278,6 @@ func (i *Ilo) Syslog(cfg *cfgresources.Syslog) (err error) {
 // SetLicense applies license configuration params
 // SetLicense implements the Configure interface.
 func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
-
 	if cfg.Key == "" {
 		msg := "License resource expects parameter: Key."
 		i.log.V(1).Info(msg, "step", helper.WhosCalling())
@@ -339,7 +326,6 @@ func (i *Ilo) SetLicense(cfg *cfgresources.License) (err error) {
 // Ntp applies NTP configuration params
 // Ntp implements the Configure interface.
 func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
-
 	enable := 1
 	if cfg.Server1 == "" {
 		msg := "NTP resource expects parameter: server1."
@@ -396,7 +382,7 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 		Ipv6Disabled:                0,
 		DhcpEnabled:                 enable,
 		Dhcp6Enabled:                enable,
-		UseDhcpSuppliedTimeServers:  0, //we probably want to expose these as params
+		UseDhcpSuppliedTimeServers:  0, // TODO: Maybe expose these as params?
 		UseDhcp6SuppliedTimeServers: 0,
 		Sdn1WCount:                  existingConfig.Sdn1WCount,
 		Sdn2WCount:                  existingConfig.Sdn2WCount,
@@ -445,7 +431,6 @@ func (i *Ilo) Ntp(cfg *cfgresources.Ntp) (err error) {
 // LdapGroups implements the Configure interface.
 // nolint: gocyclo
 func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
-
 	directoryGroups, err := i.queryDirectoryGroups()
 	if err != nil {
 		msg := "Unable to query existing Ldap groups"
@@ -506,7 +491,7 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 		}
 
 		if group.Group == "" {
-			msg := "Ldap resource parameter Group required but not declared."
+			msg := "LDAP resource parameter Group required but not declared."
 			i.log.V(1).Info(msg,
 				"HardwareType", i.HardwareType(),
 				"step", helper.WhosCalling(),
@@ -516,7 +501,7 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 		}
 
 		if !i.isRoleValid(group.Role) {
-			msg := "Ldap resource Role must be a valid role: admin OR user."
+			msg := "LDAP resource Role must be a valid role: admin OR user."
 			i.log.V(1).Info(msg,
 				"HardwareType", i.HardwareType(),
 				"step", helper.WhosCalling(),
@@ -585,15 +570,14 @@ func (i *Ilo) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresour
 		)
 	}
 
-	return err
+	return nil
 }
 
 // Ldap applies LDAP configuration params.
 // Ldap implements the Configure interface.
 func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
-
 	if cfg.Server == "" {
-		msg := "Ldap resource parameter Server required but not declared."
+		msg := "LDAP resource parameter Server required but not declared."
 		i.log.V(1).Info(msg,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
@@ -602,7 +586,7 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	}
 
 	if cfg.Port == 0 {
-		msg := "Ldap resource parameter Port required but not declared."
+		msg := "LDAP resource parameter Port required but not declared."
 		i.log.V(1).Info(msg,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
@@ -611,7 +595,7 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	}
 
 	if cfg.BaseDn == "" {
-		msg := "Ldap resource parameter BaseDn required but not declared."
+		msg := "LDAP resource parameter BaseDn required but not declared."
 		i.log.V(1).Info(msg,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
@@ -620,10 +604,10 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 	}
 
 	var enable int
-	if !cfg.Enable {
-		enable = 0
-	} else {
+	if cfg.Enable {
 		enable = 1
+	} else {
+		enable = 0
 	}
 
 	directory := Directory{
@@ -676,7 +660,6 @@ func (i *Ilo) Ldap(cfg *cfgresources.Ldap) (err error) {
 // the response will be a 500 with the body	{"message":"JS_CERT_NOT_AVAILABLE","details":null}
 // If the configuration for the Subject has not changed and the CSR is ready a CSR is returned.
 func (i *Ilo) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error) {
-
 	csrConfig := &csr{
 		Country:          cert.CountryCode,
 		State:            cert.StateName,
@@ -700,10 +683,9 @@ func (i *Ilo) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error
 		return []byte{}, fmt.Errorf("CSR being generated, retry later")
 	}
 
-	// if its a not a 200 at this point,
-	// something else went wrong.
+	// If it's a not a 200 at this point, something else went wrong.
 	if statusCode != 200 {
-		return []byte{}, fmt.Errorf("Unexpected return code: %d", statusCode)
+		return []byte{}, fmt.Errorf("Unexpected return code %d calling %s!", statusCode, endpoint)
 	}
 
 	// Some other error
@@ -711,7 +693,7 @@ func (i *Ilo) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error
 		return []byte{}, err
 	}
 
-	var r = new(csrResponse)
+	r := new(csrResponse)
 	err = json.Unmarshal(response, r)
 	if err != nil {
 		return []byte{}, err
@@ -724,7 +706,6 @@ func (i *Ilo) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error
 // UploadHTTPSCert implements the Configure interface.
 // return true if the bmc requires a reset.
 func (i *Ilo) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
-
 	certPayload := &certImport{
 		Method:          "import_certificate",
 		CertificateData: string(cert),
@@ -743,7 +724,7 @@ func (i *Ilo) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyF
 	}
 
 	if statusCode != 200 {
-		return false, fmt.Errorf("Unexpected return code: %d", statusCode)
+		return false, fmt.Errorf("Unexpected return code %d calling %s!", statusCode, endpoint)
 	}
 
 	// ILOs need a reset after cert upload.
@@ -753,17 +734,16 @@ func (i *Ilo) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyF
 // Network method implements the Configure interface
 // nolint: gocyclo
 func (i *Ilo) Network(cfg *cfgresources.Network) (reset bool, err error) {
-
 	// check if AccessSettings configuration update is required.
 	accessSettings, updateAccessSettings, err := i.cmpAccessSettings(cfg)
 	if err != nil {
-		return reset, err
+		return false, err
 	}
 
 	if updateAccessSettings {
 		payload, err := json.Marshal(accessSettings)
 		if err != nil {
-			return reset, fmt.Errorf("Error marshaling AccessSettings payload: %s", err)
+			return false, fmt.Errorf("Error marshaling AccessSettings payload: %s", err)
 		}
 
 		endpoint := "json/access_settings"
@@ -782,7 +762,6 @@ func (i *Ilo) Network(cfg *cfgresources.Network) (reset bool, err error) {
 	}
 
 	if updateIPv4Settings {
-
 		payload, err := json.Marshal(networkIPv4Settings)
 		if err != nil {
 			return reset, fmt.Errorf("Error marshaling NetworkIPv4 payload: %s", err)
@@ -802,13 +781,12 @@ func (i *Ilo) Network(cfg *cfgresources.Network) (reset bool, err error) {
 
 // Power settings
 func (i *Ilo) Power(cfg *cfgresources.Power) error {
-
 	if cfg.HPE == nil {
 		return nil
 	}
 
 	// map of valid power_settings attributes to params passed to the iLO API
-	var powerRegulatorModes = map[string]string{
+	powerRegulatorModes := map[string]string{
 		"dynamic":     "dyn",
 		"static_low":  "min",
 		"static_high": "max",
@@ -817,7 +795,7 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 
 	configMode, exists := powerRegulatorModes[cfg.HPE.PowerRegulator]
 	if cfg.HPE.PowerRegulator == "" || !exists {
-		return fmt.Errorf("power regulator parameter must be one of dynamic, static_log, static_high, os_control")
+		return fmt.Errorf("power_regulator parameter must be one of dynamic, static_log, static_high, os_control")
 	}
 
 	// check if a configuration update is required based on current setting
@@ -827,7 +805,7 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 	}
 
 	if !changeRequired {
-		i.log.V(2).Info("Power regulator config - no change required.",
+		i.log.V(2).Info("power_regulator config - no change required.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"current mode", config.PowerMode,
@@ -836,7 +814,7 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 		return nil
 	}
 
-	i.log.V(2).Info("Power regulator change to be applied.",
+	i.log.V(2).Info("power_regulator change to be applied.",
 		"IP", i.ip,
 		"HardwareType", i.HardwareType(),
 		"current mode", config.PowerMode,
@@ -849,7 +827,7 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 
 	payload, err := json.Marshal(config)
 	if err != nil {
-		return fmt.Errorf("Error marshaling PowerRegulator payload: %s", err)
+		return fmt.Errorf("Error marshaling power_regulator payload: %s", err)
 	}
 
 	endpoint := "json/power_regulator"
@@ -858,7 +836,7 @@ func (i *Ilo) Power(cfg *cfgresources.Power) error {
 		return fmt.Errorf("Error/non 200 response calling power_regulator, status: %d, error: %s", statusCode, err)
 	}
 
-	i.log.V(1).Info("Power regulator config applied.",
+	i.log.V(1).Info("power_regulator config applied.",
 		"IP", i.ip,
 		"HardwareType", i.HardwareType(),
 	)

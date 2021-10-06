@@ -14,8 +14,8 @@
 
 package asset
 
-// Asset is a unit of BMC/Chassis BMC,
-// assets are passed around from inventories to butlers.
+// Asset is a unit of Server BMC/Chassis BMC.
+// Assets are passed around from inventories to butlers.
 type Asset struct {
 	// A chassis asset may have more than one IP.
 	// When the asset is first retrieved, all IPs are listed in this slice.

@@ -54,7 +54,6 @@ func NewCmcConfigurator(bmc devices.Cmc,
 
 // Apply applies configuration.
 func (b *Cmc) Apply() { //nolint: gocyclo
-
 	var interrupt bool
 	go func() { <-b.stopChan; interrupt = true }()
 

@@ -23,7 +23,7 @@ import (
 // configureCmd represents the configure command
 var executeCmd = &cobra.Command{
 	Use:   "execute",
-	Short: "Execute actions on bmcs.",
+	Short: "Execute actions on BMCs.",
 	Run: func(cmd *cobra.Command, args []string) {
 		execute()
 	},
@@ -34,9 +34,8 @@ func init() {
 }
 
 func execute() {
-
 	runConfig.Execute = true
-	inventoryChan, butlerChan, _ := pre()
+	inventoryChan, butlerChan, _ := prepareChannels()
 
 	// Iterate over the inventory channel for assets.
 	// Create a butler message for each asset along with the configuration.

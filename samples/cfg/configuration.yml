@@ -77,7 +77,7 @@ network:
   dnsFromDhcp: true  #bmc to get its DNS address from dhcp
   sshEnable: true
   sshPort: 22
-  solEnable: true    #serial over lan
+  solEnable: true    # SerialOverLan
   ipmiEnable: true
   ipmiPort: 623
   dhcpEnable: true

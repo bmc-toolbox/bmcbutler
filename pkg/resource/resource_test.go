@@ -11,7 +11,6 @@ import (
 
 // Test ReadYamlTemplate method loads expected yaml data.
 func TestReadYamlTemplate(t *testing.T) {
-
 	resourceConfig := "../../samples/cfg/configuration.yml"
 
 	// validate ReadYamlTemplate returns byte slice
@@ -31,7 +30,6 @@ func TestReadYamlTemplate(t *testing.T) {
 
 // Test template rendering
 func TestRenderYamlTemplate(t *testing.T) {
-
 	r := Resource{
 		Log: logrus.New(),
 		Asset: &asset.Asset{
@@ -55,12 +53,10 @@ func TestRenderYamlTemplate(t *testing.T) {
 	if !strings.Contains(string(rendered), "cn=acme,cn=bmcUsers") {
 		t.Fatal("Expected string not found in rendered template")
 	}
-
 }
 
 // Test yaml unmarshal and LoadConfigResources returns a cfgresources.ResourcesConfig instance
 func TestLoadConfigResources(t *testing.T) {
-
 	resourceConfig := "../../samples/cfg/configuration.yml"
 
 	// read in resource config template
@@ -87,5 +83,4 @@ func TestLoadConfigResources(t *testing.T) {
 	if configResources.LdapGroups.Groups[0].Group != "cn=acme,cn=bmcAdmins" {
 		t.Fatal("Expected string not found in LdapGroup config resource")
 	}
-
 }

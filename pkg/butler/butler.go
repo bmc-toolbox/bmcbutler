@@ -49,7 +49,6 @@ type Butler struct {
 
 // Runner spawns a pool of butlers, waits until they are done.
 func (b *Butler) Runner() {
-
 	log := b.Log
 	component := "Runner"
 

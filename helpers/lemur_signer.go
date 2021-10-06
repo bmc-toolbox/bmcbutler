@@ -57,7 +57,6 @@ type Authority struct {
 }
 
 func main() {
-
 	var csr []byte
 	debug := os.Getenv("DEBUG_SIGNER")
 	endpoint := os.Getenv("ENDPOINT")

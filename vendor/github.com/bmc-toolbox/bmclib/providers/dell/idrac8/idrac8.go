@@ -21,11 +21,6 @@ import (
 	"github.com/go-logr/logr"
 )
 
-const (
-	// BMCType defines the bmc model that is supported by this package
-	BMCType = "idrac8"
-)
-
 // IDrac8 holds the status and properties of a connection to an iDrac device
 type IDrac8 struct {
 	ip             string
@@ -155,7 +150,6 @@ func (i *IDrac8) post(endpoint string, data []byte, formDataContentType string) 
 		return 0, []byte{}, err
 	}
 
-	//fmt.Printf("%s\n", body)
 	return resp.StatusCode, body, err
 }
 
@@ -267,19 +261,19 @@ func (i *IDrac8) Nics() (nics []*devices.Nic, err error) {
 func (i *IDrac8) Serial() (serial string, err error) {
 	err = i.loadHwData()
 	if err != nil {
-		return serial, err
+		return "", err
 	}
 
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
 				if property.Name == "NodeID" && property.Type == "string" {
-					return strings.ToLower(property.Value), err
+					return strings.ToLower(property.Value), nil
 				}
 			}
 		}
 	}
-	return serial, err
+	return serial, nil
 }
 
 // ChassisSerial returns the serial number of the chassis where the blade is attached
@@ -305,7 +299,7 @@ func (i *IDrac8) ChassisSerial() (serial string, err error) {
 func (i *IDrac8) Status() (status string, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return status, err
+		return "", err
 	}
 
 	extraHeaders := &map[string]string{
@@ -315,13 +309,17 @@ func (i *IDrac8) Status() (status string, err error) {
 	url := "sysmgmt/2016/server/extended_health"
 	statusCode, response, err := i.get(url, extraHeaders)
 	if err != nil || statusCode != 200 {
-		return status, err
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
+		return "", err
 	}
 
 	iDracHealthStatus := &dell.IDracHealthStatus{}
 	err = json.Unmarshal(response, iDracHealthStatus)
 	if err != nil {
-		return status, err
+		return "", err
 	}
 
 	for _, entry := range iDracHealthStatus.HealthStatus {
@@ -343,6 +341,10 @@ func (i *IDrac8) PowerKw() (power float64, err error) {
 	url := "data?get=powermonitordata"
 	statusCode, response, err := i.get(url, nil)
 	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
 		return power, err
 	}
 
@@ -498,14 +500,14 @@ func (i *IDrac8) Model() (model string, err error) {
 
 // HardwareType returns the type of bmc we are talking to
 func (i *IDrac8) HardwareType() (bmcType string) {
-	return BMCType
+	return "idrac8"
 }
 
 // License returns the bmc license information
 func (i *IDrac8) License() (name string, licType string, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return name, licType, err
+		return "", "", err
 	}
 
 	extraHeaders := &map[string]string{
@@ -515,13 +517,17 @@ func (i *IDrac8) License() (name string, licType string, err error) {
 	url := "sysmgmt/2012/server/license"
 	statusCode, response, err := i.get(url, extraHeaders)
 	if err != nil || statusCode != 200 {
-		return name, licType, err
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
+		return "", "", err
 	}
 
 	iDracLicense := &dell.IDracLicense{}
 	err = json.Unmarshal(response, iDracLicense)
 	if err != nil {
-		return name, licType, err
+		return "", "", err
 	}
 
 	if iDracLicense.License.VConsole == 1 {
@@ -607,7 +613,7 @@ func (i *IDrac8) Disks() (disks []*devices.Disk, err error) {
 func (i *IDrac8) TempC() (temp int, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return temp, err
+		return 0, err
 	}
 
 	extraHeaders := &map[string]string{
@@ -617,13 +623,17 @@ func (i *IDrac8) TempC() (temp int, err error) {
 	url := "sysmgmt/2012/server/temperature"
 	statusCode, response, err := i.get(url, extraHeaders)
 	if err != nil || statusCode != 200 {
-		return temp, err
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
+		return 0, err
 	}
 
 	iDracTemp := &dell.IDracTemp{}
 	err = json.Unmarshal(response, iDracTemp)
 	if err != nil {
-		return temp, err
+		return 0, err
 	}
 
 	return iDracTemp.Temperatures.IDRACEmbedded1SystemBoardInletTemp.Reading, err
@@ -643,7 +653,11 @@ func (i *IDrac8) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCoun
 	url := "sysmgmt/2012/server/processor"
 	statusCode, response, err := i.get(url, extraHeaders)
 	if err != nil || statusCode != 200 {
-		return cpu, cpuCount, coreCount, hyperthreadCount, err
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
+		return "", 0, 0, 0, err
 	}
 
 	dellBladeProc := &dell.BladeProcessorEndpoint{}
@@ -694,6 +708,10 @@ func (i *IDrac8) Psus() (psus []*devices.Psu, err error) {
 	url := "data?get=powerSupplies"
 	statusCode, response, err := i.get(url, nil)
 	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+		}
+
 		return psus, err
 	}
 

@@ -49,10 +49,8 @@ func (i *IDrac9) Power(cfg *cfgresources.Power) (err error) {
 // Bios sets up Bios configuration
 // Bios implements the Configure interface
 func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
-
 	newBiosSettings := cfg.Dell.Idrac9BiosSettings
 
-	//validate config
 	validate := validator.New()
 	err = validate.Struct(newBiosSettings)
 	if err != nil {
@@ -60,7 +58,6 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 		return err
 	}
 
-	//GET current settings
 	currentBiosSettings, err := i.getBiosSettings()
 	if err != nil || currentBiosSettings == nil {
 		msg := "Unable to get current bios settings through redfish."
@@ -73,30 +70,26 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 		return errors.New(msg)
 	}
 
-	//Compare current bios settings with our declared config.
+	// Compare current BIOS settings with our declared config.
 	if *newBiosSettings != *currentBiosSettings {
-
-		//retrieve fields that is the config to be applied
 		toApplyBiosSettings, err := diffBiosSettings(newBiosSettings, currentBiosSettings)
 		if err != nil {
 			i.log.V(1).Error(err, "diffBiosSettings returned error.",
 				"IP", i.ip,
 				"HardwareType", i.HardwareType(),
 				"step", helper.WhosCalling(),
-				"Error", internal.ErrStringOrEmpty(err),
 			)
 			return err
 		}
 
-		i.log.V(0).Info("Bios configuration to be applied",
+		i.log.V(0).Info("BIOS configuration to be applied...",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Changes (Ignore empty fields)", fmt.Sprintf("%+v", toApplyBiosSettings),
 		)
 
-		//purge any existing pending bios setting jobs
-		//or we will not be able to set any params
+		// Purge any existing pending BIOS setting jobs (otherwise, we won't be able to set any params):
 		err = i.purgeJobsForBiosSettings()
 		if err != nil {
 			i.log.V(1).Info("Unable to purge pending bios setting jobs.",
@@ -110,24 +103,21 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 
 		err = i.setBiosSettings(toApplyBiosSettings)
 		if err != nil {
-			msg := "setBiosAttributes returned error."
+			msg := "setBiosAttributes() returned error."
 			i.log.V(1).Error(err, msg,
 				"IP", i.ip,
 				"HardwareType", i.HardwareType(),
 				"step", helper.WhosCalling(),
-				"Error", internal.ErrStringOrEmpty(err),
 			)
 			return errors.New(msg)
 		}
 
-		i.log.V(0).Info("Bios configuration update job queued in iDrac.",
+		i.log.V(0).Info("BIOS configuration update job queued in IDRAC.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 		)
-
 	} else {
-
 		i.log.V(0).Info("Bios configuration is up to date.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
@@ -162,7 +152,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 
 	idracUsers, err := i.queryUsers()
 	if err != nil {
-		msg := "Unable to query existing users"
+		msg := "Unable to query existing users."
 		i.log.V(1).Error(err, msg,
 			"step", "applyUserParams",
 			"IP", i.ip,
@@ -172,15 +162,11 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 		return errors.New(msg)
 	}
 
-	//for each configuration user
 	for _, cfgUser := range cfgUsers {
-
 		userID, userInfo, uExists := userInIdrac(cfgUser.Name, idracUsers)
 
-		//user to be added/updated
 		if cfgUser.Enable {
-
-			//new user to be added
+			// New user? Add them.
 			if !uExists {
 				userID, userInfo, err = getEmptyUserSlot(idracUsers)
 				if err != nil {
@@ -200,7 +186,6 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 			userInfo.UserName = cfgUser.Name
 			userInfo.Password = cfgUser.Password
 
-			//set appropriate privileges
 			if cfgUser.Role == "admin" {
 				userInfo.Privilege = "511"
 				userInfo.IpmiLanPrivilege = "Administrator"
@@ -220,10 +205,9 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 				)
 				continue
 			}
+		}
 
-		} // end if cfgUser.Enable
-
-		//if the user exists but is disabled in our config, remove the user
+		// User exists but is disabled in our config? Remove them.
 		if !cfgUser.Enable && uExists {
 			endpoint := fmt.Sprintf("sysmgmt/2017/server/user?userid=%d", userID)
 			statusCode, response, err := i.delete(endpoint)
@@ -246,7 +230,6 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 			"HardwareType", i.HardwareType(),
 			"User", cfgUser.Name,
 		)
-
 	}
 
 	return err
@@ -335,9 +318,8 @@ func (i *IDrac9) Ldap(cfg *cfgresources.Ldap) (err error) {
 	return err
 }
 
-// LdapGroups applies LDAP Group/Role related configuration
-// LdapGroups implements the Configure interface.
-// nolint: gocyclo
+// Applies LDAP Group/Role-related configuration.
+// Implements the Configure interface.
 func (i *IDrac9) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 	roleID := 0
 	for _, cfgRole := range cfgGroups {
@@ -406,7 +388,6 @@ func (i *IDrac9) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 // Ntp applies NTP configuration params
 // Ntp implements the Configure interface.
 func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
-
 	var enable string
 
 	if cfg.Enable {
@@ -496,7 +477,6 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 // and since not all BMCs currently support configuring filtering for alerts,
 // for now the configuration for alert filters/enabling is managed through this method.
 func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
-
 	var port int
 	enable := "Enabled"
 
@@ -570,7 +550,6 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 // Network method implements the Configure interface
 // applies various network parameters.
 func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
-
 	params := map[string]string{
 		"EnableIPv4":              "Enabled",
 		"DHCPEnable":              "Enabled",
@@ -670,7 +649,6 @@ func (i *IDrac9) SetLicense(cfg *cfgresources.License) (err error) {
 // 1. PUT CSR info based on configuration
 // 2. POST sysmgmt/2012/server/network/ssl/csr which returns a base64encoded CSR.
 func (i *IDrac9) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, error) {
-
 	c := CSRInfo{
 		CommonName:       cert.CommonName,
 		CountryCode:      cert.CountryCode,
@@ -703,7 +681,6 @@ func (i *IDrac9) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 // 1. POST upload signed x509 cert in multipart form.
 // 2. POST returned resource URI
 func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, keyFileName string) (bool, error) {
-
 	endpoint := "sysmgmt/2012/server/transient/filestore"
 
 	// setup a buffer for our multipart form
@@ -738,7 +715,7 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	}
 
 	// extract resourceURI from response
-	var certStore = new(certStore)
+	certStore := new(certStore)
 	err = json.Unmarshal(body, certStore)
 	if err != nil {
 		i.log.V(1).Error(err, "Unable to unmarshal cert store response payload.",

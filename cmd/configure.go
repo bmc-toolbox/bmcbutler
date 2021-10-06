@@ -54,17 +54,15 @@ func validateConfigureArgs() {
 		log.Error("--all --serial --ip are mutually exclusive args.")
 		os.Exit(1)
 	}
-
 }
 
 func configure() {
-
 	runConfig.Configure = true
 	validateConfigureArgs()
 
-	inventoryChan, butlerChan, stopChan := pre()
+	inventoryChan, butlerChan, stopChan := prepareChannels()
 
-	//Read in BMC configuration data
+	// Read BMC configuration data.
 	assetConfigDir := viper.GetString("bmcCfgDir")
 	assetConfigFile := fmt.Sprintf("%s/%s", assetConfigDir, "configuration.yml")
 
@@ -76,9 +74,9 @@ func configure() {
 		os.Exit(1)
 	}
 
-	//iterate over the inventory channel for assets,
-	//create a butler message for each asset along with the configuration,
-	//at this point templated values in the config are not yet rendered.
+	// Iterate over the inventory channel for assets.
+	// Create a butler message for each asset along with the configuration.
+	// At this point, templated values in the config are not yet rendered.
 loop:
 	for {
 		select {

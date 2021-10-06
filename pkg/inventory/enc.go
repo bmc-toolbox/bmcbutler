@@ -27,7 +27,7 @@ type Enc struct {
 
 // AssetAttributes is used to unmarshal data returned from an ENC.
 type AssetAttributes struct {
-	Data        map[string]Attributes `json:"data"` //map of asset IPs/Serials to attributes
+	Data        map[string]Attributes `json:"data"` // Map of asset IPs/Serials to attributes.
 	EndOfAssets bool                  `json:"end_of_assets"`
 }
 
@@ -35,7 +35,7 @@ type AssetAttributes struct {
 type Attributes struct {
 	Location          string              `json:"location"`
 	NetworkInterfaces *[]NetworkInterface `json:"network_interfaces"`
-	BMCIPAddress      []string            `json:"-"`
+	BMCIPAddresses    []string            `json:"-"`
 	Extras            *AttributesExtras   `json:"extras"`
 }
 
@@ -50,7 +50,7 @@ type NetworkInterface struct {
 type AttributesExtras struct {
 	State   string `json:"status"`
 	Company string `json:"company"`
-	//if its a chassis, this would hold serials for blades in the live state
+	// If it's a chassis, this would hold serials for blades in the Live state.
 	LiveAssets *[]string `json:"live_assets,omitempty"`
 }
 
@@ -67,7 +67,6 @@ func stringHasPrefix(s string, prefixes []string) bool {
 // SetBMCInterfaces populates IPAddresses of BMC interfaces,
 // from the Slice of NetworkInterfaces
 func (e *Enc) SetBMCInterfaces(attributes Attributes) Attributes {
-
 	if attributes.NetworkInterfaces == nil {
 		return attributes
 	}
@@ -85,7 +84,6 @@ func (e *Enc) SetBMCInterfaces(attributes Attributes) Attributes {
 // AttributesExtrasAsMap accepts a AttributesExtras struct as input,
 // and returns all attributes as a map
 func AttributesExtrasAsMap(attributeExtras *AttributesExtras) (extras map[string]string) {
-
 	extras = make(map[string]string)
 
 	extras["state"] = strings.ToLower(attributeExtras.State)
@@ -100,11 +98,8 @@ func AttributesExtrasAsMap(attributeExtras *AttributesExtras) (extras map[string
 	return extras
 }
 
-//AssetRetrieve looks at c.Config.FilterParams
-//and returns the appropriate function that will retrieve assets.
 func (e *Enc) AssetRetrieve() func() {
-
-	//setup the asset types we want to retrieve data for.
+	// Setup the asset types we want to retrieve data for.
 	switch {
 	case e.Config.FilterParams.Chassis:
 		e.FilterAssetType = append(e.FilterAssetType, "chassis")
@@ -114,7 +109,7 @@ func (e *Enc) AssetRetrieve() func() {
 		e.FilterAssetType = []string{"chassis", "servers"}
 	}
 
-	//Based on the filter param given, return the asset iterator method.
+	// Based on the filter param given, return the asset iterator method.
 	switch {
 	case e.Config.FilterParams.Serials != "":
 		return e.AssetIterBySerial
@@ -129,14 +124,10 @@ func (e *Enc) AssetRetrieve() func() {
 // if retry is declared, the command is retried for the given number with an interval of 10 seconds,
 // the response as a slice of bytes, and the error if any.
 func ExecCmd(exe string, args []string, retry int) (out []byte, err error) {
-
 	cmd := exec.Command(exe, args...)
 
-	//To ignore SIGINTs received by bmcbutler,
-	//the commands are spawned in its own process group.
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
-	}
+	// To ignore SIGINTs received by bmcbutler, the commands are spawned in their own process group.
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 	out, err = cmd.Output()
 	if err != nil && retry == 0 {
@@ -154,11 +145,10 @@ func ExecCmd(exe string, args []string, retry int) (out []byte, err error) {
 
 // SetChassisInstalled is a method used to update a chassis state in the inventory.
 func (e *Enc) SetChassisInstalled(serials string) {
-
 	log := e.Log
 	component := "SetChassisInstalled"
 
-	//assetlookup inventory --set-chassis-installed FOO123,BAR123
+	// assetlookup inventory --set-chassis-installed FOO123,BAR123
 	cmdArgs := []string{"inventory", "--set-chassis-installed", serials}
 
 	encBin := e.Config.Inventory.Enc.Bin
@@ -175,11 +165,10 @@ func (e *Enc) SetChassisInstalled(serials string) {
 
 // nolint: gocyclo
 func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
-
 	log := e.Log
 	component := "encQueryBySerial"
 
-	//assetlookup enc --serials FOO123,BAR123
+	// assetlookup enc --serials FOO123,BAR123
 	cmdArgs := []string{"enc", "--serials", serials}
 
 	encBin := e.Config.Inventory.Enc.Bin
@@ -217,7 +206,7 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 	for serial, attributes := range cmdResp.Data {
 
 		attributes := e.SetBMCInterfaces(attributes)
-		if len(attributes.BMCIPAddress) == 0 {
+		if len(attributes.BMCIPAddresses) == 0 {
 			metrics.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
 			continue
 		}
@@ -232,10 +221,11 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 
 		extras := AttributesExtrasAsMap(attributes.Extras)
 		assets = append(assets,
-			asset.Asset{IPAddresses: attributes.BMCIPAddress,
-				Serial:   serial,
-				Location: attributes.Location,
-				Extra:    extras,
+			asset.Asset{
+				IPAddresses: attributes.BMCIPAddresses,
+				Serial:      serial,
+				Location:    attributes.Location,
+				Extra:       extras,
 			})
 	}
 
@@ -253,7 +243,6 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 
 // nolint: gocyclo
 func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
-
 	log := e.Log
 	component := "encQueryByIP"
 
@@ -266,7 +255,7 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 		}
 	}
 
-	//assetlookup enc --serials 192.168.1.1,192.168.1.2
+	// assetlookup enc --serials 192.168.1.1,192.168.1.2
 	cmdArgs := []string{"enc", "--ips", ips}
 
 	encBin := e.Config.Inventory.Enc.Bin
@@ -309,13 +298,13 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 	for serial, attributes := range cmdResp.Data {
 
 		attributes := e.SetBMCInterfaces(attributes)
-		if len(attributes.BMCIPAddress) == 0 {
+		if len(attributes.BMCIPAddresses) == 0 {
 			populateAssetsWithNoAttributes()
 			metrics.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
 			continue
 		}
 
-		for _, bmcIPAddress := range attributes.BMCIPAddress {
+		for _, bmcIPAddress := range attributes.BMCIPAddresses {
 			for idx, ip := range missingIPs {
 				if ip == bmcIPAddress {
 					missingIPs = append(missingIPs[:idx], missingIPs[idx+1:]...)
@@ -325,10 +314,11 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 		extras := AttributesExtrasAsMap(attributes.Extras)
 
 		assets = append(assets,
-			asset.Asset{IPAddresses: attributes.BMCIPAddress,
-				Serial:   serial,
-				Location: attributes.Location,
-				Extra:    extras,
+			asset.Asset{
+				IPAddresses: attributes.BMCIPAddresses,
+				Serial:      serial,
+				Location:    attributes.Location,
+				Extra:       extras,
 			})
 	}
 
@@ -348,7 +338,6 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 // assetType is one of 'servers/chassis'
 // location is a comma delimited list of locations
 func (e *Enc) encQueryByOffset(assetType string, offset int, limit int, location string) (assets []asset.Asset, endOfAssets bool) {
-
 	component := "EncQueryByOffset"
 	log := e.Log
 
@@ -365,10 +354,12 @@ func (e *Enc) encQueryByOffset(assetType string, offset int, limit int, location
 		encAssetTypeFlag = "--server"
 	}
 
-	//assetlookup inventory --server --offset 0 --limit 10
-	cmdArgs := []string{"inventory", encAssetTypeFlag,
+	// assetlookup inventory --server --offset 0 --limit 10
+	cmdArgs := []string{
+		"inventory", encAssetTypeFlag,
 		"--limit", strconv.Itoa(limit),
-		"--offset", strconv.Itoa(offset)}
+		"--offset", strconv.Itoa(offset),
+	}
 
 	//--location ams9
 	if location != "" {
@@ -405,20 +396,20 @@ func (e *Enc) encQueryByOffset(assetType string, offset int, limit int, location
 	}
 
 	for serial, attributes := range cmdResp.Data {
-
 		attributes := e.SetBMCInterfaces(attributes)
-		if len(attributes.BMCIPAddress) == 0 {
+		if len(attributes.BMCIPAddresses) == 0 {
 			metrics.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
 			continue
 		}
 
 		extras := AttributesExtrasAsMap(attributes.Extras)
 		assets = append(assets,
-			asset.Asset{IPAddresses: attributes.BMCIPAddress,
-				Serial:   serial,
-				Type:     assetType,
-				Location: attributes.Location,
-				Extra:    extras,
+			asset.Asset{
+				IPAddresses: attributes.BMCIPAddresses,
+				Serial:      serial,
+				Type:        assetType,
+				Location:    attributes.Location,
+				Extra:       extras,
 			})
 	}
 
@@ -428,13 +419,8 @@ func (e *Enc) encQueryByOffset(assetType string, offset int, limit int, location
 }
 
 // AssetIter fetches assets and sends them over the asset channel.
+// Iter stuffs assets into an array of Assets, writes that to the channel.
 func (e *Enc) AssetIter() {
-
-	//Asset needs to be an inventory asset
-	//Iter stuffs assets into an array of Assets
-	//Iter writes the assets array to the channel
-	//component := "AssetIterEnc"
-
 	var interrupt bool
 
 	go func() { <-e.StopChan; interrupt = true }()
@@ -444,9 +430,8 @@ func (e *Enc) AssetIter() {
 
 	locations := strings.Join(e.Config.Locations, ",")
 	for _, assetType := range e.FilterAssetType {
-
-		var limit = e.BatchSize
-		var offset = 0
+		limit := e.BatchSize
+		offset := 0
 
 		for {
 			var endOfAssets bool
@@ -462,54 +447,40 @@ func (e *Enc) AssetIter() {
 				"locations": locations,
 			}).Debug("Assets retrieved.")
 
-			//pass the asset to the channel
 			e.AssetsChan <- assets
 
-			//increment offset for next set of assets
+			// Increment offset for the next set of assets.
 			offset += limit
 
-			//If the ENC indicates we've reached the end of assets
+			// ENC indicates we've reached the end of assets?
 			if endOfAssets || interrupt {
-
 				e.Log.WithFields(logrus.Fields{
 					"component": "inventory",
 					"method":    "AssetIter",
 				}).Debug("Reached end of assets/interrupt received.")
 				break
 			}
-		} // endless for
-	} // for each assetType
+		}
+	}
 }
 
-// AssetIterBySerial reads in list of serials passed in via cli,
-// queries the ENC for the serials, passes them to the assets channel
+// Reads the list of serials passed by the user via CLI.
+// Queries ENC for the serials, then passes them to the assets channel.
 func (e *Enc) AssetIterBySerial() {
-
 	defer close(e.AssetsChan)
 
-	//get serials passed in via cli - they need to be comma separated
 	serials := e.Config.FilterParams.Serials
-
-	//query ENC for given serials
 	assets := e.encQueryBySerial(serials)
-
-	//pass assets returned by ENC to the assets channel
 	e.AssetsChan <- assets
 }
 
-// AssetIterByIP reads in list of ips passed in via cli,
-// queries the ENC for attributes related to the, passes them to the assets channel
-// if no attributes for a given IP are returned, an asset with just the IP is returned.
+// Reads the list of IPs passed by the user via CLI.
+// Queries ENC for attributes related to those, then passes them to the assets channel.
+// If no attributes for a given IP are returned, an asset with just the IP is returned.
 func (e *Enc) AssetIterByIP() {
-
 	defer close(e.AssetsChan)
 
-	//get ips passed in via cli - they need to be comma separated
 	ips := e.Config.FilterParams.Ips
-
-	//query ENC for given serials
 	assets := e.encQueryByIP(ips)
-
-	//pass assets returned by ENC to the assets channel
 	e.AssetsChan <- assets
 }

@@ -133,7 +133,6 @@ func (p *Probe) hpC7000(ctx context.Context, log logr.Logger) (bmcConnection int
 
 // hpCl100 attempts to identify a cloudline device
 func (p *Probe) hpCl100(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
-
 	// HPE Cloudline CL100
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://%s/res/ok.png", p.host), nil)
 	if err != nil {
@@ -147,7 +146,7 @@ func (p *Probe) hpCl100(ctx context.Context, log logr.Logger) (bmcConnection int
 	defer resp.Body.Close()
 	defer io.Copy(ioutil.Discard, resp.Body) // nolint
 
-	var firstBytes = make([]byte, 8)
+	firstBytes := make([]byte, 8)
 	_, err = io.ReadFull(resp.Body, firstBytes)
 	if err != nil {
 		return bmcConnection, err
@@ -159,7 +158,6 @@ func (p *Probe) hpCl100(ctx context.Context, log logr.Logger) (bmcConnection int
 	}
 
 	return bmcConnection, errors.ErrDeviceNotMatched
-
 }
 
 func (p *Probe) idrac8(ctx context.Context, log logr.Logger) (bmcConnection interface{}, err error) {
