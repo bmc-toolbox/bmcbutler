@@ -39,14 +39,13 @@ type Resource struct {
 
 // ReadYamlTemplate reads the given config .yml file, returns it as a slice of bytes.
 func ReadYamlTemplate(yamlFile string) (yamlTemplate []byte, err error) {
-
-	//check file exists
+	// Does the file exist?
 	_, err = os.Stat(yamlFile)
 	if err != nil {
 		return []byte{}, err
 	}
 
-	//read in file
+	// Read the file.
 	yamlTemplate, err = ioutil.ReadFile(yamlFile)
 	if err != nil {
 		return []byte{}, err
@@ -57,14 +56,13 @@ func ReadYamlTemplate(yamlFile string) (yamlTemplate []byte, err error) {
 
 // RenderYamlTemplate renders templated values in the given config .yml, returns it as a slice of bytes.
 func (r *Resource) RenderYamlTemplate(yamlTemplate []byte) (yamlData []byte) {
-
 	log := r.Log
 	component := "RenderYamlTemplate"
 
-	//render any templated data
+	// Rendering templated data.
 	ctx := plush.NewContext()
 
-	//assign variables that are exposed in the template.
+	// Assign variables exposed in the template.
 	ctx.Set("vendor", strings.ToLower(r.Asset.Vendor))
 	ctx.Set("location", strings.ToLower(r.Asset.Location))
 	ctx.Set("assetType", strings.ToLower(r.Asset.Type))
@@ -73,7 +71,7 @@ func (r *Resource) RenderYamlTemplate(yamlTemplate []byte) (yamlData []byte) {
 	ctx.Set("ipaddress", strings.ToLower(r.Asset.IPAddress))
 	ctx.Set("extra", r.Asset.Extra)
 
-	// r.Secrets is non nil if the bmcbutler.yml declares secretsFromVault: true
+	// r.Secrets is non nil if the bmcbutler.yml declares secretsFromVault: true.
 	if r.Secrets != nil {
 		ctx.Set("lookup_secret", func(s string) string {
 			secret, _ := r.Secrets.Get(s)
@@ -81,7 +79,7 @@ func (r *Resource) RenderYamlTemplate(yamlTemplate []byte) (yamlData []byte) {
 		})
 	}
 
-	//render, plush is awesome!
+	// Render, plush is awesome!
 	s, err := plush.Render(string(yamlTemplate), ctx)
 	if err != nil {
 		log.WithFields(logrus.Fields{
@@ -95,7 +93,6 @@ func (r *Resource) RenderYamlTemplate(yamlTemplate []byte) (yamlData []byte) {
 
 // LoadConfigResources gets the template rendered and unmarshals the resulting yml.
 func (r *Resource) LoadConfigResources(yamlTemplate []byte) (config *cfgresources.ResourcesConfig) {
-
 	component := "LoadConfigResources"
 	log := r.Log
 

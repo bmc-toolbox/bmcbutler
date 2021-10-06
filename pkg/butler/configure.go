@@ -20,14 +20,11 @@ import (
 // gets any Asset config templated data rendered
 // applies the asset configuration using bmclib
 func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
-
-	log := b.Log
 	component := "configureAsset"
 
 	if b.Config.DryRun {
-		log.WithFields(logrus.Fields{
+		b.Log.WithFields(logrus.Fields{
 			"component": component,
-			"Asset":     fmt.Sprintf("%+v", asset),
 		}).Info("Dry run, asset configuration will be skipped.")
 		return nil
 	}
@@ -38,7 +35,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		"component": component,
 		"Serial":    asset.Serial,
 		"IPAddress": asset.IPAddresses,
-	}).Debug("Connecting to asset.")
+	}).Debug("Connecting to asset...")
 
 	bmcConn := bmclogin.Params{
 		IpAddresses:     asset.IPAddresses,
@@ -48,7 +45,6 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		StopChan:        b.StopChan,
 	}
 
-	//connect to the bmc/chassis bmc
 	client, loginInfo, err := bmcConn.Login()
 	if err != nil {
 		return err
@@ -56,9 +52,8 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 
 	asset.IPAddress = loginInfo.ActiveIpAddress
 
-	switch client.(type) {
+	switch clientType := client.(type) {
 	case devices.Bmc:
-
 		bmc := client.(devices.Bmc)
 
 		asset.Type = "server"
@@ -82,14 +77,14 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 			}).Warn("The BMC reports a different serial than the inventory source!")
 		}
 
-		//rendered config is a *cfgresources.ResourcesConfig type
+		// Gets any templated values in the asset configuration rendered.
+		resourceInstance := resource.Resource{Log: b.Log, Asset: asset, Secrets: b.Secrets}
 		renderedConfig := resourceInstance.LoadConfigResources(config)
 		if renderedConfig == nil {
-			return errors.New("No BMC configuration to be applied")
+			return errors.New("No BMC configuration to be applied!")
 		}
 
-		// Apply configuration
-		c := configure.NewBmcConfigurator(bmc, asset, b.Config.Resources, renderedConfig, b.Config, b.StopChan, log)
+		c := configure.NewBmcConfigurator(bmc, asset, b.Config.Resources, renderedConfig, b.Config, b.StopChan, b.Log)
 		c.Apply()
 
 		bmc.Close(context.TODO())
@@ -120,7 +115,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		resourceInstance := resource.Resource{Log: b.Log, Asset: asset, Secrets: b.Secrets}
 		renderedConfig := resourceInstance.LoadConfigResources(config)
 		if renderedConfig == nil {
-			return errors.New("No BMC configuration to be applied")
+			return errors.New("No CMC configuration to be applied!")
 		}
 
 		if renderedConfig.SetupChassis != nil {
@@ -137,16 +132,16 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		}
 
 		// Apply configuration
-		c := configure.NewCmcConfigurator(chassis, asset, b.Config.Resources, renderedConfig, b.StopChan, log)
+		c := configure.NewCmcConfigurator(chassis, asset, b.Config.Resources, renderedConfig, b.StopChan, b.Log)
 		c.Apply()
 
 		chassis.Close()
 	default:
-		log.WithFields(logrus.Fields{
+		b.Log.WithFields(logrus.Fields{
 			"component": component,
-			"Asset":     fmt.Sprintf("%+v", asset),
+			"Type":      fmt.Sprintf("%s", clientType),
 		}).Warn("Unknown device type.")
-		return errors.New("Unknown asset type")
+		return fmt.Errorf("Unknown device type \"%s\"!", clientType)
 	}
 
 	return err

@@ -16,7 +16,6 @@ import (
 // - A successful command exec returns as expected
 // - Args given are returned as expected.
 func TestExecCmd(t *testing.T) {
-
 	badCMD := "/usr/bin/echofoobar"
 	_, err := ExecCmd(badCMD, []string{}, 0)
 	if err == nil {
@@ -35,13 +34,11 @@ func TestExecCmd(t *testing.T) {
 	if out1 != strings.Join(args, " ") {
 		t.Fatalf("Expected output '%s' instead got '%s'", strings.Join(args, " "), out1)
 	}
-
 }
 
 // TestAttributesExtrasAsMap tests the method returns a map[string]string
 // which is a map of the Extras Attributes of an asset.
 func TestAttributesExtrasAsMap(t *testing.T) {
-
 	aExtras := new(AttributesExtras)
 	aExtras.State = "live"
 	aExtras.Company = "acme"
@@ -69,12 +66,10 @@ func TestAttributesExtrasAsMap(t *testing.T) {
 
 // TestEncQueryBySerial tests assets are returned by encQueryBySerial as expected.
 func TestEncQueryBySerial(t *testing.T) {
-
 	serials := []string{"foobar", "barfoo"}
 	assetLookup := "/tmp/assetlookup"
 	cmd := "/usr/bin/go"
 
-	//build asset lookup bin
 	args := []string{"build", "-o", assetLookup, "../../samples/assetlookup.go"}
 	_, err := ExecCmd(cmd, args, 0)
 	if err != nil {

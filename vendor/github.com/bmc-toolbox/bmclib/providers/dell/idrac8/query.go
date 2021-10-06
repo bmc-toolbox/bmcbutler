@@ -18,13 +18,11 @@ import (
 // The bool value returned indicates if the BMC supports CSR generation.
 // CurrentHTTPSCert implements the Configure interface
 func (i *IDrac8) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
-
 	dialer := &net.Dialer{
 		Timeout: time.Duration(10) * time.Second,
 	}
 
 	conn, err := tls.DialWithDialer(dialer, "tcp", i.ip+":"+"443", &tls.Config{InsecureSkipVerify: true})
-
 	if err != nil {
 		return []*x509.Certificate{{}}, true, err
 	}
@@ -32,7 +30,6 @@ func (i *IDrac8) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 	defer conn.Close()
 
 	return conn.ConnectionState().PeerCertificates, true, nil
-
 }
 
 // Screenshot Grab screen preview.
@@ -42,14 +39,18 @@ func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 		return response, extension, err
 	}
 
-	endpoint1 := fmt.Sprintf("data?get=consolepreview[auto%%20%d]",
+	endpoint := fmt.Sprintf("data?get=consolepreview[auto%%20%d]",
 		time.Now().UnixNano()/int64(time.Millisecond))
 
 	extension = "png"
 
 	// here we expect an empty response
-	statusCode, response, err := i.get(endpoint1, &map[string]string{"idracAutoRefresh": "1"})
+	statusCode, response, err := i.get(endpoint, &map[string]string{"idracAutoRefresh": "1"})
 	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
 		return []byte{}, extension, err
 	}
 
@@ -57,18 +58,22 @@ func (i *IDrac8) Screenshot() (response []byte, extension string, err error) {
 		return []byte{}, extension, fmt.Errorf(string(response))
 	}
 
-	endpoint2 := fmt.Sprintf("capconsole/scapture0.png?%d",
+	endpoint = fmt.Sprintf("capconsole/scapture0.png?%d",
 		time.Now().UnixNano()/int64(time.Millisecond))
 
-	statusCode, response, err = i.get(endpoint2, &map[string]string{})
+	statusCode, response, err = i.get(endpoint, &map[string]string{})
 	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
 		return []byte{}, extension, err
 	}
 
 	return response, extension, err
 }
 
-//Queries Idrac8 for current user accounts
+// Queries for current user accounts.
 func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 	userInfo = make(UserInfo)
 
@@ -76,12 +81,16 @@ func (i *IDrac8) queryUsers() (userInfo UserInfo, err error) {
 
 	statusCode, response, err := i.get(endpoint, &map[string]string{})
 	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+		}
+
 		i.log.V(1).Error(err, "GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
+			"status", statusCode,
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return userInfo, err
 	}

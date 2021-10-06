@@ -16,7 +16,6 @@ type Store struct {
 
 // Load connects to Vault and returns a secret Store populated with secrets
 func Load(c config.Vault) (*Store, error) {
-
 	s := &Store{data: make(map[string]string)}
 	v, err := vaultapi.NewClient(
 		&vaultapi.Config{
@@ -25,7 +24,6 @@ func Load(c config.Vault) (*Store, error) {
 			MaxRetries: 5,
 		},
 	)
-
 	if err != nil {
 		return s, err
 	}
@@ -59,7 +57,6 @@ func (s *Store) Get(k string) (string, error) {
 
 // GetSignerToken is a helper method to retrieve and return the signer token key
 func (s *Store) GetSignerToken(v string) (string, error) {
-
 	prefix := "lookup_secret::"
 
 	if !strings.HasPrefix(v, prefix) {
@@ -81,7 +78,6 @@ func (s *Store) GetSignerToken(v string) (string, error) {
 
 // SetCredentials updates credentials that contain the lookup_secret keyword
 func (s *Store) SetCredentials(config []map[string]string) ([]map[string]string, error) {
-
 	lookupPrefix := "lookup_secret::"
 	// config is a []map[string]string
 	for _, c := range config {

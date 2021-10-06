@@ -22,11 +22,6 @@ import (
 	"github.com/bmc-toolbox/bmclib/providers/dell"
 )
 
-const (
-	// BMCType defines the bmc model that is supported by this package
-	BMCType = "idrac9"
-)
-
 // IDrac9 holds the status and properties of a connection to an iDrac device
 type IDrac9 struct {
 	ip             string
@@ -139,7 +134,6 @@ func (i *IDrac9) put(endpoint string, payload []byte) (statusCode int, response 
 
 // calls delete on the given endpoint
 func (i *IDrac9) delete(endpoint string) (statusCode int, payload []byte, err error) {
-
 	bmcURL := fmt.Sprintf("https://%s", i.ip)
 
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/%s", bmcURL, endpoint), nil)
@@ -171,7 +165,6 @@ func (i *IDrac9) delete(endpoint string) (statusCode int, payload []byte, err er
 
 // posts the payload to the given endpoint
 func (i *IDrac9) post(endpoint string, data []byte, formDataContentType string) (statusCode int, body []byte, err error) {
-
 	u, err := url.Parse(fmt.Sprintf("https://%s/%s", i.ip, endpoint))
 	if err != nil {
 		return 0, []byte{}, err
@@ -272,7 +265,7 @@ func (i *IDrac9) Nics() (nics []*devices.Nic, err error) {
 func (i *IDrac9) Serial() (serial string, err error) {
 	err = i.loadHwData()
 	if err != nil {
-		return serial, err
+		return "", err
 	}
 
 	for _, component := range i.iDracInventory.Component {
@@ -284,7 +277,7 @@ func (i *IDrac9) Serial() (serial string, err error) {
 			}
 		}
 	}
-	return serial, err
+	return serial, nil
 }
 
 // ChassisSerial returns the serial number of the chassis where the blade is attached
@@ -342,7 +335,7 @@ func (i *IDrac9) Status() (status string, err error) {
 func (i *IDrac9) PowerKw() (power float64, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return power, err
+		return 0, err
 	}
 
 	url := "sysmgmt/2015/server/sensor/power"
@@ -489,8 +482,7 @@ func (i *IDrac9) Slot() (slot int, err error) {
 
 // slotC6420 returns the current slot for the C6420 blade within the chassis
 func (i *IDrac9) slotC6420() (slot int, err error) {
-
-	var url = "sysmgmt/2012/server/configgroup/System.ServerTopology"
+	url := "sysmgmt/2012/server/configgroup/System.ServerTopology"
 	statusCode, response, err := i.get(url, nil)
 	if err != nil || statusCode != 200 {
 		return -1, err
@@ -514,28 +506,27 @@ func (i *IDrac9) slotC6420() (slot int, err error) {
 	return slot, err
 }
 
-// Model returns the device model
 func (i *IDrac9) Model() (model string, err error) {
 	err = i.loadHwData()
 	if err != nil {
-		return model, err
+		return "", err
 	}
 
 	for _, component := range i.iDracInventory.Component {
 		if component.Classname == "DCIM_SystemView" {
 			for _, property := range component.Properties {
 				if property.Name == "Model" && property.Type == "string" {
-					return property.Value, err
+					return property.Value, nil
 				}
 			}
 		}
 	}
-	return model, err
+	return model, nil
 }
 
 // HardwareType returns the type of bmc we are talking to
 func (i *IDrac9) HardwareType() (bmcType string) {
-	return BMCType
+	return "idrac9"
 }
 
 // License returns the bmc license information
@@ -558,7 +549,7 @@ func (i *IDrac9) License() (name string, licType string, err error) {
 	iDracLicense := &dell.IDracLicense{}
 	err = json.Unmarshal(response, iDracLicense)
 	if err != nil {
-		return name, licType, err
+		return "", "", err
 	}
 
 	if iDracLicense.License.VConsole == 1 {
@@ -594,7 +585,7 @@ func (i *IDrac9) Memory() (mem int, err error) {
 func (i *IDrac9) TempC() (temp int, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return temp, err
+		return 0, err
 	}
 
 	extraHeaders := &map[string]string{
@@ -610,10 +601,10 @@ func (i *IDrac9) TempC() (temp int, err error) {
 	iDracTemp := &dell.IDracTemp{}
 	err = json.Unmarshal(response, iDracTemp)
 	if err != nil {
-		return temp, err
+		return 0, err
 	}
 
-	return iDracTemp.Temperatures.IDRACEmbedded1SystemBoardInletTemp.Reading, err
+	return iDracTemp.Temperatures.IDRACEmbedded1SystemBoardInletTemp.Reading, nil
 }
 
 // CPU return the cpu, cores and hyperthreads the server

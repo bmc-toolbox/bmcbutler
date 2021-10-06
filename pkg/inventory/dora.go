@@ -213,19 +213,19 @@ func (d *Dora) AssetIterBySerial() {
 			if item.Attributes.BmcAddress == "" {
 				log.WithFields(logrus.Fields{
 					"component": component,
-					"DoraAsset": fmt.Sprintf("%+v", item),
 				}).Warn("Asset location could not be determined, since the asset has no IP.")
 				continue
 			}
 
-			assets = append(assets, asset.Asset{IPAddress: item.Attributes.BmcAddress,
-				Serial: item.Attributes.Serial,
-				Vendor: item.Attributes.Vendor,
-				Type:   assetType})
+			assets = append(assets, asset.Asset{
+				IPAddress: item.Attributes.BmcAddress,
+				Serial:    item.Attributes.Serial,
+				Vendor:    item.Attributes.Vendor,
+				Type:      assetType,
+			})
 
 		}
 
-		//set the location for the assets
 		err = d.setLocation(assets)
 		if err != nil {
 			log.WithFields(logrus.Fields{
@@ -235,18 +235,12 @@ func (d *Dora) AssetIterBySerial() {
 			return
 		}
 
-		//pass the asset to the channel
 		d.AssetsChan <- assets
 	}
 }
 
-// AssetIter routine that returns data to iter over
+// Stuffs assets into an array, writes that to the channel.
 func (d *Dora) AssetIter() {
-
-	//Asset needs to be an inventory asset
-	//Iter stuffs assets into an array of Assets
-	//Iter writes the assets array to the channel
-
 	apiURL := d.Config.Inventory.Dora.URL
 	component := "retrieveInventoryAssetsDora"
 
@@ -258,7 +252,7 @@ func (d *Dora) AssetIter() {
 	for _, assetType := range d.FilterAssetType {
 		var path string
 
-		//since this asset type in dora is plural.
+		// This asset type in Dora is plural.
 		if assetType == "blade" {
 			path = "blades"
 		} else if assetType == "discrete" {
@@ -312,7 +306,6 @@ func (d *Dora) AssetIter() {
 				if item.Attributes.BmcAddress == "" || item.Attributes.BmcAddress == "0.0.0.0" {
 					log.WithFields(logrus.Fields{
 						"component": component,
-						"DoraAsset": fmt.Sprintf("%+v", item),
 					}).Warn("Asset location could not be determined, since the asset has no IP.")
 
 					metrics.IncrCounter([]string{"inventory", "assets_noip_dora"}, 1)
@@ -320,20 +313,20 @@ func (d *Dora) AssetIter() {
 				}
 
 				assets = append(assets,
-					asset.Asset{IPAddress: item.Attributes.BmcAddress,
-						Serial: item.Attributes.Serial,
-						Vendor: item.Attributes.Vendor,
-						Type:   assetType})
+					asset.Asset{
+						IPAddress: item.Attributes.BmcAddress,
+						Serial:    item.Attributes.Serial,
+						Vendor:    item.Attributes.Vendor,
+						Type:      assetType,
+					})
 
 			}
 
-			//set the location for the assets
 			err = d.setLocation(assets)
 			if err != nil {
 				log.WithFields(logrus.Fields{
 					"component": component,
 					"Error":     err,
-					"Assets":    fmt.Sprintf("%+v", assets),
 				}).Warn("Asset location could not be determined, ignoring assets")
 
 				metrics.IncrCounter([]string{"inventory", "assets_nolocation_dora"}, 1)
@@ -342,9 +335,9 @@ func (d *Dora) AssetIter() {
 
 			metrics.IncrCounter(
 				[]string{"inventory", "assets_returned_dora"},
-				int64(len(assets)))
+				int64(len(assets)),
+			)
 
-			//pass the asset to the channel
 			d.AssetsChan <- assets
 
 			// if we reached the end of dora assets

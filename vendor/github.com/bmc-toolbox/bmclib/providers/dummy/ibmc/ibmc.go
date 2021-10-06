@@ -13,11 +13,6 @@ import (
 // for lack of a better name and since most annoying devices begin with "i"
 // ibmc only exists to make testing easier.
 
-const (
-	// BMCType defines the bmc model that is supported by this package
-	BMCType = "ibmc"
-)
-
 // Ibmc holds the status and properties of a connection to an iDrac device
 type Ibmc struct {
 	ip       string
@@ -46,7 +41,7 @@ func (i *Ibmc) Class() (class string, err error) {
 
 // HardwareType implements the Bmc interface
 func (i *Ibmc) HardwareType() string {
-	return ""
+	return "ibmc"
 }
 
 // Version implements the Bmc interface
@@ -161,7 +156,7 @@ func (i *Ibmc) TempC() (int, error) {
 
 // Vendor implements the Bmc interface
 func (i *Ibmc) Vendor() string {
-	return ""
+	return "Ibmc"
 }
 
 // Screenshot implements the Bmc interface

@@ -16,13 +16,11 @@ import (
 // The bool value returned indicates if the BMC supports CSR generation.
 // CurrentHTTPSCert implements the Configure interface
 func (i *Ilo) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
-
 	dialer := &net.Dialer{
 		Timeout: time.Duration(10) * time.Second,
 	}
 
 	conn, err := tls.DialWithDialer(dialer, "tcp", i.ip+":"+"443", &tls.Config{InsecureSkipVerify: true})
-
 	if err != nil {
 		return []*x509.Certificate{{}}, true, err
 	}
@@ -30,7 +28,6 @@ func (i *Ilo) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 	defer conn.Close()
 
 	return conn.ConnectionState().PeerCertificates, true, nil
-
 }
 
 // Screenshot returns a thumbnail of video display from the bmc.
@@ -57,7 +54,6 @@ func (i *Ilo) Screenshot() (response []byte, extension string, err error) {
 }
 
 func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err error) {
-
 	endpoint := "json/directory_groups"
 
 	payload, err := i.get(endpoint, true)
@@ -74,7 +70,6 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 	}
 
 	var directoryGroupAccts DirectoryGroupAccts
-	//fmt.Printf("--> %+v\n", userinfo["users"])
 	err = json.Unmarshal(payload, &directoryGroupAccts)
 	if err != nil {
 		msg := "Unable to unmarshal payload."
@@ -91,7 +86,6 @@ func (i *Ilo) queryDirectoryGroups() (directoryGroups []DirectoryGroups, err err
 }
 
 func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
-
 	endpoint := "json/user_info"
 
 	payload, err := i.get(endpoint, true)
@@ -108,7 +102,6 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 	}
 
 	var users Users
-	//fmt.Printf("--> %+v\n", userinfo["users"])
 	err = json.Unmarshal(payload, &users)
 	if err != nil {
 		msg := "Unable to unmarshal payload."
@@ -126,7 +119,6 @@ func (i *Ilo) queryUsers() (usersInfo []UserInfo, err error) {
 }
 
 func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
-
 	endpoint := "json/network_sntp/interface/0"
 
 	payload, err := i.get(endpoint, true)
@@ -158,7 +150,6 @@ func (i *Ilo) queryNetworkSntp() (networkSntp NetworkSntp, err error) {
 }
 
 func (i *Ilo) queryAccessSettings() (AccessSettings, error) {
-
 	endpoint := "json/access_settings"
 
 	var accessSettings AccessSettings
@@ -192,7 +183,6 @@ func (i *Ilo) queryAccessSettings() (AccessSettings, error) {
 }
 
 func (i *Ilo) queryNetworkIPv4() (NetworkIPv4, error) {
-
 	endpoint := "json/network_ipv4/interface/0"
 
 	var networkIPv4 NetworkIPv4
@@ -226,7 +216,6 @@ func (i *Ilo) queryNetworkIPv4() (NetworkIPv4, error) {
 }
 
 func (i *Ilo) queryPowerRegulator() (PowerRegulator, error) {
-
 	endpoint := "json/power_regulator"
 
 	var powerRegulator PowerRegulator

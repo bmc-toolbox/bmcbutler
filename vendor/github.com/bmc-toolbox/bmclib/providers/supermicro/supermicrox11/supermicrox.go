@@ -21,9 +21,6 @@ import (
 )
 
 const (
-	// BmcType defines the bmc model that is supported by this package
-	BmcType = "supermicrox"
-
 	// X11 is the constant for x11 servers
 	X11 = "x11"
 )
@@ -46,7 +43,8 @@ func New(ctx context.Context, ip string, username string, password string, log l
 		username: username,
 		password: password,
 		ctx:      ctx,
-		log:      log}, err
+		log:      log,
+	}, err
 }
 
 // CheckCredentials verify whether the credentials are valid or not
@@ -60,7 +58,6 @@ func (s *SupermicroX) CheckCredentials() (err error) {
 
 // get calls a given json endpoint of the ilo and returns the data
 func (s *SupermicroX) get(endpoint string) (payload []byte, err error) {
-
 	bmcURL := fmt.Sprintf("https://%s/%s", s.ip, endpoint)
 	req, err := http.NewRequest("GET", bmcURL, nil)
 	if err != nil {
@@ -251,8 +248,7 @@ func (s *SupermicroX) ChassisSerial() (serial string, err error) {
 func (s *SupermicroX) HardwareType() (model string) {
 	m, err := s.Model()
 	if err != nil {
-		// Here is your sin
-		return model
+		return ""
 	}
 	return m
 }

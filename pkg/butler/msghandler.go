@@ -21,13 +21,11 @@ func (b *Butler) myLocation(location string) bool {
 // msgHandler invokes the appropriate action based on msg attributes.
 // nolint: gocyclo
 func (b *Butler) msgHandler(msg Msg) {
-
-	// if an interrupt was received, return.
+	// If an interrupt was received, return.
 	if b.interrupt {
 		return
 	}
 
-	log := b.Log
 	component := "msgHandler"
 
 	metrics.IncrCounter([]string{"butler", "asset_recvd"}, 1)
@@ -44,15 +42,15 @@ func (b *Butler) msgHandler(msg Msg) {
 		return
 	}
 
-	//if asset has a location defined, we may want to filter it
+	// If an asset has a location defined, we may want to filter it.
 	if msg.Asset.Location != "" {
 		if !b.myLocation(msg.Asset.Location) && !b.Config.IgnoreLocation {
-			log.WithFields(logrus.Fields{
+			b.Log.WithFields(logrus.Fields{
 				"component":     component,
 				"Serial":        msg.Asset.Serial,
 				"AssetType":     msg.Asset.Type,
 				"AssetLocation": msg.Asset.Location,
-			}).Warn("Butler wont manage asset based on its current location.")
+			}).Warn("Butler won't manage asset based on its current location.")
 
 			metrics.IncrCounter([]string{"butler", "asset_recvd_location_unmanaged"}, 1)
 			return
@@ -60,20 +58,28 @@ func (b *Butler) msgHandler(msg Msg) {
 	}
 
 	switch {
-	case msg.Asset.Execute == true:
+	case msg.Asset.Execute:
 		err := b.executeCommand(msg.AssetExecute, &msg.Asset)
 		if err != nil {
-			log.WithFields(logrus.Fields{
+			b.Log.WithFields(logrus.Fields{
 				"component": component,
 				"Serial":    msg.Asset.Serial,
 				"AssetType": msg.Asset.Type,
-				"Vendor":    msg.Asset.Vendor, //at this point the vendor may or may not be known.
+				"Vendor":    msg.Asset.Vendor, // At this point the vendor may or may not be known.
 				"Location":  msg.Asset.Location,
 				"Error":     err,
-			}).Warn("Unable Execute command(s) on asset.")
+			}).Warn("Execute action returned error.")
 			metrics.IncrCounter([]string{"butler", "execute_fail"}, 1)
 			return
 		}
+
+		b.Log.WithFields(logrus.Fields{
+			"component": component,
+			"Serial":    msg.Asset.Serial,
+			"AssetType": msg.Asset.Type,
+			"Vendor":    msg.Asset.Vendor, // At this point the vendor may or may not be known.
+			"Location":  msg.Asset.Location,
+		}).Info("Execute action succeeded.")
 
 		metrics.IncrCounter([]string{"butler", "execute_success"}, 1)
 		return
@@ -100,15 +106,27 @@ func (b *Butler) msgHandler(msg Msg) {
 			return
 		}
 
+		b.Log.WithFields(logrus.Fields{
+			"AssetType":    msg.Asset.Type,
+			"component":    component,
+			"Error":        err,
+			"HardwareType": msg.Asset.HardwareType,
+			"IPAddress":    msg.Asset.IPAddress,
+			"ID":           identifier,
+			"Location":     msg.Asset.Location,
+			"Serial":       msg.Asset.Serial,
+			"Vendor":       msg.Asset.Vendor, // At this point the vendor may or may not be known.
+		}).Warn("Configure action succeeded.")
+
 		metrics.IncrCounter([]string{"butler", "configure_success"}, 1)
 		return
 	default:
-		log.WithFields(logrus.Fields{
+		b.Log.WithFields(logrus.Fields{
 			"component": component,
 			"Serial":    msg.Asset.Serial,
 			"AssetType": msg.Asset.Type,
-			"Vendor":    msg.Asset.Vendor, //at this point the vendor may or may not be known.
+			"Vendor":    msg.Asset.Vendor, // At this point the vendor may or may not be known.
 			"Location":  msg.Asset.Location,
 		}).Warn("Unknown action request on asset.")
-	} //switch
+	}
 }

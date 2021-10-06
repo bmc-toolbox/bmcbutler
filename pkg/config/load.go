@@ -13,7 +13,6 @@ import (
 // Load sets up bmcbutler configuration.
 // nolint: gocyclo
 func (p *Params) Load(cfgFile string) {
-
 	_, err := os.Stat(cfgFile)
 	if err != nil {
 		log.Fatalf("[Error] unable to read bmcbutler config file: %s", err)
@@ -24,7 +23,6 @@ func (p *Params) Load(cfgFile string) {
 		log.Fatalf("failed to unmarshal config: %s", err.Error())
 	}
 
-	// slice of config section validators
 	validators := []func() error{
 		p.validateVaultCfg,
 		p.validateMetricsCfg,
@@ -33,7 +31,6 @@ func (p *Params) Load(cfgFile string) {
 		p.validateCertSignerCfg,
 	}
 
-	// validate config sections
 	for _, v := range validators {
 		err := v()
 		if err != nil {
@@ -66,8 +63,7 @@ func (p *Params) unmarshalConfig(cfgFile string) error {
 }
 
 func (p *Params) defaults() error {
-
-	// min butlers to spawn
+	// Minimum butlers to spawn.
 	if p.ButlersToSpawn == 0 {
 		p.ButlersToSpawn = 5
 	}
@@ -80,9 +76,7 @@ func (p *Params) defaults() error {
 	return nil
 }
 
-//signer config
 func (p *Params) validateCertSignerCfg() error {
-
 	if p.CertSigner != nil {
 		if p.CertSigner.FakeSigner != nil {
 			p.CertSigner.Client = "fakeSigner"
@@ -98,7 +92,6 @@ func (p *Params) validateCertSignerCfg() error {
 
 func (p *Params) validateInventoryCfg() error {
 	if p.Inventory != nil {
-
 		if p.Inventory.Enc != nil {
 			p.Inventory.Source = "enc"
 		} else if p.Inventory.Dora != nil {
@@ -115,7 +108,6 @@ func (p *Params) validateInventoryCfg() error {
 
 // metrics config
 func (p *Params) validateMetricsCfg() error {
-
 	if p.Metrics != nil {
 		if p.Metrics.Graphite != nil {
 			p.Metrics.Client = "graphite"

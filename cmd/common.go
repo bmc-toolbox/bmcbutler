@@ -51,24 +51,21 @@ func overrideConfigFromFlags() {
 	}
 }
 
-// pre sets up required plumbing and returns two channels.
-// - Spawn go routine to listen to interrupt signals
+// Sets up required plumbing and returns three channels.
+// - Spawn a Go routine to listen to interrupt signals
 // - Setup metrics channel
-// - Spawn the metrics forwarder go routine
+// - Spawn the metrics forwarder Go routine
 // - Setup the inventory channel over which to receive assets
-// - Based on the inventory source (dora/csv), Spawn the asset retriever go routine.
+// - Based on the inventory source (dora/csv), spawn the asset retriever Go routine
 // - Spawn butlers
-// - Return inventory channel, butler channel.
-func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopChan chan struct{}) {
-
-	// load config
+// - Return inventory channel, butler channel
+func prepareChannels() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopChan chan struct{}) {
 	overrideConfigFromFlags()
 	runConfig.Load(runConfig.CfgFile)
 
-	//Channel used to indicate goroutines to exit.
+	// Used to indicate Go routines to exit.
 	stopChan = make(chan struct{})
 
-	//Initialize metrics collection.
 	err := metrics.Setup(
 		runConfig.Metrics.Client,
 		runConfig.Metrics.Graphite.Host,
@@ -81,13 +78,13 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 		os.Exit(1)
 	}
 
-	// A channel to receive inventory assets
+	// A channel to receive inventory assets.
 	inventoryChan = make(chan []asset.Asset, 5)
 
-	//determine inventory to fetch asset data.
+	// Determine inventory to fetch asset data.
 	inventorySource := runConfig.Inventory.Source
 
-	//based on inventory source, invoke assetRetriever
+	// Based on inventory source, invoke assetRetriever:
 	var assetRetriever func()
 
 	switch inventorySource {
@@ -132,8 +129,7 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 		os.Exit(1)
 	}
 
-	//invoke asset retriever routine
-	//this routine returns assets over the inventoryChan.
+	// This routine returns assets over the inventoryChan.
 	go assetRetriever()
 
 	// Spawn butlers to work
@@ -147,9 +143,7 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 		SyncWG:     &commandWG,
 	}
 
-	// load secrets from vault
 	if runConfig.SecretsFromVault {
-
 		store, err := secrets.Load(*runConfig.Vault)
 		if err != nil {
 			log.Fatalf("[Error] loading secrets from vault: %s", err.Error())
@@ -171,12 +165,11 @@ func pre() (inventoryChan chan []asset.Asset, butlerChan chan butler.Msg, stopCh
 	go butlers.Runner()
 	commandWG.Add(1)
 
-	//setup a sigchan
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	signalsChan := make(chan os.Signal, 1)
+	signal.Notify(signalsChan, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		select {
-		case <-sigChan:
+		case <-signalsChan:
 			interrupt = true
 			log.Warn("Interrupt SIGINT/SIGTERM received.")
 			close(stopChan)

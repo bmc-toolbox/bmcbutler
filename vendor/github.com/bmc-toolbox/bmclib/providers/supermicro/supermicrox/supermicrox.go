@@ -23,9 +23,6 @@ import (
 )
 
 const (
-	// BmcType defines the bmc model that is supported by this package
-	BmcType = "supermicrox"
-
 	// X10 is the constant for x10 servers
 	X10 = "x10"
 	// X11 is the constant for x11 servers
@@ -60,7 +57,8 @@ func New(ctx context.Context, ip string, username string, password string, log l
 		username: username,
 		password: password,
 		ctx:      ctx,
-		log:      log}, err
+		log:      log,
+	}, err
 }
 
 // CheckCredentials verify whether the credentials are valid or not
@@ -127,7 +125,6 @@ func (s *SupermicroX) get(endpoint string, authentication bool) (payload []byte,
 // posts a urlencoded form to the given endpoint
 // nolint: gocyclo
 func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, formDataContentType string) (statusCode int, err error) {
-
 	err = s.httpLogin()
 	if err != nil {
 		return statusCode, err

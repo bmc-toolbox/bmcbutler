@@ -14,7 +14,7 @@ import (
 
 // AssetAttributes struct is the JSON format for asset data
 type AssetAttributes struct {
-	Data        map[string]Attributes `json:"data"` //map of asset IPs/Serials to attributes
+	Data        map[string]Attributes `json:"data"` // Map of asset IPs/Serials to attributes.
 	EndOfAssets bool                  `json:"end_of_assets,omitempty"`
 	Offset      int                   `json:"offset,omitempty"`
 	Limit       int                   `json:"limit,omitempty"`
@@ -24,7 +24,7 @@ type AssetAttributes struct {
 type Attributes struct {
 	Serial    string           `json:"serial"`
 	Location  string           `json:"location"`
-	IPAddress []string         `json:"ipaddress"` //the BMC address.
+	IPAddress []string         `json:"ipaddress"`
 	Extras    AttributesExtras `json:"extras"`
 }
 
@@ -32,9 +32,9 @@ type Attributes struct {
 type AttributesExtras struct {
 	State             string              `json:"status"`
 	Company           string              `json:"company"`
-	AssetType         string              `json:"assetType"` //chassis or server
+	AssetType         string              `json:"assetType"` // "server" or "chassis"
 	NetworkInterfaces *[]NetworkInterface `json:"network_interfaces"`
-	LiveAssets        []string            `json:"live_assets"` //if its a chassis, we populate asset serials that are live.
+	LiveAssets        []string            `json:"live_assets"` // If it's a chassis, only populate Live asset serials.
 }
 
 // NetworkInterface struct is
@@ -56,7 +56,6 @@ type NetworkInterface struct {
 //}
 
 func main() {
-
 	serialsFlag := flag.NewFlagSet("serialsFlag", flag.ExitOnError)
 	serialsArg := serialsFlag.String("serials", "", "--serials <foo>,<bar>")
 
@@ -81,7 +80,6 @@ func encCmd(args string) {
 // from the inventory using the serials.
 // In this case we generate dummy assets and return AssetAttributes
 func assetBySerial(serials []string) AssetAttributes {
-
 	assets := make(map[string]Attributes)
 
 	i := 1
@@ -111,5 +109,4 @@ func assetBySerial(serials []string) AssetAttributes {
 	}
 
 	return AssetAttributes{Data: assets}
-
 }

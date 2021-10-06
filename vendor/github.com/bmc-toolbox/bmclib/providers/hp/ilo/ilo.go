@@ -22,9 +22,6 @@ import (
 )
 
 const (
-	// BmcType defines the bmc model that is supported by this package
-	BmcType = "ilo"
-
 	// Ilo2 is the constant for iLO2
 	Ilo2 = "ilo2"
 	// Ilo3 is the constant for iLO3
@@ -156,7 +153,6 @@ func (i *Ilo) get(endpoint string, useSession bool) (payload []byte, err error) 
 
 // posts the payload to the given endpoint
 func (i *Ilo) post(endpoint string, data []byte) (statusCode int, body []byte, err error) {
-
 	u, err := url.Parse(fmt.Sprintf("https://%s/%s", i.ip, endpoint))
 	if err != nil {
 		return 0, []byte{}, err
@@ -166,7 +162,6 @@ func (i *Ilo) post(endpoint string, data []byte) (statusCode int, body []byte, e
 	if err != nil {
 		return 0, []byte{}, err
 	}
-
 	req.Header.Add("Content-Type", "application/json")
 	for _, cookie := range i.httpClient.Jar.Cookies(u) {
 		if cookie.Name == "sessionKey" {
@@ -181,7 +176,9 @@ func (i *Ilo) post(endpoint string, data []byte) (statusCode int, body []byte, e
 	if err != nil {
 		return 0, []byte{}, err
 	}
+
 	defer resp.Body.Close()
+
 	respDump, _ := httputil.DumpResponse(resp, true)
 	i.log.V(2).Info("responseTrace", "responseDump", string(respDump))
 
