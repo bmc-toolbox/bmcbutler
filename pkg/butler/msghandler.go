@@ -77,7 +77,11 @@ func (b *Butler) msgHandler(msg Msg) {
 
 		metrics.IncrCounter([]string{"butler", "execute_success"}, 1)
 		return
-	case msg.Asset.Configure == true:
+	case msg.Asset.Configure:
+		// This field helps with enumerating the unique assets we have, since some assets don't
+		//   have a serial and some don't have an IP address. This is only for logging.
+		identifier := "Serial: " + msg.Asset.Serial + ", IP(s): " + strings.Join(msg.Asset.IPAddresses, ",")
+
 		err := b.configureAsset(msg.AssetConfig, &msg.Asset)
 		if err != nil {
 			b.Log.WithFields(logrus.Fields{
