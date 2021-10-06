@@ -1,6 +1,8 @@
 package butler
 
 import (
+	"strings"
+
 	"github.com/sirupsen/logrus"
 
 	metrics "github.com/bmc-toolbox/gin-go-metrics"
@@ -30,13 +32,13 @@ func (b *Butler) msgHandler(msg Msg) {
 
 	metrics.IncrCounter([]string{"butler", "asset_recvd"}, 1)
 
-	//if asset has no IPAddress, we can't do anything about it
-	if len(msg.Asset.IPAddresses) == 0 {
-		log.WithFields(logrus.Fields{
+	// If an asset has no IPAddress, we can't do anything about it!
+	if len(msg.Asset.IPAddresses) == 0 || len(msg.Asset.IPAddresses) == 1 && msg.Asset.IPAddresses[0] == "0.0.0.0" {
+		b.Log.WithFields(logrus.Fields{
 			"component": component,
 			"Serial":    msg.Asset.Serial,
 			"AssetType": msg.Asset.Type,
-		}).Debug("Asset was received by butler without any IP(s) info, skipped.")
+		}).Warn("Asset was received by butler without any IP(s) info, skipped.")
 
 		metrics.IncrCounter([]string{"butler", "asset_recvd_noip"}, 1)
 		return

@@ -74,8 +74,8 @@ func (e *Enc) SetBMCInterfaces(attributes Attributes) Attributes {
 
 	bmcNicPrefixes := e.Config.Inventory.Enc.BMCNicPrefix
 	for _, nic := range *attributes.NetworkInterfaces {
-		if stringHasPrefix(nic.Name, bmcNicPrefixes) && nic.IPAddress != "" {
-			attributes.BMCIPAddress = append(attributes.BMCIPAddress, nic.IPAddress)
+		if stringHasPrefix(nic.Name, bmcNicPrefixes) && nic.IPAddress != "" && nic.IPAddress != "0.0.0.0" {
+			attributes.BMCIPAddresses = append(attributes.BMCIPAddresses, nic.IPAddress)
 		}
 	}
 
