@@ -71,8 +71,8 @@ func (s *SupermicroX) IsOn() (status bool, err error) {
 }
 
 // UpdateFirmware updates the bmc firmware
-func (s *SupermicroX) UpdateFirmware(source, file string) (status bool, err error) {
-	return true, fmt.Errorf("not supported yet")
+func (s *SupermicroX) UpdateFirmware(source, file string) (status bool, output string, err error) {
+	return true, "", fmt.Errorf("not supported yet")
 }
 
 func (s *SupermicroX) CheckFirmwareVersion() (version string, err error) {
