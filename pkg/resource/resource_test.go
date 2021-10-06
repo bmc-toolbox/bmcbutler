@@ -35,10 +35,10 @@ func TestRenderYamlTemplate(t *testing.T) {
 	r := Resource{
 		Log: logrus.New(),
 		Asset: &asset.Asset{
-			Serial: "FOOBAR",
-			Vendor: "ACME",
-			Model:  "002",
-			Type:   "Server",
+			Serial:       "FOOBAR",
+			Vendor:       "ACME",
+			HardwareType: "002",
+			Type:         "Server",
 		},
 	}
 
@@ -72,10 +72,10 @@ func TestLoadConfigResources(t *testing.T) {
 	r := Resource{
 		Log: logrus.New(),
 		Asset: &asset.Asset{
-			Serial: "FOOBAR",
-			Vendor: "ACME",
-			Model:  "002",
-			Type:   "Server",
+			Serial:       "FOOBAR",
+			Vendor:       "ACME",
+			HardwareType: "002",
+			Type:         "Server",
 		},
 	}
 

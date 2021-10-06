@@ -23,7 +23,7 @@ type Bmc struct {
 	ip           string
 	serial       string
 	vendor       string
-	model        string
+	hardwareType string
 	stopChan     <-chan struct{}
 }
 
@@ -82,11 +82,11 @@ func (b *Bmc) Apply() {
 	var resetCause []string
 
 	b.logger.WithFields(logrus.Fields{
-		"Vendor":    b.vendor,
-		"Model":     b.model,
-		"Serial":    b.serial,
-		"IPAddress": b.ip,
-		"To apply":  strings.Join(resources, ", "),
+		"Vendor":       b.vendor,
+		"HardwareType": b.hardwareType,
+		"Serial":       b.serial,
+		"IPAddress":    b.ip,
+		"To apply":     strings.Join(resources, ", "),
 	}).Trace("Configuration resources to be applied.")
 
 	for _, resource := range resources {
@@ -97,10 +97,10 @@ func (b *Bmc) Apply() {
 		// check if an interrupt was received.
 		if interrupt {
 			b.logger.WithFields(logrus.Fields{
-				"Vendor":    b.vendor,
-				"Model":     b.model,
-				"Serial":    b.serial,
-				"IPAddress": b.ip,
+				"Vendor":       b.vendor,
+				"HardwareType": b.hardwareType,
+				"Serial":       b.serial,
+				"IPAddress":    b.ip,
 			}).Debug("Received interrupt.")
 			break
 		}
@@ -124,16 +124,16 @@ func (b *Bmc) Apply() {
 			}
 		case "ldap_group":
 			if b.config.LdapGroups != nil && b.config.Ldap != nil {
-				k, err := b.config.LdapGroups.GetExtraGroups(b.asset.Serial, b.asset.Vendor)
+				o, err := b.config.LdapGroups.GetExtraGroups(b.asset.Serial, b.asset.Vendor)
 				if err != nil {
 					b.logger.WithFields(logrus.Fields{
-						"Vendor":    b.vendor,
-						"Model":     b.model,
-						"Serial":    b.serial,
-						"IPAddress": b.ip,
-						"Error":     err,
-						"K":         k,
-						"Groups":    b.config.LdapGroups.Groups,
+						"Vendor":       b.vendor,
+						"HardwareType": b.hardwareType,
+						"Serial":       b.serial,
+						"IPAddress":    b.ip,
+						"Error":        err,
+						"Output":       o,
+						"Groups":       b.config.LdapGroups.Groups,
 					}).Warn("Trying to fetch more LDAP groups has failed.")
 				}
 				err = b.configure.LdapGroups(b.config.LdapGroups.Groups, b.config.Ldap)
@@ -167,12 +167,12 @@ func (b *Bmc) Apply() {
 		if err != nil {
 			failed = append(failed, resource)
 			b.logger.WithFields(logrus.Fields{
-				"resource":  resource,
-				"Vendor":    b.vendor,
-				"Model":     b.model,
-				"Serial":    b.serial,
-				"IPAddress": b.ip,
-				"Error":     err,
+				"resource":     resource,
+				"Vendor":       b.vendor,
+				"HardwareType": b.hardwareType,
+				"Serial":       b.serial,
+				"IPAddress":    b.ip,
+				"Error":        err,
 			}).Warn("Resource configuration returned errors.")
 		} else {
 			success = append(success, resource)
@@ -183,11 +183,11 @@ func (b *Bmc) Apply() {
 		}
 
 		b.logger.WithFields(logrus.Fields{
-			"resource":  resource,
-			"Vendor":    b.vendor,
-			"Model":     b.model,
-			"Serial":    b.serial,
-			"IPAddress": b.ip,
+			"resource":     resource,
+			"Vendor":       b.vendor,
+			"HardwareType": b.hardwareType,
+			"Serial":       b.serial,
+			"IPAddress":    b.ip,
 		}).Trace("Resource configuration applied.")
 
 	}
@@ -196,11 +196,11 @@ func (b *Bmc) Apply() {
 	if len(resetCause) > 0 {
 
 		b.logger.WithFields(logrus.Fields{
-			"Vendor":    b.vendor,
-			"Model":     b.model,
-			"Serial":    b.serial,
-			"IPAddress": b.ip,
-			"cause":     strings.Join(resetCause, ", "),
+			"Vendor":       b.vendor,
+			"HardwareType": b.hardwareType,
+			"Serial":       b.serial,
+			"IPAddress":    b.ip,
+			"cause":        strings.Join(resetCause, ", "),
 		}).Info("BMC to be reset.")
 
 		// Close the current connection - so we don't leave connections hanging.
@@ -210,11 +210,11 @@ func (b *Bmc) Apply() {
 		_, err := b.bmc.PowerCycleBmc()
 		if err != nil {
 			b.logger.WithFields(logrus.Fields{
-				"Vendor":    b.vendor,
-				"Model":     b.model,
-				"Serial":    b.serial,
-				"IPAddress": b.ip,
-				"Error":     err,
+				"Vendor":       b.vendor,
+				"HardwareType": b.hardwareType,
+				"Serial":       b.serial,
+				"IPAddress":    b.ip,
+				"Error":        err,
 			}).Warn("BMC reset failed.")
 
 		}
@@ -222,24 +222,24 @@ func (b *Bmc) Apply() {
 
 	if len(failed) > 0 {
 		b.logger.WithFields(logrus.Fields{
-			"Vendor":    b.vendor,
-			"Model":     b.model,
-			"Serial":    b.serial,
-			"IPAddress": b.ip,
-			"success":   false,
-			"applied":   strings.Join(success, ", "),
-			"failed":    strings.Join(failed, ", "),
+			"Vendor":       b.vendor,
+			"HardwareType": b.hardwareType,
+			"Serial":       b.serial,
+			"IPAddress":    b.ip,
+			"success":      false,
+			"applied":      strings.Join(success, ", "),
+			"failed":       strings.Join(failed, ", "),
 		}).Warn("One or more resources failed to apply.")
 		return
 	}
 
 	b.logger.WithFields(logrus.Fields{
-		"Vendor":    b.vendor,
-		"Model":     b.model,
-		"Serial":    b.serial,
-		"IPAddress": b.ip,
-		"success":   true,
-		"applied":   strings.Join(success, ", "),
+		"Vendor":       b.vendor,
+		"HardwareType": b.hardwareType,
+		"Serial":       b.serial,
+		"IPAddress":    b.ip,
+		"success":      true,
+		"applied":      strings.Join(success, ", "),
 	}).Info("BMC configuration actions successful.")
 
 }

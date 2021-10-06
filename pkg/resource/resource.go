@@ -68,7 +68,7 @@ func (r *Resource) RenderYamlTemplate(yamlTemplate []byte) (yamlData []byte) {
 	ctx.Set("vendor", strings.ToLower(r.Asset.Vendor))
 	ctx.Set("location", strings.ToLower(r.Asset.Location))
 	ctx.Set("assetType", strings.ToLower(r.Asset.Type))
-	ctx.Set("model", strings.ToLower(r.Asset.Model))
+	ctx.Set("hardwareType", strings.ToLower(r.Asset.HardwareType))
 	ctx.Set("serial", strings.ToLower(r.Asset.Serial))
 	ctx.Set("ipaddress", strings.ToLower(r.Asset.IPAddress))
 	ctx.Set("extra", r.Asset.Extra)

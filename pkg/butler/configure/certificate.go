@@ -58,21 +58,21 @@ func (b *Bmc) certificateSetup() (bool, error) {
 	if valid {
 
 		b.logger.WithFields(logrus.Fields{
-			"Vendor":    b.vendor,
-			"Model":     b.model,
-			"Serial":    b.serial,
-			"IPAddress": b.ip,
+			"Vendor":       b.vendor,
+			"HardwareType": b.hardwareType,
+			"Serial":       b.serial,
+			"IPAddress":    b.ip,
 		}).Trace("Current certificate matches configuration.")
 
 		return false, nil
 	}
 
 	b.logger.WithFields(logrus.Fields{
-		"Vendor":    b.vendor,
-		"Model":     b.model,
-		"Serial":    b.serial,
-		"IPAddress": b.ip,
-		"Cause":     invalidReason,
+		"Vendor":       b.vendor,
+		"HardwareType": b.hardwareType,
+		"Serial":       b.serial,
+		"IPAddress":    b.ip,
+		"Cause":        invalidReason,
 	}).Trace("Current certificate does not match configuration.")
 
 	var csr []byte

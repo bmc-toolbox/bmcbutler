@@ -78,13 +78,16 @@ func (b *Butler) msgHandler(msg Msg) {
 	case msg.Asset.Configure == true:
 		err := b.configureAsset(msg.AssetConfig, &msg.Asset)
 		if err != nil {
-			log.WithFields(logrus.Fields{
-				"component": component,
-				"Serial":    msg.Asset.Serial,
-				"AssetType": msg.Asset.Type,
-				"Vendor":    msg.Asset.Vendor, //at this point the vendor may or may not be known.
-				"Location":  msg.Asset.Location,
-				"Error":     err,
+			b.Log.WithFields(logrus.Fields{
+				"AssetType":    msg.Asset.Type,
+				"component":    component,
+				"Error":        err,
+				"HardwareType": msg.Asset.HardwareType,
+				"IPAddress":    msg.Asset.IPAddress, // When we fail to login to the BMC, this field is not set.
+				"ID":           identifier,
+				"Location":     msg.Asset.Location,
+				"Serial":       msg.Asset.Serial,
+				"Vendor":       msg.Asset.Vendor, // At this point the vendor may or may not be known.
 			}).Warn("Configure action returned error.")
 
 			metrics.IncrCounter([]string{"butler", "configure_fail"}, 1)

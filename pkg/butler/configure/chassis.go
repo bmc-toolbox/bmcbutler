@@ -11,17 +11,17 @@ import (
 
 // Cmc struct declares attributes required to apply configuration.
 type Cmc struct {
-	asset     *asset.Asset
-	bmc       devices.Cmc
-	resources []string
-	configure devices.Configure
-	config    *cfgresources.ResourcesConfig
-	logger    *logrus.Logger
-	ip        string
-	serial    string
-	vendor    string
-	model     string
-	stopChan  <-chan struct{}
+	asset        *asset.Asset
+	bmc          devices.Cmc
+	resources    []string
+	configure    devices.Configure
+	config       *cfgresources.ResourcesConfig
+	logger       *logrus.Logger
+	ip           string
+	serial       string
+	vendor       string
+	hardwareType string
+	stopChan     <-chan struct{}
 }
 
 // NewCmcConfigurator returns a new configure struct to apply configuration.
@@ -41,14 +41,14 @@ func NewCmcConfigurator(bmc devices.Cmc,
 		resources: resources,
 		// devices.Cmc is type asserted to apply configuration,
 		// this is possible since devices.Bmc embeds the Configure interface.
-		configure: bmc.(devices.Configure),
-		config:    config,
-		logger:    logger,
-		stopChan:  stopChan,
-		ip:        asset.IPAddress,
-		serial:    asset.Serial,
-		vendor:    asset.Vendor,
-		model:     asset.Model,
+		configure:    bmc.(devices.Configure),
+		config:       config,
+		logger:       logger,
+		stopChan:     stopChan,
+		ip:           asset.IPAddress,
+		serial:       asset.Serial,
+		vendor:       asset.Vendor,
+		hardwareType: asset.HardwareType,
 	}
 }
 
@@ -73,11 +73,11 @@ func (b *Cmc) Apply() { //nolint: gocyclo
 	var failed, success []string
 
 	b.logger.WithFields(logrus.Fields{
-		"Vendor":    b.vendor,
-		"Model":     b.model,
-		"Serial":    b.serial,
-		"IPAddress": b.ip,
-		"To apply":  strings.Join(resources, ", "),
+		"Vendor":       b.vendor,
+		"HardwareType": b.hardwareType,
+		"Serial":       b.serial,
+		"IPAddress":    b.ip,
+		"To apply":     strings.Join(resources, ", "),
 	}).Trace("Configuration resources to be applied.")
 
 	for _, resource := range resources {
@@ -87,10 +87,10 @@ func (b *Cmc) Apply() { //nolint: gocyclo
 		// check if an interrupt was received.
 		if interrupt == true {
 			b.logger.WithFields(logrus.Fields{
-				"Vendor":    b.vendor,
-				"Model":     b.model,
-				"Serial":    b.serial,
-				"IPAddress": b.ip,
+				"Vendor":       b.vendor,
+				"HardwareType": b.hardwareType,
+				"Serial":       b.serial,
+				"IPAddress":    b.ip,
 			}).Debug("Received interrupt.")
 			break
 		}
@@ -114,16 +114,16 @@ func (b *Cmc) Apply() { //nolint: gocyclo
 			}
 		case "ldap_group":
 			if b.config.LdapGroups != nil && b.config.Ldap != nil {
-				k, err := b.config.LdapGroups.GetExtraGroups(b.asset.Serial, b.asset.Vendor)
+				o, err := b.config.LdapGroups.GetExtraGroups(b.asset.Serial, b.asset.Vendor)
 				if err != nil {
 					b.logger.WithFields(logrus.Fields{
-						"Vendor":    b.vendor,
-						"Model":     b.model,
-						"Serial":    b.serial,
-						"IPAddress": b.ip,
-						"Error":     err,
-						"K":         k,
-						"Groups":    b.config.LdapGroups.Groups,
+						"Vendor":       b.vendor,
+						"HardwareType": b.hardwareType,
+						"Serial":       b.serial,
+						"IPAddress":    b.ip,
+						"Error":        err,
+						"Output":       o,
+						"Groups":       b.config.LdapGroups.Groups,
 					}).Warn("Trying to fetch more LDAP groups has failed.")
 				}
 				err = b.configure.LdapGroups(b.config.LdapGroups.Groups, b.config.Ldap)
@@ -145,46 +145,46 @@ func (b *Cmc) Apply() { //nolint: gocyclo
 		if err != nil {
 			failed = append(failed, resource)
 			b.logger.WithFields(logrus.Fields{
-				"resource":  resource,
-				"Vendor":    b.vendor,
-				"Model":     b.model,
-				"Serial":    b.serial,
-				"IPAddress": b.ip,
-				"Error":     err,
+				"resource":     resource,
+				"Vendor":       b.vendor,
+				"HardwareType": b.hardwareType,
+				"Serial":       b.serial,
+				"IPAddress":    b.ip,
+				"Error":        err,
 			}).Warn("Resource configuration returned errors.")
 		} else {
 			success = append(success, resource)
 		}
 
 		b.logger.WithFields(logrus.Fields{
-			"resource":  resource,
-			"Vendor":    b.vendor,
-			"Model":     b.model,
-			"Serial":    b.serial,
-			"IPAddress": b.ip,
+			"resource":     resource,
+			"Vendor":       b.vendor,
+			"HardwareType": b.hardwareType,
+			"Serial":       b.serial,
+			"IPAddress":    b.ip,
 		}).Trace("Resource configuration applied.")
 
 	}
 
 	if len(failed) > 0 {
 		b.logger.WithFields(logrus.Fields{
-			"Vendor":    b.vendor,
-			"Model":     b.model,
-			"Serial":    b.serial,
-			"IPAddress": b.ip,
-			"success":   false,
-			"applied":   strings.Join(success, ", "),
-			"failed":    strings.Join(failed, ", "),
+			"Vendor":       b.vendor,
+			"HardwareType": b.hardwareType,
+			"Serial":       b.serial,
+			"IPAddress":    b.ip,
+			"success":      false,
+			"applied":      strings.Join(success, ", "),
+			"failed":       strings.Join(failed, ", "),
 		}).Warn("One or more resources failed to apply.")
 		return
 	}
 
 	b.logger.WithFields(logrus.Fields{
-		"Vendor":    b.vendor,
-		"Model":     b.model,
-		"Serial":    b.serial,
-		"IPAddress": b.ip,
-		"success":   true,
-		"applied":   strings.Join(success, ", "),
-	}).Info("BMC configuration actions successful.")
+		"Vendor":       b.vendor,
+		"HardwareType": b.hardwareType,
+		"Serial":       b.serial,
+		"IPAddress":    b.ip,
+		"success":      true,
+		"applied":      strings.Join(success, ", "),
+	}).Info("CMC configuration actions successful.")
 }
