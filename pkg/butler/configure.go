@@ -64,12 +64,23 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		asset.Type = "server"
 		asset.HardwareType = bmc.HardwareType()
 		asset.Vendor = bmc.Vendor()
-		// Required for TLS cert CN
-		asset.Serial, _ = bmc.Serial()
 
-		//Setup a resource instance
-		//Get any templated values in the asset config rendered
-		resourceInstance := resource.Resource{Log: log, Asset: asset, Secrets: b.Secrets}
+		// We already have the asset serial from the inventory source.
+		// This is done for sanity checking. Sometimes a device's serial changes because
+		//   of a motherboard change, however. It's a valid case but should be rare.
+		s, err := bmc.Serial()
+		if err != nil {
+			b.Log.WithFields(logrus.Fields{
+				"component":       component,
+				"InventorySerial": asset.Serial,
+			}).Warn("Error getting BMC serial!")
+		} else if asset.Serial != s {
+			b.Log.WithFields(logrus.Fields{
+				"component":       component,
+				"BMCSerial":       s,
+				"InventorySerial": asset.Serial,
+			}).Warn("The BMC reports a different serial than the inventory source!")
+		}
 
 		//rendered config is a *cfgresources.ResourcesConfig type
 		renderedConfig := resourceInstance.LoadConfigResources(config)
@@ -89,13 +100,24 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		asset.HardwareType = chassis.HardwareType()
 		asset.Vendor = chassis.Vendor()
 
-		// Required for TLS cert CN
-		asset.Serial, _ = chassis.Serial()
+		// We already have the asset serial from the inventory source.
+		// This is done for sanity checking. Sometimes a device's serial changes because
+		//   of a motherboard change, however. It's a valid case but should be rare.
+		s, err := chassis.Serial()
+		if err != nil {
+			b.Log.WithFields(logrus.Fields{
+				"component":       component,
+				"InventorySerial": asset.Serial,
+			}).Warn("Error getting CMC serial!")
+		} else if asset.Serial != s {
+			b.Log.WithFields(logrus.Fields{
+				"component":       component,
+				"CMCSerial":       s,
+				"InventorySerial": asset.Serial,
+			}).Warn("The CMC reports a different serial than the inventory source!")
+		}
 
-		//Setup a resource instance
-		//Get any templated values in the asset config rendered
-		resourceInstance := resource.Resource{Log: log, Asset: asset, Secrets: b.Secrets}
-
+		resourceInstance := resource.Resource{Log: b.Log, Asset: asset, Secrets: b.Secrets}
 		renderedConfig := resourceInstance.LoadConfigResources(config)
 		if renderedConfig == nil {
 			return errors.New("No BMC configuration to be applied")
