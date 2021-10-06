@@ -386,18 +386,7 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 // LdapGroups implements the Configure interface.
 // nolint: gocyclo
 func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
-
-	groupID := 1
-
-	//set to decide what privileges the group should have
-	//497 == operator
-	//511 == administrator (full privileges)
-	privID := "0"
-
-	//groupPrivilegeParam is populated per group and is passed to i.applyLdapRoleGroupPrivParam
-	groupPrivilegeParam := ""
-
-	//first some preliminary checks
+	// Preliminary checks:
 	if cfgLdap.Port == 0 {
 		msg := "Ldap resource parameter Port required but not declared"
 		err = errors.New(msg)
@@ -428,19 +417,6 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 
 	//for each ldap group
 	for _, group := range cfgGroups {
-
-		//if a group has been set to disable in the config,
-		//its configuration is skipped and removed.
-		if !group.Enable {
-			continue
-		}
-
-		if group.Role == "" {
-			msg := "Ldap resource parameter Role required but not declared."
-			i.log.V(1).Info(msg, "Role", group.Role, "step", "applyLdapGroupParams")
-			continue
-		}
-
 		if group.Group == "" {
 			msg := "Ldap resource parameter Group required but not declared."
 			err = errors.New(msg)
@@ -460,6 +436,24 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 			err = errors.New(msg)
 			i.log.V(1).Error(err, msg, "Role", group.Role, "step", "applyLdapGroupParams")
 			return err
+		}
+	}
+
+	// Now, time to do the actual work!
+	groupID := 1
+
+	// What privileges should the group have?
+	//   497: Operator
+	//   511: Administrator (full privileges)
+	privID := "0"
+
+	// Populated per group, passed to i.applyLdapRoleGroupPrivParam()
+	groupPrivilegeParam := ""
+
+	for _, group := range cfgGroups {
+		// If a group has been set to `disable` in the config, its configuration is skipped.
+		if !group.Enable {
+			continue
 		}
 
 		groupDn := fmt.Sprintf("%s,%s", group.Group, group.GroupBaseDn)
@@ -496,10 +490,28 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 		groupID++
 	}
 
-	// Set the rest of the group privileges to 0.
+	// Set the rest of the group privileges to 0, and the DNs to empty strings.
 	// Dell supports only 5 groups.
-	for i := groupID; i <= 5; i++ {
-		groupPrivilegeParam += fmt.Sprintf("xGLGroup%dPriv:0,", i)
+	for g := groupID; g <= 5; g++ {
+		groupPrivilegeParam += fmt.Sprintf("xGLGroup%dPriv:0,", g)
+
+		endpoint := fmt.Sprintf("data?set=xGLGroup%dName:%s", g, "")
+		statusCode, response, err := i.get(endpoint, nil)
+		if err != nil || statusCode != 200 {
+			if err == nil {
+				err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			}
+
+			i.log.V(1).Error(err, "GET request failed.",
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+				"endpoint", endpoint,
+				"StatusCode", statusCode,
+				"step", "applyLdapGroupParams",
+				"response", string(response),
+			)
+			// No need to return an error here, since the privilege of this group is none anyway.
+		}
 	}
 
 	err = i.applyLdapRoleGroupPrivParam(cfgLdap, groupPrivilegeParam)
