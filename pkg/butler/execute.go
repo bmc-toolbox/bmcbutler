@@ -98,13 +98,7 @@ func (b *Butler) executeCommandBmc(bmc devices.Bmc, command string) (success boo
 		success, err := bmc.PowerCycle()
 		return success, "", err
 	case "firmware-update":
-		class, err := bmc.Class()
-		if err != nil {
-			return false, "", err
-		}
-
-		success, output, err := bmc.UpdateFirmware("10.198.174.2", "bmc-firmware/"+bmc.Vendor()+"/"+class)
-		return success, output, err
+		return bmc.UpdateFirmware("https://10.198.174.2", "bmc-firmware/"+bmc.Vendor()+"/"+bmc.HardwareType())
 	case "firmware-version":
 		output, err := bmc.CheckFirmwareVersion()
 		return err == nil, output, err
