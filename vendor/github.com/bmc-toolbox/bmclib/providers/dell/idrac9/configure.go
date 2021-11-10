@@ -54,18 +54,21 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 	validate := validator.New()
 	err = validate.Struct(newBiosSettings)
 	if err != nil {
-		i.log.V(1).Error(err, "Config validation failed.", "step", "applyBiosParams", "Error", internal.ErrStringOrEmpty(err))
+		i.log.V(1).Error(err, "Bios(): Config validation failed.", "step", "applyBiosParams")
 		return err
 	}
 
 	currentBiosSettings, err := i.getBiosSettings()
 	if err != nil || currentBiosSettings == nil {
-		msg := "Unable to get current bios settings through redfish."
+		if err == nil {
+			err = fmt.Errorf("Call to getBiosSettings() returned nil.")
+		}
+
+		msg := "Bios(): Unable to get current BIOS settings through RedFish."
 		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return errors.New(msg)
 	}
@@ -92,12 +95,11 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 		// Purge any existing pending BIOS setting jobs (otherwise, we won't be able to set any params):
 		err = i.purgeJobsForBiosSettings()
 		if err != nil {
-			i.log.V(1).Info("Unable to purge pending bios setting jobs.",
+			i.log.V(1).Error(err, "Bios(): Unable to purge pending BIOS setting jobs.",
 				"step", "applyBiosParams",
 				"resource", "Bios",
 				"IP", i.ip,
 				"HardwareType", i.HardwareType(),
-				"Bios settings pending", internal.ErrStringOrEmpty(err),
 			)
 		}
 
@@ -136,16 +138,22 @@ func (i *IDrac9) Bios(cfg *cfgresources.Bios) (err error) {
 func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return err
-	}
-	err = internal.ValidateUserConfig(cfgUsers)
-	if err != nil {
-		msg := "Config validation failed."
+		msg := "IDRAC9 User(): HTTP login failed: " + err.Error()
 		i.log.V(1).Error(err, msg,
 			"step", "applyUserParams",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
+		)
+		return errors.New(msg)
+	}
+
+	err = internal.ValidateUserConfig(cfgUsers)
+	if err != nil {
+		msg := "IDRAC9 User(): User config validation failed: " + err.Error()
+		i.log.V(1).Error(err, msg,
+			"step", "applyUserParams",
+			"IP", i.ip,
+			"HardwareType", i.HardwareType(),
 		)
 		return errors.New(msg)
 	}
@@ -157,82 +165,85 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 			"step", "applyUserParams",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
+			"Model", i.HardwareType(),
 		)
 		return errors.New(msg)
 	}
 
-	for _, cfgUser := range cfgUsers {
-		userID, userInfo, uExists := userInIdrac(cfgUser.Name, idracUsers)
+	// This user is reserved for IDRAC usage, we can't delete it.
+	delete(idracUsers, 1)
 
-		if cfgUser.Enable {
-			// New user? Add them.
-			if !uExists {
-				userID, userInfo, err = getEmptyUserSlot(idracUsers)
-				if err != nil {
-					i.log.V(1).Error(err, "Unable to add new User.",
-						"IP", i.ip,
-						"HardwareType", i.HardwareType(),
-						"step", helper.WhosCalling(),
-						"User", cfgUser.Name,
-						"Error", internal.ErrStringOrEmpty(err),
-					)
-					continue
-				}
-			}
-
-			userInfo.Enable = "Enabled"
-			userInfo.SolEnable = "Enabled"
-			userInfo.UserName = cfgUser.Name
-			userInfo.Password = cfgUser.Password
-
-			if cfgUser.Role == "admin" {
-				userInfo.Privilege = "511"
-				userInfo.IpmiLanPrivilege = "Administrator"
-			} else {
-				userInfo.Privilege = "499"
-				userInfo.IpmiLanPrivilege = "Operator"
-			}
-
-			err = i.putUser(userID, userInfo)
-			if err != nil {
-				i.log.V(1).Error(err, "Add/Update user request failed.",
-					"IP", i.ip,
-					"HardwareType", i.HardwareType(),
-					"step", helper.WhosCalling(),
-					"User", cfgUser.Name,
-					"Error", internal.ErrStringOrEmpty(err),
-				)
-				continue
-			}
+	// Start from a clean slate.
+	for id := range idracUsers {
+		statusCode, payload, err := i.delete(fmt.Sprintf("sysmgmt/2017/server/user?userid=%d", id))
+		if err != nil {
+			msg := fmt.Sprintf("IDRAC9 User(): Unable to remove existing user (ID %d): %s", id, err.Error())
+			i.log.V(1).Error(err, msg,
+				"step", "applyUserParams",
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+			)
+			return err
 		}
 
-		// User exists but is disabled in our config? Remove them.
-		if !cfgUser.Enable && uExists {
-			endpoint := fmt.Sprintf("sysmgmt/2017/server/user?userid=%d", userID)
-			statusCode, response, err := i.delete(endpoint)
-			if err != nil {
-				i.log.V(1).Error(err, "Delete user request failed.",
-					"IP", i.ip,
-					"HardwareType", i.HardwareType(),
-					"step", helper.WhosCalling(),
-					"User", cfgUser.Name,
-					"Error", internal.ErrStringOrEmpty(err),
-					"StatusCode", statusCode,
-					"Response", response,
-				)
-				continue
-			}
+		if statusCode > 299 {
+			err = fmt.Errorf("Request failed with status code %d and payload %s.", statusCode, string(payload))
+			msg := fmt.Sprintf("IDRAC9 User(): Unable to remove existing user (ID %d): %s", id, err.Error())
+			i.log.V(1).Error(err, msg,
+				"step", "applyUserParams",
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+			)
+			return err
 		}
-
-		i.log.V(1).Info("User parameters applied.",
-			"IP", i.ip,
-			"HardwareType", i.HardwareType(),
-			"User", cfgUser.Name,
-		)
 	}
 
-	return err
+	// As mentioned before, user ID 1 is reserved for IDRAC usage.
+	userID := 2
+
+	for _, cfgUser := range cfgUsers {
+		// If the user is not enabled in the config, just skip.
+		if !cfgUser.Enable {
+			continue
+		}
+
+		user := UserInfo{}
+		user.Enable = "Enabled"
+		user.UserName = cfgUser.Name
+		user.Password = cfgUser.Password
+		if cfgUser.SolEnable {
+			user.SolEnable = "Enabled"
+		} else {
+			user.SolEnable = "Disabled"
+		}
+		if cfgUser.SNMPv3Enable {
+			user.ProtocolEnable = "Enabled"
+		} else {
+			user.ProtocolEnable = "Disabled"
+		}
+		if cfgUser.Role == "admin" {
+			user.Privilege = "511"
+			user.IpmiLanPrivilege = "Administrator"
+		} else {
+			user.Privilege = "499"
+			user.IpmiLanPrivilege = "Operator"
+		}
+
+		err = i.putUser(userID, user)
+		if err != nil {
+			i.log.V(1).Error(err, "User(): Add/Update user request failed.",
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+				"step", helper.WhosCalling(),
+				"User", cfgUser.Name,
+			)
+			continue
+		}
+		i.log.V(1).Info("User parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType(), "User", cfgUser.Name)
+		userID++
+	}
+
+	return nil
 }
 
 // Ldap applies LDAP configuration params.
@@ -310,7 +321,6 @@ func (i *IDrac9) Ldap(cfg *cfgresources.Ldap) (err error) {
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -438,7 +448,6 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
 			"Timezone", cfg.Timezone,
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -456,7 +465,6 @@ func (i *IDrac9) Ntp(cfg *cfgresources.Ntp) (err error) {
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -514,7 +522,6 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -526,7 +533,6 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -538,7 +544,6 @@ func (i *IDrac9) Syslog(cfg *cfgresources.Syslog) (err error) {
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
@@ -597,41 +602,37 @@ func (i *IDrac9) Network(cfg *cfgresources.Network) (reset bool, err error) {
 
 	err = i.putIPv4(ipv4)
 	if err != nil {
-		i.log.V(1).Info("PUT IPv4 request failed.",
+		i.log.V(1).Error(err, "PUT IPv4 request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 	}
 
 	err = i.putSerialOverLan(serialOverLan)
 	if err != nil {
-		i.log.V(1).Info("PUT SerialOverLan request failed.",
+		i.log.V(1).Error(err, "PUT SerialOverLan request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 	}
 
 	err = i.putSerialRedirection(serialRedirection)
 	if err != nil {
-		i.log.V(1).Info("PUT SerialRedirection request failed.",
+		i.log.V(1).Error(err, "PUT SerialRedirection request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 	}
 
 	err = i.putIpmiOverLan(ipmiOverLan)
 	if err != nil {
-		i.log.V(1).Info("PUT IpmiOverLan request failed.",
+		i.log.V(1).Error(err, "PUT IpmiOverLan request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 	}
 
@@ -704,7 +705,11 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	// 1. POST upload x509 cert
 	status, body, err := i.post(endpoint, form.Bytes(), w.FormDataContentType())
 	if err != nil || status != 201 {
-		i.log.V(1).Error(err, "Cert form upload POST request failed, expected 201.",
+		if err == nil {
+			err = fmt.Errorf("Cert form upload POST request to %s failed with status code %d.", endpoint, status)
+		}
+
+		i.log.V(1).Error(err, "UploadHTTPSCert(): Cert form upload POST request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
@@ -722,7 +727,6 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return false, err
 	}
@@ -733,7 +737,6 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return false, err
 	}
@@ -742,7 +745,11 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	endpoint = "sysmgmt/2012/server/network/ssl/cert"
 	status, _, err = i.post(endpoint, []byte(resourceURI), "")
 	if err != nil || status != 201 {
-		i.log.V(1).Error(err, "Cert form upload POST request failed, expected 201.",
+		if err == nil {
+			err = fmt.Errorf("Cert form upload POST request to %s failed with status code %d.", endpoint, status)
+		}
+
+		i.log.V(1).Error(err, "UploadHTTPSCert(): Cert form upload POST request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
@@ -752,5 +759,5 @@ func (i *IDrac9) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 		return false, err
 	}
 
-	return true, err
+	return true, nil
 }

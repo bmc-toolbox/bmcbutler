@@ -57,17 +57,23 @@ func (b *Butler) msgHandler(msg Msg) {
 		}
 	}
 
+	// This field helps with enumerating the unique assets we have, since some assets don't
+	//   have a serial and some don't have an IP address. This is only for logging.
+	identifier := "Serial: " + msg.Asset.Serial + ", IP(s): " + strings.Join(msg.Asset.IPAddresses, ",")
+
 	switch {
 	case msg.Asset.Execute:
 		err := b.executeCommand(msg.AssetExecute, &msg.Asset)
 		if err != nil {
 			b.Log.WithFields(logrus.Fields{
-				"component": component,
-				"Serial":    msg.Asset.Serial,
-				"AssetType": msg.Asset.Type,
-				"Vendor":    msg.Asset.Vendor, // At this point the vendor may or may not be known.
-				"Location":  msg.Asset.Location,
-				"Error":     err,
+				"component":   component,
+				"AssetType":   msg.Asset.Type,
+				"Error":       err,
+				"IPAddress":   msg.Asset.IPAddress,                      // When we fail to login to the BMC, this field is not set...
+				"IPAddresses": strings.Join(msg.Asset.IPAddresses, ","), // ... and that's why we list all tried IP addresses.
+				"Location":    msg.Asset.Location,
+				"Serial":      msg.Asset.Serial,
+				"Vendor":      msg.Asset.Vendor, // At this point the vendor may or may not be known.
 			}).Warn("Execute action returned error.")
 			metrics.IncrCounter([]string{"butler", "execute_fail"}, 1)
 			return
@@ -84,18 +90,15 @@ func (b *Butler) msgHandler(msg Msg) {
 		metrics.IncrCounter([]string{"butler", "execute_success"}, 1)
 		return
 	case msg.Asset.Configure:
-		// This field helps with enumerating the unique assets we have, since some assets don't
-		//   have a serial and some don't have an IP address. This is only for logging.
-		identifier := "Serial: " + msg.Asset.Serial + ", IP(s): " + strings.Join(msg.Asset.IPAddresses, ",")
-
 		err := b.configureAsset(msg.AssetConfig, &msg.Asset)
 		if err != nil {
 			b.Log.WithFields(logrus.Fields{
-				"AssetType":    msg.Asset.Type,
 				"component":    component,
+				"AssetType":    msg.Asset.Type,
 				"Error":        err,
 				"HardwareType": msg.Asset.HardwareType,
-				"IPAddress":    msg.Asset.IPAddress, // When we fail to login to the BMC, this field is not set.
+				"IPAddress":    msg.Asset.IPAddress,                      // When we fail to login to the BMC, this field is not set...
+				"IPAddresses":  strings.Join(msg.Asset.IPAddresses, ","), // ... and that's why we list all tried IP addresses.
 				"ID":           identifier,
 				"Location":     msg.Asset.Location,
 				"Serial":       msg.Asset.Serial,

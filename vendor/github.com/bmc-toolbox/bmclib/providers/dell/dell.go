@@ -126,7 +126,7 @@ type PsuData struct {
 	PsuPartNum     string `json:"psuPartNum"`
 }
 
-// UnmarshalJSON custom unmarshalling for this "special" data structure
+// UnmarshalJSON custom unmarshaling for this "special" data structure
 func (d *PsuStatus) UnmarshalJSON(data []byte) error {
 	var jsonMapping map[string]json.RawMessage
 	if err := json.Unmarshal(data, &jsonMapping); err != nil {
@@ -403,7 +403,7 @@ type CMCSlotMacWwn struct {
 	SlotMacWwnList map[int]CMCWWNBlade `json:"-"`
 }
 
-// UnmarshalJSON custom unmarshalling for this "special" data structure
+// UnmarshalJSON custom unmarshaling for this "special" data structure
 func (d *CMCSlotMacWwn) UnmarshalJSON(data []byte) error {
 	d.SlotMacWwnList = make(map[int]CMCWWNBlade)
 	var slotMacWwn map[string]json.RawMessage
@@ -440,7 +440,6 @@ func (d *CMCSlotMacWwn) UnmarshalJSON(data []byte) error {
 				d.SlotMacWwnList[pos] = b
 			}
 		}
-
 	}
 
 	return nil

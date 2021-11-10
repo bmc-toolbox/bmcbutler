@@ -21,6 +21,9 @@ import (
 )
 
 const (
+	// BmcType defines the bmc model that is supported by this package
+	BmcType = "supermicrox"
+
 	// X11 is the constant for x11 servers
 	X11 = "x11"
 )
@@ -119,15 +122,12 @@ func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, 
 	var req *http.Request
 
 	if formDataContentType == "" {
-
 		req, err = http.NewRequest("POST", u.String(), strings.NewReader(urlValues.Encode()))
 		if err != nil {
 			return response, statusCode, err
 		}
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
 	} else {
-
 		req, err = http.NewRequest("POST", u.String(), bytes.NewReader(form))
 		if err != nil {
 			return response, statusCode, err

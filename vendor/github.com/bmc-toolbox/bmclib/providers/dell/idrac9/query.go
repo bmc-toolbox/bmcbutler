@@ -33,25 +33,25 @@ func (i *IDrac9) CurrentHTTPSCert() ([]*x509.Certificate, bool, error) {
 func (i *IDrac9) Screenshot() (response []byte, extension string, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return response, extension, err
+		return nil, "", err
 	}
 
 	extension = "png"
-	url := "sysmgmt/2015/server/preview"
-	statusCode, _, err := i.get(url, &map[string]string{})
+	endpoint := "sysmgmt/2015/server/preview"
+	statusCode, _, err := i.get(endpoint, &map[string]string{})
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return nil, "", err
 	}
 
-	url = "capconsole/scapture0.png"
-	statusCode, response, err = i.get(url, &map[string]string{})
+	endpoint = "capconsole/scapture0.png"
+	statusCode, response, err = i.get(endpoint, &map[string]string{})
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return nil, "", err
@@ -60,25 +60,24 @@ func (i *IDrac9) Screenshot() (response []byte, extension string, err error) {
 	return response, extension, nil
 }
 
-func (i *IDrac9) queryUsers() (users map[int]User, err error) {
-	url := "sysmgmt/2012/server/configgroup/iDRAC.Users"
-
-	statusCode, response, err := i.get(url, &map[string]string{})
+func (i *IDrac9) queryUsers() (users UsersInfo, err error) {
+	endpoint := "sysmgmt/2012/server/configgroup/iDRAC.Users"
+	statusCode, response, err := i.get(endpoint, &map[string]string{})
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
-		i.log.V(1).Error(err, "GET request failed.",
+		i.log.V(1).Error(err, "queryUsers(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"endpoint", url,
+			"endpoint", endpoint,
 			"step", helper.WhosCalling(),
 		)
 		return users, err
 	}
 
-	userData := make(idracUsers)
+	userData := make(IdracUsers)
 	err = json.Unmarshal(response, &userData)
 	if err != nil {
 		i.log.V(1).Error(err, "Unable to unmarshal payload.",
@@ -90,38 +89,5 @@ func (i *IDrac9) queryUsers() (users map[int]User, err error) {
 		return users, err
 	}
 
-	return userData["iDRAC.Users"], err
-}
-
-func (i *IDrac9) queryLdapRoleGroups() (ldapRoleGroups LdapRoleGroups, err error) {
-	url := "sysmgmt/2012/server/configgroup/iDRAC.LDAPRoleGroup"
-
-	statusCode, response, err := i.get(url, &map[string]string{})
-	if err != nil || statusCode != 200 {
-		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
-		}
-
-		i.log.V(1).Error(err, "GET request failed.",
-			"IP", i.ip,
-			"HardwareType", i.HardwareType(),
-			"endpoint", url,
-			"step", helper.WhosCalling(),
-		)
-		return ldapRoleGroups, err
-	}
-
-	idracLdapRoleGroups := make(idracLdapRoleGroups)
-	err = json.Unmarshal(response, &idracLdapRoleGroups)
-	if err != nil {
-		i.log.V(1).Error(err, "Unable to unmarshal payload.",
-			"IP", i.ip,
-			"HardwareType", i.HardwareType(),
-			"resource", "User",
-			"step", "queryUserInfo",
-		)
-		return ldapRoleGroups, err
-	}
-
-	return idracLdapRoleGroups["iDRAC.LDAPRoleGroup"], err
+	return userData["iDRAC.Users"], nil
 }

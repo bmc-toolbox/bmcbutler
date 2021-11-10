@@ -167,7 +167,7 @@ func (c *C7000) PxeOnceBlade(position int) (bool, error) {
 	return false, fmt.Errorf(output)
 }
 
-// SetDynamicPower configure the dynamic power behaviour
+// Configures dynamic power behavior.
 func (c *C7000) SetDynamicPower(enable bool) (bool, error) {
 	var state string
 	if enable {
@@ -205,7 +205,7 @@ func (c *C7000) UpdateFirmware(source, file string) (bool, string, error) {
 }
 
 func (c *C7000) CheckFirmwareVersion() (version string, err error) {
-	return "", fmt.Errorf("not supported yet")
+	return "", fmt.Errorf("not yet implemented")
 }
 
 // ModBladeBmcUser modfies BMC Admin user account password through the chassis,

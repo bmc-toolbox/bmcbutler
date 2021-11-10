@@ -15,7 +15,6 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/devices"
 	"github.com/bmc-toolbox/bmclib/errors"
-	"github.com/bmc-toolbox/bmclib/internal"
 	"github.com/bmc-toolbox/bmclib/internal/httpclient"
 	"github.com/go-logr/logr"
 
@@ -23,6 +22,9 @@ import (
 )
 
 const (
+	// BmcType defines the bmc model that is supported by this package
+	BmcType = "supermicrox"
+
 	// X10 is the constant for x10 servers
 	X10 = "x10"
 	// X11 is the constant for x11 servers
@@ -138,15 +140,12 @@ func (s *SupermicroX) post(endpoint string, urlValues *url.Values, form []byte, 
 	var req *http.Request
 
 	if formDataContentType == "" {
-
 		req, err = http.NewRequest("POST", u.String(), strings.NewReader(urlValues.Encode()))
 		if err != nil {
 			return statusCode, err
 		}
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
 	} else {
-
 		req, err = http.NewRequest("POST", u.String(), bytes.NewReader(form))
 		if err != nil {
 			return statusCode, err
@@ -274,10 +273,10 @@ func (s *SupermicroX) ChassisSerial() (serial string, err error) {
 func (s *SupermicroX) HardwareType() (model string) {
 	m, err := s.Model()
 	if err != nil {
-		// Here is your sin
-		s.log.V(1).Info("error getting hardwaretype", "err", internal.ErrStringOrEmpty(err))
-		return model
+		s.log.V(1).Error(err, "HardwareType(): Getting the hardware type failed.")
+		return ""
 	}
+
 	return m
 }
 
@@ -394,10 +393,6 @@ func (s *SupermicroX) BiosVersion() (version string, err error) {
 	}
 
 	return version, err
-}
-
-func (s *SupermicroX) Class() (class string, err error) {
-	return "SupermicroX", nil
 }
 
 // PowerKw returns the current power usage in Kw

@@ -13,7 +13,6 @@ import (
 
 	"github.com/bmc-toolbox/bmclib/cfgresources"
 	"github.com/bmc-toolbox/bmclib/devices"
-	"github.com/bmc-toolbox/bmclib/internal"
 	"github.com/bmc-toolbox/bmclib/internal/helper"
 
 	"github.com/google/go-querystring/query"
@@ -82,7 +81,7 @@ func (s *SupermicroX) queryUserAccounts() (userAccounts map[int]string, err erro
 	userAccounts = make(map[int]string)
 	ipmi, err := s.query("CONFIG_INFO.XML=(0,0)")
 	if err != nil {
-		s.log.V(1).Info("error querying user accounts", "Error", internal.ErrStringOrEmpty(err))
+		s.log.V(1).Error(err, "queryUserAccounts(): Error querying user accounts.")
 		return userAccounts, err
 	}
 
@@ -90,7 +89,7 @@ func (s *SupermicroX) queryUserAccounts() (userAccounts map[int]string, err erro
 		userAccounts[idx] = account.Name
 	}
 
-	return userAccounts, err
+	return userAccounts, nil
 }
 
 // User applies the User configuration resource,
@@ -101,12 +100,11 @@ func (s *SupermicroX) queryUserAccounts() (userAccounts map[int]string, err erro
 func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 	currentUsers, err := s.queryUserAccounts()
 	if err != nil {
-		msg := "Unable to query current user accounts."
-		s.log.V(1).Info(msg,
+		msg := "Unable to query existing users."
+		s.log.V(1).Error(err, msg,
 			"ip", s.ip,
 			"HardwareType", s.HardwareType(),
 			"step", helper.WhosCalling(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return errors.New(msg)
 	}
@@ -166,9 +164,9 @@ func (s *SupermicroX) User(users []*cfgresources.User) (err error) {
 		statusCode, err := s.post(endpoint, &form, []byte{}, "")
 		if err != nil || statusCode != 200 {
 			if err == nil {
-				err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+				err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 			} else {
-				err = fmt.Errorf("POST request to %s failed with error: ", endpoint, err.Error())
+				err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 			}
 
 			s.log.V(1).Error(err, "POST request to set User config failed.",
@@ -220,9 +218,9 @@ func (s *SupermicroX) Network(cfg *cfgresources.Network) (reset bool, err error)
 	statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		} else {
-			err = fmt.Errorf("POST request to %s failed with error: ", endpoint, err.Error())
+			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 		}
 
 		s.log.V(1).Error(err, "POST request to set Port config failed.",
@@ -259,11 +257,11 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 
 	tzLocation, err := time.LoadLocation(cfg.Timezone)
 	if err != nil {
-		s.log.V(1).Info("NTP resource declared parameter timezone invalid.",
+		s.log.V(1).Error(err, "Ntp(): Invalid timezone parameter.",
 			"step", "applyNtpParams",
 			"HardwareType", s.HardwareType(),
-			"declaredTtimezone", cfg.Timezone,
-			"Error", internal.ErrStringOrEmpty(err))
+			"Timezone", cfg.Timezone,
+		)
 		return
 	}
 
@@ -310,9 +308,9 @@ func (s *SupermicroX) Ntp(cfg *cfgresources.Ntp) (err error) {
 	statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		} else {
-			err = fmt.Errorf("POST request to %s failed with error: ", endpoint, err.Error())
+			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 		}
 
 		s.log.V(1).Error(err, "POST request to set NTP config failed.",
@@ -431,9 +429,9 @@ func (s *SupermicroX) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *c
 		statusCode, err := s.post(endpoint, &form, []byte{}, "")
 		if err != nil || statusCode != 200 {
 			if err == nil {
-				err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+				err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 			} else {
-				err = fmt.Errorf("POST request to %s failed with error: ", endpoint, err.Error())
+				err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 			}
 
 			s.log.V(1).Error(err, "POST request to set LDAP group config failed.",
@@ -497,9 +495,9 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 	statusCode, err := s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		} else {
-			err = fmt.Errorf("POST request to %s failed with error: ", endpoint, err.Error())
+			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 		}
 
 		s.log.V(1).Error(err, "POST request to set Syslog config returned error.",
@@ -521,9 +519,9 @@ func (s *SupermicroX) Syslog(cfg *cfgresources.Syslog) (err error) {
 	statusCode, err = s.post(endpoint, &form, []byte{}, "")
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the POST request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		} else {
-			err = fmt.Errorf("POST request to %s failed with error: ", endpoint, err.Error())
+			err = fmt.Errorf("POST request to %s failed with error: %s", endpoint, err.Error())
 		}
 
 		s.log.V(1).Error(err, "POST request to enable maintenance alerts failed.",
@@ -585,16 +583,19 @@ func (s *SupermicroX) UploadHTTPSCert(cert []byte, certFileName string, key []by
 	w.Close()
 
 	// 1. upload
-	status, err := s.post(endpoint, &url.Values{}, form.Bytes(), w.FormDataContentType())
-	if err != nil || status != 200 {
-		msg := "Cert form upload POST request failed, expected 200."
-		s.log.V(1).Info(msg,
+	statusCode, err := s.post(endpoint, &url.Values{}, form.Bytes(), w.FormDataContentType())
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("POST request to %s failed with status code %d.", endpoint, statusCode)
+		}
+
+		s.log.V(1).Error(err, "UploadHTTPSCert(): Cert form upload POST request failed.",
 			"step", helper.WhosCalling(),
 			"ip", s.ip,
 			"HardwareType", s.HardwareType(),
 			"endpoint", endpoint,
-			"StatusCode", status,
-			"Error", internal.ErrStringOrEmpty(err))
+			"StatusCode", statusCode,
+		)
 		return false, err
 	}
 
@@ -626,16 +627,20 @@ func (s *SupermicroX) validateSSL() error {
 	v.Set("SSL_VALIDATE.XML", "(0,0)")
 
 	endpoint := "ipmi.cgi"
-	status, err := s.post(endpoint, &v, []byte{}, "")
-	if err != nil || status != 200 {
-		msg := "Cert validate POST request failed, expected 200."
-		s.log.V(1).Info(msg,
+	statusCode, err := s.post(endpoint, &v, []byte{}, "")
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("POST request to %s failed with status code %d.", endpoint, statusCode)
+		}
+
+		s.log.V(1).Error(err, "Cert validate POST request failed, expected 200.",
 			"step", helper.WhosCalling(),
 			"ip", s.ip,
 			"HardwareType", s.HardwareType(),
 			"endpoint", endpoint,
-			"StatusCode", status,
-			"Error", internal.ErrStringOrEmpty(err))
+			"StatusCode", statusCode,
+		)
+
 		return err
 	}
 
@@ -650,16 +655,19 @@ func (s *SupermicroX) statusSSL() error {
 	v.Add("SSL_STATUS.XML", "(0,0)")
 
 	endpoint := "ipmi.cgi"
-	status, err := s.post(endpoint, &v, []byte{}, "")
-	if err != nil || status != 200 {
-		msg := "Cert status POST request failed, expected 200."
-		s.log.V(1).Info(msg,
+	statusCode, err := s.post(endpoint, &v, []byte{}, "")
+	if err != nil || statusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("POST request to %s failed with status code %d.", endpoint, statusCode)
+		}
+
+		s.log.V(1).Error(err, "statusSSL(): Cert status POST request failed.",
 			"step", helper.WhosCalling(),
 			"ip", s.ip,
 			"HardwareType", s.HardwareType(),
 			"endpoint", endpoint,
-			"StatusCode", status,
-			"Error", internal.ErrStringOrEmpty(err))
+			"StatusCode", statusCode,
+		)
 		return err
 	}
 

@@ -109,7 +109,7 @@ func (i *Ilo) IsOn() (bool, error) {
 
 // UpdateFirmware updates the bmc firmware
 func (i *Ilo) UpdateFirmware(source, file string) (bool, string, error) {
-	cmd := fmt.Sprintf("load /map1/firmware1 -source https://%s/%s", source, file)
+	cmd := fmt.Sprintf("load /map1/firmware1 -source %s/%s", source, file)
 	output, err := i.sshClient.Run(cmd)
 	if err != nil {
 		return false, "", fmt.Errorf("output: %q: %w", output, err)

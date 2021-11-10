@@ -204,7 +204,6 @@ func (e *Enc) encQueryBySerial(serials string) (assets []asset.Asset) {
 
 	missingSerials := strings.Split(serials, ",")
 	for serial, attributes := range cmdResp.Data {
-
 		attributes := e.SetBMCInterfaces(attributes)
 		if len(attributes.BMCIPAddresses) == 0 {
 			metrics.IncrCounter([]string{"inventory", "assets_noip_enc"}, 1)
@@ -296,7 +295,6 @@ func (e *Enc) encQueryByIP(ips string) (assets []asset.Asset) {
 	// missing IPs are IPs we looked up using the enc and got no data for.
 	missingIPs := strings.Split(ips, ",")
 	for serial, attributes := range cmdResp.Data {
-
 		attributes := e.SetBMCInterfaces(attributes)
 		if len(attributes.BMCIPAddresses) == 0 {
 			populateAssetsWithNoAttributes()

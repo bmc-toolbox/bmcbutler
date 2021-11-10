@@ -24,7 +24,7 @@ const (
 	ProbeHpCl100       = "hpcl100"
 )
 
-// ScanAndConnect will scan the bmc trying to learn the device type and return a working connection.
+// ScanAndConnect will scan the BMC trying to deduce the device type and return a working connection.
 func ScanAndConnect(host string, username string, password string, options ...Option) (bmcConnection interface{}, err error) {
 	opts := &Options{HintCallback: func(_ string) error { return nil }}
 	for _, optFn := range options {

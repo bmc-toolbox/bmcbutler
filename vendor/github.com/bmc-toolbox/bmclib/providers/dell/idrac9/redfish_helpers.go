@@ -100,15 +100,15 @@ func (i *IDrac9) setBiosSettings(biosSettings *BiosSettings) (err error) {
 
 	payload, err := json.Marshal(idracPayload)
 	if err != nil {
-		msg := fmt.Sprintf("Error marshalling biosAttributes payload: %s", err)
+		msg := fmt.Sprintf("Error marshaling biosAttributes payload: %s", err)
 		return errors.New(msg)
 	}
 
 	statusCode, _, err := i.queryRedfish("PATCH", biosSettingsURI, payload)
-	if statusCode != 200 {
-		return fmt.Errorf("PATCH request to set BIOS config failed with status code %d!", statusCode)
-	} else if err != nil {
+	if err != nil {
 		return fmt.Errorf("PATCH request to set BIOS config failed with error %s!", err.Error())
+	} else if statusCode != 200 {
+		return fmt.Errorf("PATCH request to set BIOS config failed with status code %d!", statusCode)
 	}
 
 	// Queue config to be set at next boot.
@@ -129,15 +129,15 @@ func (i *IDrac9) queueJobs(jobURI string) (err error) {
 
 	payload, err := json.Marshal(targetSetting)
 	if err != nil {
-		msg := fmt.Sprintf("Error marshalling job queue payload for uri: %s, error: %s", jobURI, err)
+		msg := fmt.Sprintf("Error marshaling job queue payload for uri: %s, error: %s", jobURI, err)
 		return errors.New(msg)
 	}
 
 	statusCode, _, err := i.queryRedfish("POST", endpoint, payload)
-	if statusCode != 200 {
-		return fmt.Errorf("POST request to queue job %s failed with status code %d!", jobURI, statusCode)
-	} else if err != nil {
+	if err != nil {
 		return fmt.Errorf("POST request to queue job %s failed with error %s!", jobURI, err.Error())
+	} else if statusCode != 200 {
+		return fmt.Errorf("POST request to queue job %s failed with status code %d!", jobURI, statusCode)
 	}
 
 	return nil
@@ -152,10 +152,10 @@ func (i *IDrac9) purgeJob(jobID string) (err error) {
 	endpoint := fmt.Sprintf("%s/%s", "redfish/v1/Managers/iDRAC.Embedded.1/Jobs", jobID)
 
 	statusCode, _, err := i.queryRedfish("DELETE", endpoint, nil)
-	if statusCode != 200 {
-		return fmt.Errorf("POST request to purge job %s failed with status code %d!", jobID, statusCode)
-	} else if err != nil {
+	if err != nil {
 		return fmt.Errorf("POST request to purge job %s failed with error %s!", jobID, err.Error())
+	} else if statusCode != 200 {
+		return fmt.Errorf("POST request to purge job %s failed with status code %d!", jobID, statusCode)
 	}
 
 	return nil

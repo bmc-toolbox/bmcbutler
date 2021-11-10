@@ -47,28 +47,28 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 		success, output, err := b.executeCommandBmc(bmc, command)
 		if err != nil || !success {
 			log.WithFields(logrus.Fields{
-				"component":          component,
-				"Serial":             asset.Serial,
-				"Asset Type":         asset.Type,
-				"Vendor":             asset.Vendor, // At this point, the vendor may or may not be known.
-				"Location":           asset.Location,
-				"IP Address":         asset.IPAddress,
-				"Command":            command,
-				"Command Successful": success,
-				"Error":              err,
-				"Output":             output,
+				"component":         component,
+				"Serial":            asset.Serial,
+				"AssetType":         asset.Type,
+				"Vendor":            asset.Vendor, // At this point, the vendor may or may not be known.
+				"Location":          asset.Location,
+				"IPAddress":         asset.IPAddress,
+				"Command":           command,
+				"CommandSuccessful": success,
+				"Error":             err,
+				"Output":            output,
 			}).Warn("Command execute returned error.")
 		} else {
 			log.WithFields(logrus.Fields{
-				"component":          component,
-				"Serial":             asset.Serial,
-				"Asset Type":         asset.Type,
-				"Vendor":             asset.Vendor,
-				"Location":           asset.Location,
-				"IP Address":         asset.IPAddress,
-				"Command":            command,
-				"Command Successful": success,
-				"Output":             output,
+				"component":         component,
+				"Serial":            asset.Serial,
+				"AssetType":         asset.Type,
+				"Vendor":            asset.Vendor,
+				"Location":          asset.Location,
+				"IPAddress":         asset.IPAddress,
+				"Command":           command,
+				"CommandSuccessful": success,
+				"Output":            output,
 			}).Debug("Command successfully executed.")
 		}
 		bmc.Close(context.TODO())

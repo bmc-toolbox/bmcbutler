@@ -21,6 +21,11 @@ import (
 	"github.com/go-logr/logr"
 )
 
+const (
+	// BMCType defines the bmc model that is supported by this package
+	BMCType = "idrac8"
+)
+
 // IDrac8 holds the status and properties of a connection to an iDrac device
 type IDrac8 struct {
 	ip             string
@@ -60,13 +65,13 @@ func (i *IDrac8) put(endpoint string, payload []byte) (statusCode int, response 
 
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/%s", bmcURL, endpoint), bytes.NewReader(payload))
 	if err != nil {
-		return statusCode, response, err
+		return 0, nil, err
 	}
 	req.Header.Add("ST2", i.st2)
 
 	u, err := url.Parse(bmcURL)
 	if err != nil {
-		return statusCode, response, err
+		return 0, nil, err
 	}
 
 	for _, cookie := range i.httpClient.Jar.Cookies(u) {
@@ -80,8 +85,9 @@ func (i *IDrac8) put(endpoint string, payload []byte) (statusCode int, response 
 
 	resp, err := i.httpClient.Do(req)
 	if err != nil {
-		return statusCode, response, err
+		return 0, nil, err
 	}
+
 	defer resp.Body.Close()
 
 	respDump, _ := httputil.DumpResponse(resp, true)
@@ -122,7 +128,6 @@ func (i *IDrac8) post(endpoint string, data []byte, formDataContentType string) 
 	if formDataContentType == "" {
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	} else {
-
 		// Set multipart form content type
 		req.Header.Set("Content-Type", formDataContentType)
 
@@ -153,7 +158,6 @@ func (i *IDrac8) post(endpoint string, data []byte, formDataContentType string) 
 	return resp.StatusCode, body, err
 }
 
-// get calls a given json endpoint of the ilo and returns the data
 func (i *IDrac8) get(endpoint string, extraHeaders *map[string]string) (statusCode int, payload []byte, err error) {
 	i.log.V(1).Info("retrieving data from bmc", "step", "bmc connection", "vendor", dell.VendorID, "ip", i.ip, "endpoint", endpoint)
 
@@ -273,7 +277,7 @@ func (i *IDrac8) Serial() (serial string, err error) {
 			}
 		}
 	}
-	return serial, nil
+	return "", nil
 }
 
 // ChassisSerial returns the serial number of the chassis where the blade is attached
@@ -306,11 +310,11 @@ func (i *IDrac8) Status() (status string, err error) {
 		"X-SYSMGMT-OPTIMIZE": "true",
 	}
 
-	url := "sysmgmt/2016/server/extended_health"
-	statusCode, response, err := i.get(url, extraHeaders)
+	endpoint := "sysmgmt/2016/server/extended_health"
+	statusCode, response, err := i.get(endpoint, extraHeaders)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return "", err
@@ -338,11 +342,11 @@ func (i *IDrac8) PowerKw() (power float64, err error) {
 		return power, err
 	}
 
-	url := "data?get=powermonitordata"
-	statusCode, response, err := i.get(url, nil)
+	endpoint := "data?get=powermonitordata"
+	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return power, err
@@ -402,10 +406,6 @@ func (i *IDrac8) BiosVersion() (version string, err error) {
 	}
 
 	return version, err
-}
-
-func (i *IDrac8) Class() (class string, err error) {
-	return "iDRAC8", nil
 }
 
 // Name returns the name of this server from the bmc point of view
@@ -500,7 +500,7 @@ func (i *IDrac8) Model() (model string, err error) {
 
 // HardwareType returns the type of bmc we are talking to
 func (i *IDrac8) HardwareType() (bmcType string) {
-	return "idrac8"
+	return BMCType
 }
 
 // License returns the bmc license information
@@ -514,11 +514,11 @@ func (i *IDrac8) License() (name string, licType string, err error) {
 		"X_SYSMGMT_OPTIMIZE": "true",
 	}
 
-	url := "sysmgmt/2012/server/license"
-	statusCode, response, err := i.get(url, extraHeaders)
+	endpoint := "sysmgmt/2012/server/license"
+	statusCode, response, err := i.get(endpoint, extraHeaders)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return "", "", err
@@ -620,11 +620,11 @@ func (i *IDrac8) TempC() (temp int, err error) {
 		"X_SYSMGMT_OPTIMIZE": "true",
 	}
 
-	url := "sysmgmt/2012/server/temperature"
-	statusCode, response, err := i.get(url, extraHeaders)
+	endpoint := "sysmgmt/2012/server/temperature"
+	statusCode, response, err := i.get(endpoint, extraHeaders)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return 0, err
@@ -650,11 +650,11 @@ func (i *IDrac8) CPU() (cpu string, cpuCount int, coreCount int, hyperthreadCoun
 		"X_SYSMGMT_OPTIMIZE": "true",
 	}
 
-	url := "sysmgmt/2012/server/processor"
-	statusCode, response, err := i.get(url, extraHeaders)
+	endpoint := "sysmgmt/2012/server/processor"
+	statusCode, response, err := i.get(endpoint, extraHeaders)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		return "", 0, 0, 0, err
@@ -702,23 +702,23 @@ func (i *IDrac8) IsBlade() (isBlade bool, err error) {
 func (i *IDrac8) Psus() (psus []*devices.Psu, err error) {
 	err = i.httpLogin()
 	if err != nil {
-		return psus, err
+		return nil, err
 	}
 
-	url := "data?get=powerSupplies"
-	statusCode, response, err := i.get(url, nil)
+	endpoint := "data?get=powerSupplies"
+	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", url)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
-		return psus, err
+		return nil, err
 	}
 
 	iDracRoot := &dell.IDracRoot{}
 	err = xml.Unmarshal(response, iDracRoot)
 	if err != nil {
-		return psus, err
+		return nil, err
 	}
 
 	serial, _ := i.Serial()
@@ -744,7 +744,7 @@ func (i *IDrac8) Psus() (psus []*devices.Psu, err error) {
 		psus = append(psus, p)
 	}
 
-	return psus, err
+	return psus, nil
 }
 
 // Vendor returns bmc's vendor

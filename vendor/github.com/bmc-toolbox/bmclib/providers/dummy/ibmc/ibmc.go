@@ -13,6 +13,11 @@ import (
 // for lack of a better name and since most annoying devices begin with "i"
 // ibmc only exists to make testing easier.
 
+const (
+	// BMCType defines the bmc model that is supported by this package
+	BMCType = "ibmc"
+)
+
 // Ibmc holds the status and properties of a connection to an iDrac device
 type Ibmc struct {
 	ip       string
@@ -33,10 +38,6 @@ func (i *Ibmc) ApplyCfg(config *cfgresources.ResourcesConfig) (err error) {
 // BiosVersion implements the Bmc interface
 func (i *Ibmc) BiosVersion() (string, error) {
 	return "", nil
-}
-
-func (i *Ibmc) Class() (class string, err error) {
-	return "iBMC", nil
 }
 
 // HardwareType implements the Bmc interface
@@ -201,4 +202,8 @@ func (i *Ibmc) GetBMCVersion(ctx context.Context) (string, error) {
 // Updates the BMC firmware, implements the Firmware interface
 func (i *Ibmc) FirmwareUpdateBMC(ctx context.Context, filePath string) error {
 	return errors.ErrNotImplemented
+}
+
+func (i *Ibmc) CheckFirmwareVersion() (version string, err error) {
+	return "", fmt.Errorf("not yet implemented")
 }

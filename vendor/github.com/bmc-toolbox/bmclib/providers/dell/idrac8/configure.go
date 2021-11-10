@@ -50,7 +50,7 @@ func (i *IDrac8) Bios(cfg *cfgresources.Bios) (err error) {
 	return err
 }
 
-func (i *IDrac8) escapeLdapString(s string) string {
+func escapeLdapString(s string) string {
 	r := ""
 	for _, c := range s {
 		if c == '=' {
@@ -65,10 +65,43 @@ func (i *IDrac8) escapeLdapString(s string) string {
 	return r
 }
 
-// User applies the User configuration resource,
-// if the user exists, it updates the users password,
-// User implements the Configure interface.
-// Iterate over iDrac users and adds/removes/modifies user accounts
+func (i *IDrac8) RunSshCommand(command string, id int) (success bool) {
+	output, err := i.sshClient.Run(command)
+	if err != nil {
+		// "The specified value is not allowed to be configured if the user name \nor password is blank\n"
+		//   is an acceptable error while cleaning. Don't log that.
+		if !strings.Contains(err.Error(), "is blank") {
+			msg := fmt.Sprintf("IDRAC8 User(): Unable to reset existing user (ID %d).", id)
+			i.log.V(1).Error(err, msg,
+				"step", "applyUserParams",
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+			)
+		}
+		return false
+	}
+
+	if !strings.Contains(output, "successful") {
+		msg := fmt.Sprintf("IDRAC8 User(): Unable to reset existing user (ID %d).", id)
+		// "The specified value is not allowed to be configured if the user name \nor password is blank\n"
+		//   is an acceptable error while cleaning. Don't log that.
+		if !strings.Contains(output, "is blank") {
+			err = errors.New("The output of the command `" + command + "` is " + output)
+			i.log.V(1).Error(err, msg,
+				"step", "applyUserParams",
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+			)
+			return false
+		}
+	}
+
+	return true
+}
+
+// Applies the User configuration resource, obliterating any existing users.
+// Implements the Configure interface.
+// TODO: Forgives any errors happening (just logs though). Maybe that's not what we want?
 func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 	err = internal.ValidateUserConfig(cfgUsers)
 	if err != nil {
@@ -78,93 +111,164 @@ func (i *IDrac8) User(cfgUsers []*cfgresources.User) (err error) {
 			"step", "applyUserParams",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return err
 	}
 
-	idracUsers, err := i.queryUsers()
+	usersInfo, err := i.queryUsers()
 	if err != nil {
-		msg := "Unable to query existing users."
-		err = errors.New(msg)
+		msg := "IDRAC8 User(): Getting existing users failed."
 		i.log.V(1).Error(err, msg,
-			"step", "applyUserParams",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
-		return err
+		return errors.New(msg + " Error: " + err.Error())
 	}
 
+	usedIDs := make(map[int]bool)
 	for _, cfgUser := range cfgUsers {
-		userID, userInfo, uExists := userInIdrac(cfgUser.Name, idracUsers)
-		if cfgUser.Enable {
-			// New user? Add them.
-			if !uExists {
-				userID, userInfo, err = getEmptyUserSlot(idracUsers)
-				if err != nil {
-					i.log.V(1).Info("Unable to add new User.",
-						"IP", i.ip,
-						"HardwareType", i.HardwareType(),
-						"step", helper.WhosCalling(),
-						"User", cfgUser.Name,
-						"Error", internal.ErrStringOrEmpty(err),
-					)
-					continue
+		// If the user is not enabled in the config, just skip.
+		// The next section is going to wipe it out.
+		if !cfgUser.Enable {
+			continue
+		}
+
+		// Does the user already exist?
+		newID := 0
+		for userID, userInfo := range usersInfo {
+			if userInfo.UserName == cfgUser.Name {
+				usedIDs[userID] = true
+				newID = userID
+				break
+			}
+		}
+
+		// New user, pick an available ID.
+		if newID == 0 {
+			for userID := 2; userID <= 16; userID++ {
+				if !usedIDs[userID] {
+					usedIDs[userID] = true
+					newID = userID
+					break
 				}
 			}
-
-			userInfo.Enable = "Enabled"
-			userInfo.SolEnable = "Enabled"
-			userInfo.UserName = cfgUser.Name
-			userInfo.Password = cfgUser.Password
-
-			if cfgUser.Role == "admin" {
-				userInfo.Privilege = "511"
-				userInfo.IpmiLanPrivilege = "Administrator"
-			} else {
-				userInfo.Privilege = "499"
-				userInfo.IpmiLanPrivilege = "Operator"
-			}
-
-			err = i.putUser(userID, userInfo)
-			if err != nil {
-				i.log.V(1).Info("Add/Update user request failed.",
-					"IP", i.ip,
-					"HardwareType", i.HardwareType(),
-					"step", helper.WhosCalling(),
-					"User", cfgUser.Name,
-					"Error", internal.ErrStringOrEmpty(err),
-				)
-				continue
-			}
-
 		}
 
-		// User exists but is disabled in our config? Remove them.
-		if !cfgUser.Enable && uExists {
-			userInfo.Enable = "Disabled"
-			userInfo.SolEnable = "Disabled"
-			userInfo.UserName = cfgUser.Name
-			userInfo.Privilege = "0"
-			userInfo.IpmiLanPrivilege = "No Access"
-
-			err = i.putUser(userID, userInfo)
-			if err != nil {
-				i.log.V(1).Info("Disable user request failed.",
-					"IP", i.ip,
-					"HardwareType", i.HardwareType(),
-					"step", helper.WhosCalling(),
-					"User", cfgUser.Name,
-					"Error", internal.ErrStringOrEmpty(err),
-				)
-			}
+		// No available slots!
+		if newID == 0 {
+			msg := "IDRAC8 User(): Finding an empty user slot failed."
+			err = errors.New("No more available slots!")
+			i.log.V(1).Error(err, msg,
+				"IP", i.ip,
+				"HardwareType", i.HardwareType(),
+			)
+			return errors.New(msg + " Error: " + err.Error())
 		}
 
-		i.log.V(1).Info("User parameters applied.", "IP", i.ip, "HardwareType", i.HardwareType(), "User", cfgUser.Name)
+		mainCommand := fmt.Sprintf("racadm set iDRAC.Users.%d.", newID)
+
+		command := mainCommand + fmt.Sprintf("Username \"%s\"", cfgUser.Name)
+		i.RunSshCommand(command, newID)
+
+		command = mainCommand + fmt.Sprintf("Password \"%s\"", cfgUser.Password)
+		i.RunSshCommand(command, newID)
+
+		command = mainCommand + "Enable \"Enabled\""
+		i.RunSshCommand(command, newID)
+
+		if cfgUser.SolEnable {
+			command = mainCommand + "SolEnable \"Enabled\""
+		} else {
+			command = mainCommand + "SolEnable \"Disabled\""
+		}
+		i.RunSshCommand(command, newID)
+
+		if cfgUser.SNMPv3Enable {
+			command = mainCommand + "SNMPv3Enable \"Enabled\""
+		} else {
+			command = mainCommand + "SNMPv3Enable \"Disabled\""
+		}
+		i.RunSshCommand(command, newID)
+
+		if cfgUser.Role == "admin" {
+			// The number comes from 0x1FF. We reverse-engineered that by setting the user
+			//   manually to have Administrator access in IDRAC's UI, and then SSH and run
+			//   `racadm get iDRAC.Users.4` (replace 4 by the user you have edited).
+			// You get something like
+			//   [Key=iDRAC.Embedded.1#Users.4]
+			//   Enable=Enabled
+			//   IpmiLanPrivilege=3
+			//   MD5v3Key=...
+			//   !!Password=******** (Write-Only)
+			//   Privilege=0x1ff
+			//   SHA1v3Key=...
+			//   SHA256Password=...
+			//   SHA256PasswordSalt=...
+			//   SNMPv3AuthenticationType=SHA
+			//   SNMPv3Enable=Disabled
+			//   SNMPv3PrivacyType=AES
+			//   SolEnable=Disabled
+			//   UserName=HOperator
+			command = mainCommand + "Privilege 511"
+		} else if cfgUser.Role == "operator" {
+			// The number comes from 0x1F3.
+			command = mainCommand + "Privilege 499"
+		} else if cfgUser.Role == "user" {
+			// This one is actually called Read Only in IDRAC, but for simplicity
+			//   we use the same value for both Privilege and IpmiLanPrivilege.
+			command = mainCommand + "Privilege 1"
+		} else {
+			command = mainCommand + "Privilege 0" // No Access!
+		}
+		i.RunSshCommand(command, newID)
+
+		if cfgUser.Role == "admin" {
+			command = mainCommand + "IpmiLanPrivilege 4"
+		} else if cfgUser.Role == "operator" {
+			command = mainCommand + "IpmiLanPrivilege 3"
+		} else if cfgUser.Role == "user" {
+			command = mainCommand + "IpmiLanPrivilege 2"
+		} else {
+			command = mainCommand + "IpmiLanPrivilege 15" // No Access!
+		}
+		i.RunSshCommand(command, newID)
 	}
 
-	return err
+	for userID := 2; userID <= 16; userID++ {
+		// Avoid used slots.
+		if usedIDs[userID] {
+			continue
+		}
+
+		mainCommand := fmt.Sprintf("racadm set iDRAC.Users.%d.", userID)
+
+		// Just temporarily. Some of the commands will fail with the message
+		//   "The specified value is not allowed to be configured if the user name or password is blank."
+		// That's why we give a temporary name, and then blank it at the end.
+		command := mainCommand + fmt.Sprintf("Username \"TempUser%02d\"", userID)
+		i.RunSshCommand(command, userID)
+
+		command = mainCommand + "Enable \"Disabled\""
+		i.RunSshCommand(command, userID)
+
+		command = mainCommand + "SolEnable \"Disabled\""
+		i.RunSshCommand(command, userID)
+
+		command = mainCommand + "SNMPv3Enable \"Disabled\""
+		i.RunSshCommand(command, userID)
+
+		command = mainCommand + "Privilege 0"
+		i.RunSshCommand(command, userID)
+
+		command = mainCommand + "IpmiLanPrivilege 15"
+		i.RunSshCommand(command, userID)
+
+		// Now, really clean the username.
+		command = mainCommand + "Username \"\""
+		i.RunSshCommand(command, userID)
+	}
+
+	return nil
 }
 
 // Syslog applies the Syslog configuration resource
@@ -291,7 +395,11 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 	endpoint := fmt.Sprintf("data?%s", queryStr)
 	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
-		i.log.V(1).Info("GET request failed.",
+		if err == nil {
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
+		}
+
+		i.log.V(1).Error(err, "applyNtpServerParam(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
@@ -308,7 +416,7 @@ func (i *IDrac8) applyNtpServerParam(cfg *cfgresources.Ntp) {
 // Ldap implements the Configure interface.
 func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 	if cfg.Server == "" {
-		msg := "ldap resource parameter Server required but not declared."
+		msg := "LDAP resource parameter \"Server\" required but not declared."
 		err := errors.New(msg)
 		i.log.V(1).Error(err, msg, "step", "applyLdapServerParam")
 		return err
@@ -318,7 +426,7 @@ func (i *IDrac8) Ldap(cfg *cfgresources.Ldap) error {
 	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 		i.log.V(1).Error(err, "Request to set LDAP server failed.",
 			"IP", i.ip,
@@ -350,11 +458,11 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 		return err
 	}
 
-	endpoint := fmt.Sprintf("data?set=xGLSearchFilter:%s", i.escapeLdapString(cfg.SearchFilter))
+	endpoint := fmt.Sprintf("data?set=xGLSearchFilter:%s", escapeLdapString(cfg.SearchFilter))
 	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
 		i.log.V(1).Error(err, "Request to set LDAP search filter failed.",
@@ -372,7 +480,7 @@ func (i *IDrac8) applyLdapSearchFilterParam(cfg *cfgresources.Ldap) error {
 	return nil
 }
 
-// Applies LDAP Group/Role related configuration
+// Applies LDAP Group/Role related configuration.
 // Implements the Configure interface.
 func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgresources.Ldap) (err error) {
 	// Preliminary checks:
@@ -445,16 +553,16 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 		}
 
 		groupDn := fmt.Sprintf("%s,%s", group.Group, group.GroupBaseDn)
-		groupDn = i.escapeLdapString(groupDn)
+		groupDn = escapeLdapString(groupDn)
 
 		endpoint := fmt.Sprintf("data?set=xGLGroup%dName:%s", groupID, groupDn)
 		statusCode, response, err := i.get(endpoint, nil)
 		if err != nil || statusCode != 200 {
 			if err == nil {
-				err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+				err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 			}
 
-			i.log.V(1).Error(err, "GET request failed.",
+			i.log.V(1).Error(err, "LdapGroups(): GET request failed.",
 				"IP", i.ip,
 				"HardwareType", i.HardwareType(),
 				"endpoint", endpoint,
@@ -491,7 +599,7 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 		statusCode, response, err := i.get(endpoint, nil)
 		if err != nil || statusCode != 200 {
 			if err == nil {
-				err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+				err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 			}
 
 			i.log.V(1).Error(err, "GET request failed.",
@@ -522,7 +630,7 @@ func (i *IDrac8) LdapGroups(cfgGroups []*cfgresources.LdapGroup, cfgLdap *cfgres
 // https://10.193.251.10/postset?ldapconf
 // data=LDAPEnableMode:3,xGLNameSearchEnabled:0,xGLBaseDN:ou%5C%3DPeople%5C%2Cdc%5C%3Dactivehotels%5C%2Cdc%5C%3Dcom,xGLUserLogin:uid,xGLGroupMem:memberUid,xGLBindDN:,xGLCertValidationEnabled:1,xGLGroup1Priv:511,xGLGroup2Priv:97,xGLGroup3Priv:0,xGLGroup4Priv:0,xGLGroup5Priv:0,xGLServerPort:636
 func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivilegeParam string) (err error) {
-	baseDn := i.escapeLdapString(cfg.BaseDn)
+	baseDn := escapeLdapString(cfg.BaseDn)
 	payload := "data=LDAPEnableMode:3,"  // Generic LDAP
 	payload += "xGLNameSearchEnabled:0," // Lookup LDAP server from DNS
 	payload += fmt.Sprintf("xGLBaseDN:%s,", baseDn)
@@ -530,7 +638,7 @@ func (i *IDrac8) applyLdapRoleGroupPrivParam(cfg *cfgresources.Ldap, groupPrivil
 	payload += fmt.Sprintf("xGLGroupMem:%s,", cfg.GroupAttribute)
 
 	if cfg.BindDn != "" {
-		bindDn := i.escapeLdapString(cfg.BindDn)
+		bindDn := escapeLdapString(cfg.BindDn)
 		payload += fmt.Sprintf("xGLBindDN:%s,", bindDn)
 	} else {
 		payload += "xGLBindDN:,"
@@ -567,10 +675,10 @@ func (i *IDrac8) applyTimezoneParam(timezone string) {
 	statusCode, response, err := i.get(endpoint, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
-		i.log.V(1).Error(err, "GET request failed.",
+		i.log.V(1).Error(err, "applyTimezoneParam(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
@@ -655,10 +763,10 @@ func (i *IDrac8) GenerateCSR(cert *cfgresources.HTTPSCertAttributes) ([]byte, er
 	statusCode, response, err := i.get(queryString, nil)
 	if err != nil || statusCode != 200 {
 		if err == nil {
-			err = fmt.Errorf("Received a non-200 status code from the GET request to %s.", endpoint)
+			err = fmt.Errorf("Received a %d status code from the GET request to %s.", statusCode, endpoint)
 		}
 
-		i.log.V(1).Error(err, "GET request failed.",
+		i.log.V(1).Error(err, "GenerateCSR(): GET request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
@@ -715,7 +823,11 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	// 1. POST upload x509 cert
 	status, body, err := i.post(endpoint, form.Bytes(), w.FormDataContentType())
 	if err != nil || status != 201 {
-		i.log.V(1).Error(err, "Cert form upload POST request failed, expected 201.",
+		if err == nil {
+			err = fmt.Errorf("Cert form upload POST request to %s failed with status code %d.", endpoint, status)
+		}
+
+		i.log.V(1).Error(err, "UploadHTTPSCert(): Cert form upload POST request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
@@ -729,22 +841,20 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	certStore := new(certStore)
 	err = json.Unmarshal(body, certStore)
 	if err != nil {
-		i.log.V(1).Error(err, "Unable to unmarshal cert store response payload.",
+		i.log.V(1).Error(err, "UploadHTTPSCert(): Unable to unmarshal cert store response payload.",
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return false, err
 	}
 
 	resourceURI, err := json.Marshal(certStore.File)
 	if err != nil {
-		i.log.V(1).Error(err, "Unable to marshal cert store resource URI.",
+		i.log.V(1).Error(err, "UploadHTTPSCert(): Unable to marshal cert store resource URI.",
 			"step", helper.WhosCalling(),
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
-			"Error", internal.ErrStringOrEmpty(err),
 		)
 		return false, err
 	}
@@ -753,7 +863,11 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 	endpoint = "sysmgmt/2012/server/network/ssl/cert"
 	status, _, err = i.post(endpoint, []byte(resourceURI), "")
 	if err != nil || status != 201 {
-		i.log.V(1).Error(err, "Cert form upload POST request failed, expected 201.",
+		if err == nil {
+			err = fmt.Errorf("Cert form upload POST request to %s failed with status code %d.", endpoint, status)
+		}
+
+		i.log.V(1).Error(err, "UploadHTTPSCert(): Cert form upload POST request failed.",
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
 			"endpoint", endpoint,
@@ -763,5 +877,5 @@ func (i *IDrac8) UploadHTTPSCert(cert []byte, certFileName string, key []byte, k
 		return false, err
 	}
 
-	return true, err
+	return true, nil
 }

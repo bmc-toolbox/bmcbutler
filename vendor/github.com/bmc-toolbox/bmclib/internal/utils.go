@@ -12,15 +12,8 @@ func IsntLetterOrNumber(c rune) bool {
 	return !unicode.IsLetter(c) && !unicode.IsNumber(c)
 }
 
-func ErrStringOrEmpty(err error) string {
-	if err == nil {
-		return ""
-	}
-	return err.Error()
-}
-
 func IsRoleValid(role string) bool {
-	return role == "admin" || role == "user"
+	return role == "admin" || role == "user" || role == "operator"
 }
 
 func ValidateUserConfig(cfgUsers []*cfgresources.User) (err error) {
@@ -42,4 +35,13 @@ func ValidateUserConfig(cfgUsers []*cfgresources.User) (err error) {
 	}
 
 	return nil
+}
+
+func StringInSlice(str string, sl []string) bool {
+	for _, s := range sl {
+		if str == s {
+			return true
+		}
+	}
+	return false
 }

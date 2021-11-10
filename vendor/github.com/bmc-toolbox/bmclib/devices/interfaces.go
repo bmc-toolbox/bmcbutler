@@ -30,9 +30,8 @@ type Bmc interface {
 // BmcCollection represents the requirement of items to be collected a server
 type BmcCollection interface {
 	BiosVersion() (string, error)
-	HardwareType() string
+	HardwareType() string // ilo4, ilo5, idrac8 or idrac9, etc
 	Version() (string, error)
-	Class() (string, error) // Class is like ILO4 or ILO5, iDRAC8 or iDRAC9, etc
 	CPU() (string, int, int, int, error)
 	Disks() ([]*Disk, error)
 	IsBlade() (bool, error)

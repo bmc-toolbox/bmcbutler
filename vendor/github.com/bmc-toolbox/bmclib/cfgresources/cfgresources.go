@@ -59,8 +59,8 @@ type ipmiOverLan struct {
 	Enable bool `yaml:"enable"`
 }
 
-//'Dynamic Power' in HP C7000 Jargon.
-//'DPSE' (dynamic PSU engagement) in M1000e Dell jargon.
+// 'Dynamic Power' in HP C7000 Jargon.
+// 'DPSE' (dynamic PSU engagement) in M1000e Dell jargon.
 type dynamicPower struct {
 	Enable bool `yaml:"enable"`
 }
@@ -72,10 +72,12 @@ type bladesPower struct {
 
 // User struct holds a BMC user account configuration.
 type User struct {
-	Name     string `yaml:"name"`
-	Password string `yaml:"password"`
-	Role     string `yaml:"role"`
-	Enable   bool   `yaml:"enable,omitempty"`
+	Name         string `yaml:"name"`
+	Password     string `yaml:"password"`
+	Role         string `yaml:"role"`
+	Enable       bool   `yaml:"enable,omitempty"`
+	SolEnable    bool   `yaml:"solEnable,omitempty"`
+	SNMPv3Enable bool   `yaml:"snmpV3Enable,omitempty"`
 }
 
 // Syslog struct holds BMC syslog configuration.
@@ -100,7 +102,7 @@ type Ldap struct {
 	SearchFilter   string `yaml:"searchFilter"`
 }
 
-// License struct holds BMC licencing configuration.
+// License struct holds BMC licensing configuration.
 type License struct {
 	Key string `yaml:"key"`
 }
@@ -129,13 +131,17 @@ func (l *LdapGroups) GetExtraGroups(serial, vendor string) (string, error) {
 	if l.Bin.Path == "" {
 		return "nothing", nil
 	}
+
 	cmd := exec.Command(l.Bin.Executor, l.Bin.Path, serial, vendor)
 	stdout, err := cmd.CombinedOutput()
 	if err != nil {
 		return string(stdout), err
 	}
 
-	json.Unmarshal(stdout, &l)
+	err = json.Unmarshal(stdout, &l)
+	if err != nil {
+		return string(stdout), err
+	}
 
 	l.Groups = append(l.Groups, l.ExtraAdminGroups...)
 	l.Groups = append(l.Groups, l.ExtraUserGroups...)
