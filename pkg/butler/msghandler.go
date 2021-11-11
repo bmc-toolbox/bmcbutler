@@ -1,10 +1,13 @@
 package butler
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/bmc-toolbox/bmcbutler/pkg/asset"
 	metrics "github.com/bmc-toolbox/gin-go-metrics"
 )
 
@@ -16,6 +19,18 @@ func (b *Butler) myLocation(location string) bool {
 	}
 
 	return false
+}
+
+func (b *Butler) timeTrack(start time.Time, name string, asset *asset.Asset) {
+	elapsed := time.Since(start)
+	seconds := elapsed.Seconds()
+	b.Log.WithFields(logrus.Fields{
+		"Serial":            asset.Serial,
+		"IPAddress":         asset.IPAddress,
+		"AssetType":         asset.Type,
+		"Vendor":            asset.Vendor,
+		"ConfigurationTime": seconds,
+	}).Info(fmt.Sprintf("%s on %s took %f seconds.", name, asset.IPAddress, seconds))
 }
 
 // msgHandler invokes the appropriate action based on msg attributes.
@@ -119,7 +134,7 @@ func (b *Butler) msgHandler(msg Msg) {
 			"Location":     msg.Asset.Location,
 			"Serial":       msg.Asset.Serial,
 			"Vendor":       msg.Asset.Vendor, // At this point the vendor may or may not be known.
-		}).Warn("Configure action succeeded.")
+		}).Info("Configure action succeeded.")
 
 		metrics.IncrCounter([]string{"butler", "configure_success"}, 1)
 		return

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/sirupsen/logrus"
 
@@ -26,6 +27,8 @@ func (b *Butler) executeCommand(command string, asset *asset.Asset) (err error) 
 		}).Info("Dry run, won't execute cmd on asset.")
 		return nil
 	}
+
+	defer b.timeTrack(time.Now(), "executeCommand", asset)
 
 	bmcConn := bmclogin.Params{
 		IpAddresses:     asset.IPAddresses,

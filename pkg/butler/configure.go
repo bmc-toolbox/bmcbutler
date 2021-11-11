@@ -29,6 +29,7 @@ func (b *Butler) configureAsset(config []byte, asset *asset.Asset) (err error) {
 		return nil
 	}
 
+	defer b.timeTrack(time.Now(), "configureAsset", asset)
 	defer metrics.MeasureRuntime([]string{"butler", "configure_runtime"}, time.Now())
 
 	b.Log.WithFields(logrus.Fields{
