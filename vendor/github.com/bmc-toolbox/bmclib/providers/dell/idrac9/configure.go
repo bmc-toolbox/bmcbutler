@@ -160,7 +160,7 @@ func (i *IDrac9) User(cfgUsers []*cfgresources.User) (err error) {
 
 	idracUsers, err := i.queryUsers()
 	if err != nil {
-		msg := "Unable to query existing users."
+		msg := "IDRAC9 User(): Unable to query existing users."
 		i.log.V(1).Error(err, msg,
 			"step", "applyUserParams",
 			"IP", i.ip,

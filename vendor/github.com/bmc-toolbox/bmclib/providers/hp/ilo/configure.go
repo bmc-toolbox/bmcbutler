@@ -75,7 +75,7 @@ func userExists(user string, usersInfo []UserInfo) (userInfo UserInfo, exists bo
 func (i *Ilo) User(users []*cfgresources.User) (err error) {
 	existingUsers, err := i.queryUsers()
 	if err != nil {
-		msg := "Unable to query existing users."
+		msg := "ILO User(): Unable to query existing users."
 		i.log.V(1).Error(err, msg,
 			"IP", i.ip,
 			"HardwareType", i.HardwareType(),
