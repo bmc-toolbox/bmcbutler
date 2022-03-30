@@ -130,7 +130,7 @@ func (f *UnionFile) Name() string {
 type DirsMerger func(lofi, bofi []os.FileInfo) ([]os.FileInfo, error)
 
 var defaultUnionMergeDirsFn = func(lofi, bofi []os.FileInfo) ([]os.FileInfo, error) {
-	files := make(map[string]os.FileInfo)
+	var files = make(map[string]os.FileInfo)
 
 	for _, fi := range lofi {
 		files[fi.Name()] = fi
@@ -151,6 +151,7 @@ var defaultUnionMergeDirsFn = func(lofi, bofi []os.FileInfo) ([]os.FileInfo, err
 	}
 
 	return rfi, nil
+
 }
 
 // Readdir will weave the two directories together and
@@ -267,20 +268,14 @@ func (f *UnionFile) WriteString(s string) (n int, err error) {
 	return 0, BADFD
 }
 
-func copyToLayer(base Fs, layer Fs, name string) error {
-	bfh, err := base.Open(name)
-	if err != nil {
-		return err
-	}
-	defer bfh.Close()
-
+func copyFile(base Fs, layer Fs, name string, bfh File) error {
 	// First make sure the directory exists
 	exists, err := Exists(layer, filepath.Dir(name))
 	if err != nil {
 		return err
 	}
 	if !exists {
-		err = layer.MkdirAll(filepath.Dir(name), 0o777) // FIXME?
+		err = layer.MkdirAll(filepath.Dir(name), 0777) // FIXME?
 		if err != nil {
 			return err
 		}
@@ -313,4 +308,24 @@ func copyToLayer(base Fs, layer Fs, name string) error {
 		return err
 	}
 	return layer.Chtimes(name, bfi.ModTime(), bfi.ModTime())
+}
+
+func copyToLayer(base Fs, layer Fs, name string) error {
+	bfh, err := base.Open(name)
+	if err != nil {
+		return err
+	}
+	defer bfh.Close()
+
+	return copyFile(base, layer, name, bfh)
+}
+
+func copyFileToLayer(base Fs, layer Fs, name string, flag int, perm os.FileMode) error {
+	bfh, err := base.OpenFile(name, flag, perm)
+	if err != nil {
+		return err
+	}
+	defer bfh.Close()
+
+	return copyFile(base, layer, name, bfh)
 }

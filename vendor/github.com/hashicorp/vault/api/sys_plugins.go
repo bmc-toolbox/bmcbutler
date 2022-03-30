@@ -108,6 +108,7 @@ func (c *Sys) ListPlugins(i *ListPluginsInput) (*ListPluginsResponse, error) {
 			for i, nameIfc := range pluginsIfc {
 				name, ok := nameIfc.(string)
 				if !ok {
+
 				}
 				plugins[i] = name
 			}

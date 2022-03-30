@@ -185,6 +185,7 @@ func ld(s, t string, ignoreCase bool) int {
 				d[i][j] = min + 1
 			}
 		}
+
 	}
 	return d[len(s)][len(t)]
 }

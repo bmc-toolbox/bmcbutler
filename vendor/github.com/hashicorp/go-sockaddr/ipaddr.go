@@ -43,10 +43,8 @@ type IPPort uint16
 type IPPrefixLen byte
 
 // ipAddrAttrMap is a map of the IPAddr type-specific attributes.
-var (
-	ipAddrAttrMap map[AttrName]func(IPAddr) string
-	ipAddrAttrs   []AttrName
-)
+var ipAddrAttrMap map[AttrName]func(IPAddr) string
+var ipAddrAttrs []AttrName
 
 func init() {
 	ipAddrInit()

@@ -26,8 +26,8 @@ type Paginator struct {
 	TotalPages int `json:"total_pages"`
 }
 
-// TagFromPagination receives a pagination interface{} and attempts to get
-// Paginator properties from it before generating the tag.
+//TagFromPagination receives a pagination interface{} and attempts to get
+//Paginator properties from it before generating the tag.
 func (p Paginator) TagFromPagination(pagination interface{}, opts Options) (*Tag, error) {
 	rv := reflect.ValueOf(pagination)
 	if rv.Kind() == reflect.Ptr {
@@ -71,7 +71,7 @@ func (p Paginator) TagFromPagination(pagination interface{}, opts Options) (*Tag
 	return p.Tag(opts)
 }
 
-// Tag generates the pagination html Tag
+//Tag generates the pagination html Tag
 func (p Paginator) Tag(opts Options) (*Tag, error) {
 	// return an empty div if there is only 1 page
 	if p.TotalPages <= 1 {
@@ -139,7 +139,7 @@ func (p Paginator) Tag(opts Options) (*Tag, error) {
 	return t, nil
 }
 
-// Pagination builds pagination Tag based on a passed pagintation interface
+//Pagination builds pagination Tag based on a passed pagintation interface
 func Pagination(pagination interface{}, opts Options) (*Tag, error) {
 	if p, ok := pagination.(Paginator); ok {
 		return p.Tag(opts)
@@ -220,6 +220,7 @@ func extractBaseOptions(opts Options) (string, string, int) {
 }
 
 func pageLI(text string, page int, path string, pagination Paginator) (*Tag, error) {
+
 	classes := []string{"page-item"}
 
 	if page == pagination.Page {

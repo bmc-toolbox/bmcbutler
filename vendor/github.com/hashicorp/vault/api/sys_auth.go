@@ -74,9 +74,7 @@ func (c *Sys) DisableAuth(path string) error {
 }
 
 // Rather than duplicate, we can use modern Go's type aliasing
-type (
-	EnableAuthOptions = MountInput
-	AuthConfigInput   = MountConfigInput
-	AuthMount         = MountOutput
-	AuthConfigOutput  = MountConfigOutput
-)
+type EnableAuthOptions = MountInput
+type AuthConfigInput = MountConfigInput
+type AuthMount = MountOutput
+type AuthConfigOutput = MountConfigOutput

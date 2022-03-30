@@ -1,10 +1,9 @@
 package workerpool
 
 import (
+	"github.com/gammazero/deque"
 	"sync"
 	"time"
-
-	"github.com/gammazero/deque"
 )
 
 const (

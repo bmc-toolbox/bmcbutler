@@ -1,6 +1,6 @@
 package tags
 
-// StylesheetTag builds the <link> tag to load styles on the page.
+//StylesheetTag builds the <link> tag to load styles on the page.
 func StylesheetTag(opts Options) *Tag {
 	if opts["rel"] == nil {
 		opts["rel"] = "stylesheet"
@@ -9,7 +9,7 @@ func StylesheetTag(opts Options) *Tag {
 	return New("link", opts)
 }
 
-// JavascriptTag builds JS tags based in passed options
+//JavascriptTag builds JS tags based in passed options
 func JavascriptTag(opts Options) *Tag {
 	if opts["src"] != nil {
 		delete(opts, "body")

@@ -141,6 +141,14 @@ type serviceAcceptMsg struct {
 	Service string `sshtype:"6"`
 }
 
+// See RFC 8308, section 2.3
+const msgExtInfo = 7
+
+type extInfoMsg struct {
+	NumExtensions uint32 `sshtype:"7"`
+	Payload       []byte `ssh:"rest"`
+}
+
 // See RFC 4252, section 5.
 const msgUserAuthRequest = 50
 
@@ -152,7 +160,8 @@ type userAuthRequestMsg struct {
 }
 
 // Used for debug printouts of packets.
-type userAuthSuccessMsg struct{}
+type userAuthSuccessMsg struct {
+}
 
 // See RFC 4252, section 5.1
 const msgUserAuthFailure = 51
@@ -175,17 +184,15 @@ type userAuthBannerMsg struct {
 }
 
 // See RFC 4256, section 3.2
-const (
-	msgUserAuthInfoRequest  = 60
-	msgUserAuthInfoResponse = 61
-)
+const msgUserAuthInfoRequest = 60
+const msgUserAuthInfoResponse = 61
 
 type userAuthInfoRequestMsg struct {
-	User               string `sshtype:"60"`
-	Instruction        string
-	DeprecatedLanguage string
-	NumPrompts         uint32
-	Prompts            []byte `ssh:"rest"`
+	Name        string `sshtype:"60"`
+	Instruction string
+	Language    string
+	NumPrompts  uint32
+	Prompts     []byte `ssh:"rest"`
 }
 
 // See RFC 4254, section 5.1.
@@ -199,10 +206,8 @@ type channelOpenMsg struct {
 	TypeSpecificData []byte `ssh:"rest"`
 }
 
-const (
-	msgChannelExtendedData = 95
-	msgChannelData         = 94
-)
+const msgChannelExtendedData = 95
+const msgChannelData = 94
 
 // Used for debug print outs of packets.
 type channelDataMsg struct {
@@ -785,6 +790,8 @@ func decode(packet []byte) (interface{}, error) {
 		msg = new(serviceRequestMsg)
 	case msgServiceAccept:
 		msg = new(serviceAcceptMsg)
+	case msgExtInfo:
+		msg = new(extInfoMsg)
 	case msgKexInit:
 		msg = new(kexInitMsg)
 	case msgKexDHInit:
@@ -846,6 +853,7 @@ var packetTypeNames = map[byte]string{
 	msgDisconnect:          "disconnectMsg",
 	msgServiceRequest:      "serviceRequestMsg",
 	msgServiceAccept:       "serviceAcceptMsg",
+	msgExtInfo:             "extInfoMsg",
 	msgKexInit:             "kexInitMsg",
 	msgKexDHInit:           "kexDHInitMsg",
 	msgKexDHReply:          "kexDHReplyMsg",

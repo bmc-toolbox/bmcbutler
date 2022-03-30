@@ -123,7 +123,7 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 	return
 }
 
-// Unmarshal reads an env file from a string, returning a map of keys and values.
+//Unmarshal reads an env file from a string, returning a map of keys and values.
 func Unmarshal(str string) (envMap map[string]string, err error) {
 	return Parse(strings.NewReader(str))
 }
@@ -242,7 +242,7 @@ func parseLine(line string, envMap map[string]string) (key string, value string,
 	firstColon := strings.Index(line, ":")
 	splitString := strings.SplitN(line, "=", 2)
 	if firstColon != -1 && (firstColon < firstEquals || firstEquals == -1) {
-		// this is a yaml-style line
+		//this is a yaml-style line
 		splitString = strings.SplitN(line, ":", 2)
 	}
 
@@ -264,6 +264,7 @@ func parseLine(line string, envMap map[string]string) (key string, value string,
 }
 
 func parseValue(value string, envMap map[string]string) string {
+
 	// trim
 	value = strings.Trim(value, " ")
 

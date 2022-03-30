@@ -22,7 +22,8 @@ import (
 // Latex is a type that implements the Renderer interface for LaTeX output.
 //
 // Do not create this directly, instead use the LatexRenderer function.
-type Latex struct{}
+type Latex struct {
+}
 
 // LatexRenderer creates and configures a Latex object, which
 // satisfies the Renderer interface.
@@ -55,6 +56,7 @@ func (options *Latex) BlockCode(out *bytes.Buffer, text []byte, lang string) {
 }
 
 func (options *Latex) TitleBlock(out *bytes.Buffer, text []byte) {
+
 }
 
 func (options *Latex) BlockQuote(out *bytes.Buffer, text []byte) {
@@ -173,9 +175,11 @@ func (options *Latex) TableCell(out *bytes.Buffer, text []byte, align int) {
 
 // TODO: this
 func (options *Latex) Footnotes(out *bytes.Buffer, text func() bool) {
+
 }
 
 func (options *Latex) FootnoteItem(out *bytes.Buffer, name, text []byte, flags int) {
+
 }
 
 func (options *Latex) AutoLink(out *bytes.Buffer, link []byte, kind int) {
@@ -251,6 +255,7 @@ func (options *Latex) StrikeThrough(out *bytes.Buffer, text []byte) {
 
 // TODO: this
 func (options *Latex) FootnoteRef(out *bytes.Buffer, ref []byte, id int) {
+
 }
 
 func needsBackslash(c byte) bool {

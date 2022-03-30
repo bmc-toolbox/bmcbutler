@@ -749,6 +749,7 @@ func (options *Html) DocumentFooter(out *bytes.Buffer) {
 		out.WriteString("\n</body>\n")
 		out.WriteString("</html>\n")
 	}
+
 }
 
 func (options *Html) TocHeaderWithAnchor(text []byte, level int, anchor string) {

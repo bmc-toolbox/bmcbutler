@@ -56,6 +56,7 @@ func Scheduler(interval time.Duration, fn interface{}, args ...interface{}) {
 // GoRuntimeStats collects go runtime stats.
 // prefix is a slice of metric namespace nodes.
 func GoRuntimeStats(prefix []string) {
+
 	prefix = append(prefix, "runtime")
 
 	UpdateGauge(append(prefix, "num_goroutines"), int64(runtime.NumGoroutine()))
@@ -110,7 +111,7 @@ func GoRuntimeStats(prefix []string) {
 
 // MeasureRuntime measures time elapsed since invocation
 func MeasureRuntime(key []string, start time.Time) {
-	// convert time.Duration to milliseconds
+	//convert time.Duration to milliseconds
 	elapsed := int64(time.Since(start) / time.Millisecond)
 	UpdateGauge(key, elapsed)
 }

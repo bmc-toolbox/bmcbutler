@@ -11,8 +11,8 @@ import (
 type Options map[string]interface{}
 
 func (o Options) String() string {
-	out := make([]string, 0, len(o))
-	tmp := make([]string, 2)
+	var out = make([]string, 0, len(o))
+	var tmp = make([]string, 2)
 	for k, v := range o {
 		tmp[0] = template.HTMLEscaper(k)
 		if v != nil {

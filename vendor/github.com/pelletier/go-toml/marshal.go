@@ -18,6 +18,7 @@ const (
 	tagFieldComment = "comment"
 	tagCommented    = "commented"
 	tagMultiline    = "multiline"
+	tagLiteral      = "literal"
 	tagDefault      = "default"
 )
 
@@ -27,6 +28,7 @@ type tomlOpts struct {
 	comment      string
 	commented    bool
 	multiline    bool
+	literal      bool
 	include      bool
 	omitempty    bool
 	defaultValue string
@@ -46,6 +48,7 @@ type annotation struct {
 	comment      string
 	commented    string
 	multiline    string
+	literal      string
 	defaultValue string
 }
 
@@ -54,31 +57,30 @@ var annotationDefault = annotation{
 	comment:      tagFieldComment,
 	commented:    tagCommented,
 	multiline:    tagMultiline,
+	literal:      tagLiteral,
 	defaultValue: tagDefault,
 }
 
-type marshalOrder int
+type MarshalOrder int
 
 // Orders the Encoder can write the fields to the output stream.
 const (
 	// Sort fields alphabetically.
-	OrderAlphabetical marshalOrder = iota + 1
+	OrderAlphabetical MarshalOrder = iota + 1
 	// Preserve the order the fields are encountered. For example, the order of fields in
 	// a struct.
 	OrderPreserve
 )
 
-var (
-	timeType               = reflect.TypeOf(time.Time{})
-	marshalerType          = reflect.TypeOf(new(Marshaler)).Elem()
-	unmarshalerType        = reflect.TypeOf(new(Unmarshaler)).Elem()
-	textMarshalerType      = reflect.TypeOf(new(encoding.TextMarshaler)).Elem()
-	textUnmarshalerType    = reflect.TypeOf(new(encoding.TextUnmarshaler)).Elem()
-	localDateType          = reflect.TypeOf(LocalDate{})
-	localTimeType          = reflect.TypeOf(LocalTime{})
-	localDateTimeType      = reflect.TypeOf(LocalDateTime{})
-	mapStringInterfaceType = reflect.TypeOf(map[string]interface{}{})
-)
+var timeType = reflect.TypeOf(time.Time{})
+var marshalerType = reflect.TypeOf(new(Marshaler)).Elem()
+var unmarshalerType = reflect.TypeOf(new(Unmarshaler)).Elem()
+var textMarshalerType = reflect.TypeOf(new(encoding.TextMarshaler)).Elem()
+var textUnmarshalerType = reflect.TypeOf(new(encoding.TextUnmarshaler)).Elem()
+var localDateType = reflect.TypeOf(LocalDate{})
+var localTimeType = reflect.TypeOf(LocalTime{})
+var localDateTimeType = reflect.TypeOf(LocalDateTime{})
+var mapStringInterfaceType = reflect.TypeOf(map[string]interface{}{})
 
 // Check if the given marshal type maps to a Tree primitive
 func isPrimitive(mtype reflect.Type) bool {
@@ -256,11 +258,12 @@ type Encoder struct {
 	w io.Writer
 	encOpts
 	annotation
-	line        int
-	col         int
-	order       marshalOrder
-	promoteAnon bool
-	indentation string
+	line            int
+	col             int
+	order           MarshalOrder
+	promoteAnon     bool
+	compactComments bool
+	indentation     string
 }
 
 // NewEncoder returns a new encoder that writes to w.
@@ -319,7 +322,7 @@ func (e *Encoder) ArraysWithOneElementPerLine(v bool) *Encoder {
 }
 
 // Order allows to change in which order fields will be written to the output stream.
-func (e *Encoder) Order(ord marshalOrder) *Encoder {
+func (e *Encoder) Order(ord MarshalOrder) *Encoder {
 	e.order = ord
 	return e
 }
@@ -367,6 +370,12 @@ func (e *Encoder) PromoteAnonymous(promote bool) *Encoder {
 	return e
 }
 
+// CompactComments removes the new line before each comment in the tree.
+func (e *Encoder) CompactComments(cc bool) *Encoder {
+	e.compactComments = cc
+	return e
+}
+
 func (e *Encoder) marshal(v interface{}) ([]byte, error) {
 	// Check if indentation is valid
 	for _, char := range e.indentation {
@@ -406,7 +415,7 @@ func (e *Encoder) marshal(v interface{}) ([]byte, error) {
 	}
 
 	var buf bytes.Buffer
-	_, err = t.writeToOrdered(&buf, "", "", 0, e.arraysOneElementPerLine, e.order, e.indentation, false)
+	_, err = t.writeToOrdered(&buf, "", "", 0, e.arraysOneElementPerLine, e.order, e.indentation, e.compactComments, false)
 
 	return buf.Bytes(), err
 }
@@ -444,6 +453,7 @@ func (e *Encoder) valueToTree(mtype reflect.Type, mval reflect.Value) (*Tree, er
 							Comment:   opts.comment,
 							Commented: opts.commented,
 							Multiline: opts.multiline,
+							Literal:   opts.literal,
 						}, val)
 					}
 				}
@@ -588,6 +598,7 @@ func (e *Encoder) wrapTomlValue(val interface{}, parent *Tree) interface{} {
 	_, isTree := val.(*Tree)
 	_, isTreeS := val.([]*Tree)
 	if isTree || isTreeS {
+		e.line++
 		return val
 	}
 
@@ -832,7 +843,21 @@ func (d *Decoder) valueFromTree(mtype reflect.Type, tval *Tree, mval1 *reflect.V
 					case reflect.Int32:
 						val, err = strconv.ParseInt(opts.defaultValue, 10, 32)
 					case reflect.Int64:
-						val, err = strconv.ParseInt(opts.defaultValue, 10, 64)
+						// Check if the provided number has a non-numeric extension.
+						var hasExtension bool
+						if len(opts.defaultValue) > 0 {
+							lastChar := opts.defaultValue[len(opts.defaultValue)-1]
+							if lastChar < '0' || lastChar > '9' {
+								hasExtension = true
+							}
+						}
+						// If the value is a time.Duration with extension, parse as duration.
+						// If the value is an int64 or a time.Duration without extension, parse as number.
+						if hasExtension && mvalf.Type().String() == "time.Duration" {
+							val, err = time.ParseDuration(opts.defaultValue)
+						} else {
+							val, err = strconv.ParseInt(opts.defaultValue, 10, 64)
+						}
 					case reflect.Float32:
 						val, err = strconv.ParseFloat(opts.defaultValue, 32)
 					case reflect.Float64:
@@ -1006,8 +1031,18 @@ func (d *Decoder) valueFromToml(mtype reflect.Type, tval interface{}, mval1 *ref
 		return reflect.ValueOf(nil), fmt.Errorf("Can't convert %v(%T) to a slice", tval, tval)
 	default:
 		d.visitor.visit()
+		mvalPtr := reflect.New(mtype)
+
+		// Check if pointer to value implements the Unmarshaler interface.
+		if isCustomUnmarshaler(mvalPtr.Type()) {
+			if err := callCustomUnmarshaler(mvalPtr, tval); err != nil {
+				return reflect.ValueOf(nil), fmt.Errorf("unmarshal toml: %v", err)
+			}
+			return mvalPtr.Elem(), nil
+		}
+
 		// Check if pointer to value implements the encoding.TextUnmarshaler.
-		if mvalPtr := reflect.New(mtype); isTextUnmarshaler(mvalPtr.Type()) && !isTimeType(mtype) {
+		if isTextUnmarshaler(mvalPtr.Type()) && !isTimeType(mtype) {
 			if err := d.unmarshalText(tval, mvalPtr); err != nil {
 				return reflect.ValueOf(nil), fmt.Errorf("unmarshal text: %v", err)
 			}
@@ -1146,6 +1181,7 @@ func tomlOptions(vf reflect.StructField, an annotation) tomlOpts {
 	}
 	commented, _ := strconv.ParseBool(vf.Tag.Get(an.commented))
 	multiline, _ := strconv.ParseBool(vf.Tag.Get(an.multiline))
+	literal, _ := strconv.ParseBool(vf.Tag.Get(an.literal))
 	defaultValue := vf.Tag.Get(tagDefault)
 	result := tomlOpts{
 		name:         vf.Name,
@@ -1153,6 +1189,7 @@ func tomlOptions(vf reflect.StructField, an annotation) tomlOpts {
 		comment:      comment,
 		commented:    commented,
 		multiline:    multiline,
+		literal:      literal,
 		include:      true,
 		omitempty:    false,
 		defaultValue: defaultValue,

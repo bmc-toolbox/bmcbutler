@@ -168,6 +168,7 @@ func (p *Policy) AllowStandardAttributes() {
 // Note: When bluemonday ships a CSS parser and we can safely sanitise that,
 // this will also allow sanitized styling of elements via the style attribute.
 func (p *Policy) AllowStyling() {
+
 	// "class" is permitted globally
 	p.AllowAttrs("class").Matching(SpaceSeparatedTokens).Globally()
 }
@@ -176,6 +177,7 @@ func (p *Policy) AllowStyling() {
 // ensure that URL values are parseable. This helper does not enable data URI
 // images, for that you should also use the AllowDataURIImages() helper.
 func (p *Policy) AllowImages() {
+
 	// "img" is permitted
 	p.AllowAttrs("align").Matching(ImageAlign).OnElements("img")
 	p.AllowAttrs("alt").Matching(Paragraph).OnElements("img")
@@ -201,6 +203,7 @@ func (p *Policy) AllowImages() {
 // http://palizine.plynt.com/issues/2010Oct/bypass-xss-filters/
 // https://capec.mitre.org/data/definitions/244.html
 func (p *Policy) AllowDataURIImages() {
+
 	// URLs must be parseable by net/url.Parse()
 	p.RequireParseableURLs(true)
 
@@ -244,6 +247,7 @@ func (p *Policy) AllowLists() {
 // AllowTables will enable a rich set of elements and attributes to describe
 // HTML tables
 func (p *Policy) AllowTables() {
+
 	// "table" is permitted
 	p.AllowAttrs("height", "width").Matching(NumberOrPercent).OnElements("table")
 	p.AllowAttrs("summary").Matching(Paragraph).OnElements("table")

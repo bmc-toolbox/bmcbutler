@@ -198,6 +198,7 @@ func (s *Section) ParentKeys() []*Key {
 		} else {
 			break
 		}
+
 	}
 	return parentKeys
 }
@@ -216,7 +217,7 @@ func (s *Section) KeysHash() map[string]string {
 		defer s.f.lock.RUnlock()
 	}
 
-	hash := map[string]string{}
+	hash := make(map[string]string, len(s.keysHash))
 	for key, value := range s.keysHash {
 		hash[key] = value
 	}

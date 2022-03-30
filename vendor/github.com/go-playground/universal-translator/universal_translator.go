@@ -15,6 +15,7 @@ type UniversalTranslator struct {
 // New returns a new UniversalTranslator instance set with
 // the fallback locale and locales it should support
 func New(fallback locales.Translator, supportedLocales ...locales.Translator) *UniversalTranslator {
+
 	t := &UniversalTranslator{
 		translators: make(map[string]Translator),
 	}
@@ -40,7 +41,9 @@ func New(fallback locales.Translator, supportedLocales ...locales.Translator) *U
 // and returns the first one it can find, otherwise returns the
 // fallback translator.
 func (t *UniversalTranslator) FindTranslator(locales ...string) (trans Translator, found bool) {
+
 	for _, locale := range locales {
+
 		if trans, found = t.translators[strings.ToLower(locale)]; found {
 			return
 		}
@@ -52,6 +55,7 @@ func (t *UniversalTranslator) FindTranslator(locales ...string) (trans Translato
 // GetTranslator returns the specified translator for the given locale,
 // or fallback if not found
 func (t *UniversalTranslator) GetTranslator(locale string) (trans Translator, found bool) {
+
 	if trans, found = t.translators[strings.ToLower(locale)]; found {
 		return
 	}
@@ -69,6 +73,7 @@ func (t *UniversalTranslator) GetFallback() Translator {
 // overridden; if the fallback matches the supplied translator it will be overridden as well
 // NOTE: this is normally only used when translator is embedded within a library
 func (t *UniversalTranslator) AddTranslator(translator locales.Translator, override bool) error {
+
 	lc := strings.ToLower(translator.Locale())
 	_, ok := t.translators[lc]
 	if ok && !override {
@@ -96,6 +101,7 @@ func (t *UniversalTranslator) AddTranslator(translator locales.Translator, overr
 // VerifyTranslations runs through all locales and identifies any issues
 // eg. missing plural rules for a locale
 func (t *UniversalTranslator) VerifyTranslations() (err error) {
+
 	for _, trans := range t.translators {
 		err = trans.VerifyTranslations()
 		if err != nil {
