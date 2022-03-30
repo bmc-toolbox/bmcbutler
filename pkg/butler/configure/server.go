@@ -107,6 +107,22 @@ func (b *Bmc) Apply() {
 		switch resource {
 		case "user":
 			if b.config.User != nil {
+				if b.config.ExtraUsers != nil {
+					o, err := b.config.ExtraUsers.GetExtraUsers(b.asset.Serial, b.asset.Vendor)
+					if err == nil {
+						b.config.User = append(b.config.User, b.config.ExtraUsers.Users...)
+					} else {
+						b.logger.WithFields(logrus.Fields{
+							"Vendor":       b.vendor,
+							"HardwareType": b.hardwareType,
+							"Serial":       b.serial,
+							"IPAddress":    b.ip,
+							"Error":        err,
+							"Output":       o,
+							"Users":        b.config.ExtraUsers.Users,
+						}).Warn("Trying to fetch more users has failed.")
+					}
+				}
 				err = b.configure.User(b.config.User)
 			}
 		case "syslog":
