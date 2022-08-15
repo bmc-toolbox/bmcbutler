@@ -281,11 +281,9 @@ func isTime(t reflect.Type) bool     { return t == reflect.TypeOf(time.Time{}) }
 func isFloat(t reflect.Type) bool {
 	return t.Kind() == reflect.Float32 || t.Kind() == reflect.Float64
 }
-
 func isInt(t reflect.Type) bool {
 	return t.Kind() == reflect.Int || t.Kind() == reflect.Int8 || t.Kind() == reflect.Int16 || t.Kind() == reflect.Int32 || t.Kind() == reflect.Int64
 }
-
 func isUint(t reflect.Type) bool {
 	return t.Kind() == reflect.Uint || t.Kind() == reflect.Uint8 || t.Kind() == reflect.Uint16 || t.Kind() == reflect.Uint32 || t.Kind() == reflect.Uint64
 }

@@ -1,9 +1,7 @@
 package idrac9
 
-type (
-	UsersInfo  map[int]UserInfo
-	IdracUsers map[string]UsersInfo
-)
+type UsersInfo map[int]UserInfo
+type IdracUsers map[string]UsersInfo
 
 // User struct declares user configuration payload.
 type UserInfo struct {

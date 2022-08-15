@@ -12,10 +12,8 @@ type UnixSock struct {
 type UnixSocks []*UnixSock
 
 // unixAttrMap is a map of the UnixSockAddr type-specific attributes.
-var (
-	unixAttrMap map[AttrName]func(UnixSock) string
-	unixAttrs   []AttrName
-)
+var unixAttrMap map[AttrName]func(UnixSock) string
+var unixAttrs []AttrName
 
 func init() {
 	unixAttrInit()

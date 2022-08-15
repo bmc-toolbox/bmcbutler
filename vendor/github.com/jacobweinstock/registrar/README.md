@@ -1,4 +1,5 @@
 [![Test](https://github.com/jacobweinstock/registrar/workflows/Test/badge.svg)](https://github.com/jacobweinstock/registrar/actions?query=workflow%3ATest)
+[![codecov](https://codecov.io/gh/jacobweinstock/registrar/branch/main/graph/badge.svg)](https://codecov.io/gh/jacobweinstock/registrar)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bmc-toolbox/bmclib)](https://goreportcard.com/report/github.com/jacobweinstock/registrar)
 [![GoDoc](https://godoc.org/github.com/bmc-toolbox/bmclib?status.svg)](https://pkg.go.dev/github.com/jacobweinstock/registrar)
 

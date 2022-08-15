@@ -24,6 +24,7 @@ type InvalidValidationError struct {
 
 // Error returns InvalidValidationError message
 func (e *InvalidValidationError) Error() string {
+
 	if e.Type == nil {
 		return "validator: (nil)"
 	}
@@ -40,6 +41,7 @@ type ValidationErrors []FieldError
 // All information to create an error message specific to your application is contained within
 // the FieldError found within the ValidationErrors array
 func (ve ValidationErrors) Error() string {
+
 	buff := bytes.NewBufferString("")
 
 	var fe *fieldError
@@ -56,6 +58,7 @@ func (ve ValidationErrors) Error() string {
 
 // Translate translates all of the ValidationErrors
 func (ve ValidationErrors) Translate(ut ut.Translator) ValidationErrorsTranslations {
+
 	trans := make(ValidationErrorsTranslations)
 
 	var fe *fieldError
@@ -155,10 +158,8 @@ type FieldError interface {
 }
 
 // compile time interface checks
-var (
-	_ FieldError = new(fieldError)
-	_ error      = new(fieldError)
-)
+var _ FieldError = new(fieldError)
+var _ error = new(fieldError)
 
 // fieldError contains a single field's validation error along
 // with other properties that may be needed for error message creation
@@ -203,6 +204,7 @@ func (fe *fieldError) StructNamespace() string {
 // Field returns the fields name with the tag name taking precedence over the
 // fields actual name.
 func (fe *fieldError) Field() string {
+
 	return fe.ns[len(fe.ns)-int(fe.fieldLen):]
 	// // return fe.field
 	// fld := fe.ns[len(fe.ns)-int(fe.fieldLen):]
@@ -255,6 +257,7 @@ func (fe *fieldError) Error() string {
 // NOTE: is not registered translation can be found it returns the same
 // as calling fe.Error()
 func (fe *fieldError) Translate(ut ut.Translator) string {
+
 	m, ok := fe.v.transTagFunc[ut]
 	if !ok {
 		return fe.Error()

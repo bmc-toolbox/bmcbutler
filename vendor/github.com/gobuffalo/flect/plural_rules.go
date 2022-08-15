@@ -140,7 +140,6 @@ func init() {
 		pluralToSingle[v] = k
 	}
 }
-
 func init() {
 	AddPlural("campus", "campuses")
 	AddPlural("man", "men")

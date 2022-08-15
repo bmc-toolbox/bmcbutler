@@ -364,13 +364,11 @@ func (t *Tree) SetPathWithOptions(keys []string, opts SetOptions, value interfac
 		v.multiline = opts.Multiline
 		toInsert = v
 	default:
-		toInsert = &tomlValue{
-			value:     value,
+		toInsert = &tomlValue{value: value,
 			comment:   opts.Comment,
 			commented: opts.Commented,
 			multiline: opts.Multiline,
-			position:  Position{Line: subtree.position.Line + len(subtree.values) + 1, Col: subtree.position.Col},
-		}
+			position:  Position{Line: subtree.position.Line + len(subtree.values) + 1, Col: subtree.position.Col}}
 	}
 
 	subtree.values[keys[len(keys)-1]] = toInsert

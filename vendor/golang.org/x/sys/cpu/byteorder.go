@@ -14,10 +14,8 @@ type byteOrder interface {
 	Uint64([]byte) uint64
 }
 
-type (
-	littleEndian struct{}
-	bigEndian    struct{}
-)
+type littleEndian struct{}
+type bigEndian struct{}
 
 func (littleEndian) Uint32(b []byte) uint32 {
 	_ = b[3] // bounds check hint to compiler; see golang.org/issue/14808

@@ -26,10 +26,8 @@ import (
 	"github.com/rogpeppe/go-internal/modfile"
 )
 
-var (
-	gil = &sync.RWMutex{}
-	env = map[string]string{}
-)
+var gil = &sync.RWMutex{}
+var env = map[string]string{}
 
 // GO111MODULE is ENV for turning mods on/off
 const GO111MODULE = "GO111MODULE"
@@ -86,6 +84,7 @@ func Reload() {
 // IE: envy.Load(".env", "test_env/.env") will result in DIR=test_env
 // If no arg passed, it will try to load a .env file.
 func Load(files ...string) error {
+
 	// If no files received, load the default one
 	if len(files) == 0 {
 		err := godotenv.Overload()

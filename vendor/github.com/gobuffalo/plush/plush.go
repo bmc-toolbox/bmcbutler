@@ -22,10 +22,8 @@ import (
 */
 var DefaultTimeFormat = "January 02, 2006 15:04:05 -0700"
 
-var (
-	cache = map[string]*Template{}
-	moot  = &sync.Mutex{}
-)
+var cache = map[string]*Template{}
+var moot = &sync.Mutex{}
 
 // BuffaloRenderer implements the render.TemplateEngine interface allowing velvet to be used as a template engine
 // for Buffalo

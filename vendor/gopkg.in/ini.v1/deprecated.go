@@ -19,5 +19,7 @@ const (
 	DEFAULT_SECTION = DefaultSection
 )
 
-// Deprecated: AllCapsUnderscore converts to format ALL_CAPS_UNDERSCORE.
-var AllCapsUnderscore = SnackCase
+var (
+	// Deprecated: AllCapsUnderscore converts to format ALL_CAPS_UNDERSCORE.
+	AllCapsUnderscore = SnackCase
+)

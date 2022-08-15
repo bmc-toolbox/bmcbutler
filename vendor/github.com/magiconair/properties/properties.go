@@ -111,6 +111,7 @@ func (p *Properties) Get(key string) (value string, ok bool) {
 	}
 
 	expanded, err := p.expand(key, v)
+
 	// we guarantee that the expanded value is free of
 	// circular references and malformed expressions
 	// so we panic if we still get an error here.

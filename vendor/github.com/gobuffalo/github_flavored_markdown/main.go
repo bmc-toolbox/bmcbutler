@@ -254,8 +254,8 @@ func highlightCode(src []byte, lang string) (highlightedCode []byte, ok bool) {
 					anns = append(anns, &annotate.Annotation{Start: beginOffsetRight, End: endOffsetRight, Left: []byte(`<span class="gi input-block">`), Right: []byte(`</span>`), WantInner: 0})
 
 					if '@' != lineFirstChar {
-						// leftContent := string(src[beginOffsetLeft:endOffsetLeft])
-						// rightContent := string(src[beginOffsetRight:endOffsetRight])
+						//leftContent := string(src[beginOffsetLeft:endOffsetLeft])
+						//rightContent := string(src[beginOffsetRight:endOffsetRight])
 						// This is needed to filter out the "-" and "+" at the beginning of each line from being highlighted.
 						// TODO: Still not completely filtered out.
 						leftContent := ""

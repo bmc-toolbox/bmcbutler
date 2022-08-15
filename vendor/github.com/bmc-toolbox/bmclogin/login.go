@@ -35,24 +35,25 @@ var (
 
 // Params are attributes set by callers to login to the BMC
 type Params struct {
-	IpAddresses     []string            // IPs - since chassis may have more than a single IP.
-	Credentials     []map[string]string // A slice of username, passwords to login with.
-	CheckCredential bool                // Validates the credential works - this is only required for http(s) connections.
-	Retries         int                 // The number of times to retry a credential
-	StopChan        <-chan struct{}     // If the caller decides to pass this channel, when its closed, we return to the caller.
-	doneChan        chan struct{}       // This channel is closed to indicate other internal routines spawned to close.
+	IpAddresses     []string            //IPs - since chassis may have more than a single IP.
+	Credentials     []map[string]string //A slice of username, passwords to login with.
+	CheckCredential bool                //Validates the credential works - this is only required for http(s) connections.
+	Retries         int                 //The number of times to retry a credential
+	StopChan        <-chan struct{}     //If the caller decides to pass this channel, when its closed, we return to the caller.
+	doneChan        chan struct{}       //This channel is closed to indicate other internal routines spawned to close.
 }
 
 type LoginInfo struct {
-	FailedCredentials  []map[string]string // The credentials that failed.
-	WorkingCredentials map[string]string   // The credentials that worked.
-	ActiveIpAddress    string              // The IP that we could login into and is active.
-	Attempts           int                 // The number of login attempts.
+	FailedCredentials  []map[string]string //The credentials that failed.
+	WorkingCredentials map[string]string   //The credentials that worked.
+	ActiveIpAddress    string              //The IP that we could login into and is active.
+	Attempts           int                 //The number of login attempts.
 }
 
 // Login() carries out login actions.
 // nolint: gocyclo
 func (p *Params) Login() (connection interface{}, loginInfo LoginInfo, err error) {
+
 	if os.Getenv("DEBUG_BMCLOGIN") == "1" {
 		debug = true
 	}
@@ -74,17 +75,19 @@ func (p *Params) Login() (connection interface{}, loginInfo LoginInfo, err error
 	}
 
 	defer close(p.doneChan)
-	// for credential map in slice
+	//for credential map in slice
 	for _, credentials := range p.Credentials {
-		// for each credential k, v
+
+		//for each credential k, v
 		for user, pass := range credentials {
-			// for each IpAddress
+
+			//for each IpAddress
 			for _, ip := range p.IpAddresses {
 				if ip == "" {
 					continue
 				}
 
-				// for each retry attempt
+				//for each retry attempt
 				for t := 0; t <= p.Retries; t++ {
 
 					if interrupt {
@@ -105,11 +108,11 @@ func (p *Params) Login() (connection interface{}, loginInfo LoginInfo, err error
 						return connection, loginInfo, err
 					}
 
-					// if the IP is not active, break out of this loop
-					// to try credentials on the next IP.
+					//if the IP is not active, break out of this loop
+					//to try credentials on the next IP.
 					if ipInactive {
 
-						// if we're able to login to asset that has a single IP address,
+						//if we're able to login to asset that has a single IP address,
 						if len(p.IpAddresses) == 1 {
 							loginInfo.WorkingCredentials = map[string]string{user: pass}
 							return connection, loginInfo, err
@@ -143,6 +146,7 @@ func (p *Params) Login() (connection interface{}, loginInfo LoginInfo, err error
 
 // attemptLogin tries to scanAndConnect
 func (p *Params) attemptLogin(ip string, user string, pass string) (connection interface{}, ipInactive bool, err error) {
+
 	// Scan BMC type and connect
 	connection, err = discover.ScanAndConnect(ip, user, pass)
 	if err != nil {
@@ -163,7 +167,7 @@ func (p *Params) attemptLogin(ip string, user string, pass string) (connection i
 				fmt.Sprintf("BMC login attempt failed, account: %s", user))
 		}
 
-		// successful login.
+		//successful login.
 		return connection, ipInactive, nil
 	case devices.Cmc:
 		chassis := connection.(devices.Cmc)
@@ -173,8 +177,8 @@ func (p *Params) attemptLogin(ip string, user string, pass string) (connection i
 				fmt.Sprintf("Chassis login attempt failed, account: %s", user))
 		}
 
-		// A chassis has one or more controllers
-		// We return true if this controller is active.
+		//A chassis has one or more controllers
+		//We return true if this controller is active.
 		if !chassis.IsActive() {
 			ipInactive = true
 			return connection, ipInactive, nil
@@ -185,7 +189,7 @@ func (p *Params) attemptLogin(ip string, user string, pass string) (connection i
 		return connection, ipInactive, errUnrecognizedDevice
 	}
 
-	// we won't ever end up here
-	// return connection, ipInactive, errors.New(
+	//we won't ever end up here
+	//return connection, ipInactive, errors.New(
 	//	fmt.Sprintf("Unable to login"))
 }

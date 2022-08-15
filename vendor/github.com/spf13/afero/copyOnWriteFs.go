@@ -223,7 +223,7 @@ func (u *CopyOnWriteFs) OpenFile(name string, flag int, perm os.FileMode) (File,
 			return nil, err
 		}
 		if isaDir {
-			if err = u.layer.MkdirAll(dir, 0o777); err != nil {
+			if err = u.layer.MkdirAll(dir, 0777); err != nil {
 				return nil, err
 			}
 			return u.layer.OpenFile(name, flag, perm)
@@ -322,5 +322,5 @@ func (u *CopyOnWriteFs) MkdirAll(name string, perm os.FileMode) error {
 }
 
 func (u *CopyOnWriteFs) Create(name string) (File, error) {
-	return u.OpenFile(name, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o666)
+	return u.OpenFile(name, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0666)
 }

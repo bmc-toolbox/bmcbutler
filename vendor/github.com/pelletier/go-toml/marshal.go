@@ -68,17 +68,15 @@ const (
 	OrderPreserve
 )
 
-var (
-	timeType               = reflect.TypeOf(time.Time{})
-	marshalerType          = reflect.TypeOf(new(Marshaler)).Elem()
-	unmarshalerType        = reflect.TypeOf(new(Unmarshaler)).Elem()
-	textMarshalerType      = reflect.TypeOf(new(encoding.TextMarshaler)).Elem()
-	textUnmarshalerType    = reflect.TypeOf(new(encoding.TextUnmarshaler)).Elem()
-	localDateType          = reflect.TypeOf(LocalDate{})
-	localTimeType          = reflect.TypeOf(LocalTime{})
-	localDateTimeType      = reflect.TypeOf(LocalDateTime{})
-	mapStringInterfaceType = reflect.TypeOf(map[string]interface{}{})
-)
+var timeType = reflect.TypeOf(time.Time{})
+var marshalerType = reflect.TypeOf(new(Marshaler)).Elem()
+var unmarshalerType = reflect.TypeOf(new(Unmarshaler)).Elem()
+var textMarshalerType = reflect.TypeOf(new(encoding.TextMarshaler)).Elem()
+var textUnmarshalerType = reflect.TypeOf(new(encoding.TextUnmarshaler)).Elem()
+var localDateType = reflect.TypeOf(LocalDate{})
+var localTimeType = reflect.TypeOf(LocalTime{})
+var localDateTimeType = reflect.TypeOf(LocalDateTime{})
+var mapStringInterfaceType = reflect.TypeOf(map[string]interface{}{})
 
 // Check if the given marshal type maps to a Tree primitive
 func isPrimitive(mtype reflect.Type) bool {
