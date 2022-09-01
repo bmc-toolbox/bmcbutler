@@ -84,6 +84,7 @@ network:
   kvmMediaPort: 17988   # KVM Virtual Media Port
   kvmConsolePort: 17990 # KVM console port
   DDNSEnable: false     # dynamic dns
+  snmpEnable: false
 
 
   #an example of setting the license key based on vendor.
